@@ -11,9 +11,9 @@
   --color-base: #0a1018;
   --color-surface: #131b26;
   --color-elev: #1a2433;
-  --color-text: #e8edf2;
-  --color-text-mute: #6b7480;
-  --color-border: #243040;
+  --color-fg: #e8edf2;
+  --color-fg-mute: #6b7480;
+  --color-hairline: #243040;
   --color-accent: #4fc3d9;
   --color-glow: #8fa8ff;
   --color-warn: #e8b96e;
@@ -66,7 +66,7 @@
   *::before,
   *::after {
     box-sizing: border-box;
-    border-color: var(--color-border);
+    border-color: var(--color-hairline);
   }
 
   html {
@@ -77,7 +77,7 @@
 
   body {
     background-color: var(--color-base);
-    color: var(--color-text);
+    color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.6;
@@ -89,7 +89,7 @@
 
   ::selection {
     background: color-mix(in oklab, var(--color-accent) 35%, transparent);
-    color: var(--color-text);
+    color: var(--color-fg);
   }
 
   :focus-visible {
