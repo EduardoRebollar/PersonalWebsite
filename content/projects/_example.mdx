@@ -1,0 +1,52 @@
+# Case study example
+
+A throwaway MDX file that proves the `/work/[slug]` route is wired end-to-end. Replaced in Phase 3 by the four real case studies (LA History, Interactivity & Interpretability, BiLSTM vs FFNN, Reddit Sentiment).
+
+## Why this exists
+
+Every Markdown element should have the right typography here. Headings stack with breathing room. Body text reads on translucent surfaces over the terrain. Code is monospaced and boxed: `bun run dev`.
+
+## What you can do in MDX
+
+Bullet lists work normally:
+
+- Pull paragraphs from the project's research paper.
+- Embed figures with `<Figure>`.
+- Link to live demos and repos.
+- Mix Markdown and React freely.
+
+Ordered lists, too:
+
+1. Read the README.
+2. Run the demo.
+3. Read the paper if you want depth.
+
+<TechStack items={['Python', 'PyTorch', 'pandas', 'Next.js']} />
+
+<Aside tone="note" title="Phase 3 plan">
+  Each hero project ships an MDX case study with: problem framing, approach,
+  results, and what was learned. Figures and tech-stack pills will live in MDX,
+  surrounding narrative will be paraphrased from the project's paper (not pasted
+  verbatim).
+</Aside>
+
+> Sometimes a quote from the paper or a stakeholder says it best.
+> Block quotes carry weight here.
+
+<Aside tone="warn" title="Heads-up">
+  Code blocks inherit the design tokens; fenced blocks get the surface
+  background and a 1px hairline.
+</Aside>
+
+```ts
+// Just to prove fenced code blocks render
+import { projectMDX } from '@/lib/mdx';
+
+export async function load(slug: string) {
+  const loader = projectMDX[slug];
+  if (!loader) return null;
+  return loader();
+}
+```
+
+That's it. Real case studies replace this file slug-by-slug as the project content lands.
