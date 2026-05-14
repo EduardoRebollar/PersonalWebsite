@@ -3,6 +3,7 @@ import { fontClassNames } from './fonts';
 import { Providers } from './providers';
 import { Nav } from '@/components/ui/Nav';
 import { Footer } from '@/components/ui/Footer';
+import { SceneMount } from '@/components/scene/SceneMount';
 import { SkipToContent } from '@/components/a11y/SkipToContent';
 import { site } from '@/content/data/site';
 import './globals.css';
@@ -48,8 +49,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <Providers>
           <SkipToContent />
+          <SceneMount />
           <Nav />
-          <main id="content">{children}</main>
+          <main id="content" className="relative z-10">
+            {children}
+          </main>
           <Footer />
         </Providers>
       </body>
