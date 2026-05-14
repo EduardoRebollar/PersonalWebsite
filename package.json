@@ -1,0 +1,52 @@
+{
+  "name": "eduardorebollar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal portfolio — Eduardo Rebollar",
+  "author": "Eduardo Rebollar <eduardorebollar2121@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "bun@1.3.14",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "analyze": "ANALYZE=true next build"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@next/mdx": "^15.1.6",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.17.14",
+    "clsx": "^2.1.1",
+    "detect-gpu": "^5.0.61",
+    "next": "^15.1.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remark-gfm": "^4.0.0",
+    "tailwind-merge": "^2.6.0",
+    "three": "^0.171.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^15.1.6",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.10.7",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/three": "^0.171.0",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.6",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.10",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3"
+  }
+}

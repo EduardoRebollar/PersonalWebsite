@@ -1,0 +1,10 @@
+# Bun configuration
+# Docs: https://bun.sh/docs/runtime/bunfig
+
+[install]
+# Use the standard registry; deterministic installs.
+exact = false
+production = false
+
+[install.cache]
+disable = false
