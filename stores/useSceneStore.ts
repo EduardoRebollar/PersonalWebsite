@@ -22,6 +22,7 @@ export type SceneState = {
   liteMode: boolean;
   liteModeOverridden: boolean;
   activeSection: string;
+  sectionProgress: number;
 
   initialize: (params: {
     hasWebGL2: boolean;
@@ -34,6 +35,7 @@ export type SceneState = {
   toggleLiteMode: () => void;
   setLiteMode: (value: boolean) => void;
   setActiveSection: (slug: string) => void;
+  setSectionProgress: (progress: number) => void;
 };
 
 function computeAutoLite(params: {
@@ -54,6 +56,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   liteMode: false,
   liteModeOverridden: false,
   activeSection: 'hero',
+  sectionProgress: 0,
 
   initialize: (params) =>
     set({
@@ -98,6 +101,8 @@ export const useSceneStore = create<SceneState>((set) => ({
     }),
 
   setActiveSection: (slug) => set({ activeSection: slug }),
+
+  setSectionProgress: (progress) => set({ sectionProgress: progress }),
 }));
 
 /**

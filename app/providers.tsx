@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { MotionConfig } from 'motion/react';
 import { DeviceDetector } from '@/components/a11y/DeviceDetector';
 import { SmoothScroll } from '@/components/scene/SmoothScroll';
+import { ScrollDriver } from '@/components/scene/ScrollDriver';
 
 /**
  * Single client boundary for app-wide providers.
@@ -20,6 +21,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <DeviceDetector />
       <SmoothScroll />
+      <ScrollDriver />
       {children}
     </MotionConfig>
   );

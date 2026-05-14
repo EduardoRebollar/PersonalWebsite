@@ -22,6 +22,16 @@ const eslintConfig = [
       'react/no-unknown-property': 'off',
     },
   },
+  {
+    // R3F components inside useFrame intentionally mutate camera, mesh,
+    // and uniform refs each frame — that's the idiomatic pattern. The
+    // react-hooks/immutability rule isn't aware of useFrame's contract,
+    // so we turn it off for scene code only.
+    files: ['components/scene/**/*.{ts,tsx}'],
+    rules: {
+      'react-hooks/immutability': 'off',
+    },
+  },
 ];
 
 export default eslintConfig;
