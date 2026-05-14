@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* -----------------------------------------------------------------------------
+ * Design tokens — Palette A "Deep Oceanic"
+ * Source of truth for colors, fonts, motion. Consumed by Tailwind v4 via @theme.
+ * Token names map directly to utilities: --color-base → bg-base, text-base, etc.
+ * --------------------------------------------------------------------------- */
+
+@theme {
+  /* Colors */
+  --color-base: #0a1018;
+  --color-surface: #131b26;
+  --color-elev: #1a2433;
+  --color-text: #e8edf2;
+  --color-text-mute: #6b7480;
+  --color-border: #243040;
+  --color-accent: #4fc3d9;
+  --color-glow: #8fa8ff;
+  --color-warn: #e8b96e;
+
+  /* Font families — variables set by next/font/google in app/fonts.ts */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Type scale — fluid clamps for headings, fixed for body */
+  --text-display: clamp(2.75rem, 8vw, 7rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: clamp(2rem, 4vw, 3.5rem);
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.015em;
+
+  --text-h2: clamp(1.5rem, 3vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-h3: clamp(1.125rem, 2vw, 1.5rem);
+  --text-h3--line-height: 1.25;
+
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.08em;
+
+  /* Container widths */
+  --container-prose: 42rem; /* max-w-prose-custom */
+  --container-shell: 72rem; /* max-w-shell */
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* -----------------------------------------------------------------------------
+ * Base layer — resets, body defaults, accessibility utilities.
+ * --------------------------------------------------------------------------- */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    color: var(--color-text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Reduce motion when the OS asks for it. JS providers add a class for
+     the in-app toggle; this CSS rule covers the OS-level case directly. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* -----------------------------------------------------------------------------
+ * Component layer — small shared patterns used in multiple sections.
+ * --------------------------------------------------------------------------- */
+
+@layer components {
+  .container-shell {
+    width: 100%;
+    max-width: var(--container-shell);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-shell {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  .container-prose {
+    width: 100%;
+    max-width: var(--container-prose);
+    margin-inline: auto;
+  }
+
+  /* A11y: hide visually but keep in the accessibility tree. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
