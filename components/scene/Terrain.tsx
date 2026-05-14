@@ -76,7 +76,11 @@ export function Terrain() {
   const solidRef = useRef<THREE.Mesh>(null);
   const wireRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
+    // Shader-uniform mutation is the idiomatic R3F pattern: avoiding the
+    // react-hooks/immutability complaint here keeps the eslint rule on
+    // everywhere else.
+    // eslint-disable-next-line react-hooks/immutability
     uniforms.uTime.value += delta;
     uniforms.uCameraPos.value.copy(camera.position);
   });
