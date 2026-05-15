@@ -7,10 +7,12 @@ import { Container } from './Container';
 import { LiteModeToggle } from '@/components/a11y/LiteModeToggle';
 import { navLinks, site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
+import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const isDemoRoute = useIsLaHistoryDemoRoute();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -27,6 +29,8 @@ export function Nav() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+
+  if (isDemoRoute) return null;
 
   return (
     <header

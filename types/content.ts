@@ -42,6 +42,7 @@ export type Project = {
   links?: {
     live?: string;
     repo?: string;
+    demo?: string;
   };
   challenges?: string[];
   featured?: boolean;

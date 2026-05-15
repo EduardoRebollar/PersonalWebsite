@@ -17,6 +17,9 @@ export const projects: Project[] = [
     year: 2025,
     tier: 'hero',
     tech: ['Python', 'Flask', 'SQLAlchemy', 'Leaflet', 'Ollama'],
+    links: {
+      demo: '/work/la-history/play',
+    },
   },
   {
     slug: 'interactivity-and-interpretability',

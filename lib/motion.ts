@@ -19,3 +19,13 @@ export const duration = {
 
 export type EaseToken = keyof typeof easing;
 export type DurationToken = keyof typeof duration;
+
+/**
+ * Reads the OS-level `prefers-reduced-motion` media query. Safe in SSR —
+ * returns false on the server. Use at call time (not at module init) so
+ * the value reflects the current OS setting.
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ComponentType } from 'react';
+import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
 
 /**
  * Client-only canvas mount. We deliberately do NOT use next/dynamic({ ssr:
@@ -14,8 +15,10 @@ import { useEffect, useState, type ComponentType } from 'react';
  */
 export function SceneMount() {
   const [World, setWorld] = useState<ComponentType | null>(null);
+  const isDemoRoute = useIsLaHistoryDemoRoute();
 
   useEffect(() => {
+    if (isDemoRoute) return;
     let cancelled = false;
     import('./World').then((mod) => {
       if (cancelled) return;
@@ -24,8 +27,8 @@ export function SceneMount() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isDemoRoute]);
 
-  if (!World) return null;
+  if (isDemoRoute || !World) return null;
   return <World />;
 }

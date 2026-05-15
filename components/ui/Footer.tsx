@@ -1,8 +1,13 @@
+'use client';
+
 import { Container } from './Container';
 import { site } from '@/content/data/site';
+import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const isDemoRoute = useIsLaHistoryDemoRoute();
+  if (isDemoRoute) return null;
 
   return (
     <footer className="relative z-10 border-t border-hairline bg-base/40 py-8 backdrop-blur-sm">
