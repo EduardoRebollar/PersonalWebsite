@@ -1,0 +1,55 @@
+## The question
+
+Manually moderating online toxicity is expensive and inconsistent, so social platforms increasingly lean on automated classifiers. But how much does the model's architecture really matter once you fix the data, the preprocessing, and the training budget?
+
+I built two multi-label toxicity classifiers on the [Jigsaw Toxic Comment Classification](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge) dataset — a feedforward baseline and a bidirectional LSTM with attention — and held *everything else* constant: the same 20k-token vocabulary, the same 75-token sequence length, the same `BCEWithLogitsLoss`, the same six toxicity labels (`toxic`, `severe_toxic`, `obscene`, `threat`, `insult`, `identity_hate`). The only thing varying was the network in the middle.
+
+## Approach
+
+**The baseline** is a feedforward network — an embedding layer, two dense ReLU layers with dropout, and a six-headed sigmoid output. No recurrence, no attention. It reads the input as a bag of tokens.
+
+**The advanced model** is a bidirectional LSTM with attention — embeddings flow through a BiLSTM, an attention layer scores the timesteps, and the weighted hidden states feed a six-headed sigmoid output. The architecture has access to *order* and *context*, which a feedforward bag-of-tokens model has thrown away.
+
+<TechStack items={['Python', 'PyTorch', 'pandas', 'NumPy', 'scikit-learn', 'Matplotlib', 'Seaborn']} />
+
+The training pipeline was the careful part. Tokenization, vocabulary capping at 20k, sequence padding/truncation at 75, label re-balancing, train/val/test splits — all factored so a single `train.py` produces both models from the same data path. That's the part of the project I want to point to: the *experiment*, not the leaderboard.
+
+## What the comparison surfaced
+
+<Figure
+  src="/projects/bilstm-vs-ffnn/heatmap_differences.png"
+  alt="Diverging heatmap + ranked bar showing signed mean prediction gap per label"
+  caption="Signed mean prediction gap, FFNN minus BiLSTM. Positive bars: FFNN is more confident on that label."
+/>
+
+Across the six labels, the BiLSTM and FFNN agreed strongly on the easy categories (`toxic`, `obscene`) and disagreed most on the rarer, context-heavy ones (`threat`, `identity_hate`). The feedforward model tended to over-predict — louder confidence on more comments — while the BiLSTM held back unless the surrounding tokens lined up.
+
+<Figure
+  src="/projects/bilstm-vs-ffnn/summary_means.png"
+  alt="Grouped bar chart of average prediction confidence per label, FFNN vs BiLSTM"
+  caption="Average prediction confidence per label. The Δ chips highlight where the two architectures diverge."
+/>
+
+<Figure
+  src="/projects/bilstm-vs-ffnn/summary_metrics.png"
+  alt="Two-panel dashboard: per-label Pearson correlation and mean absolute difference"
+  caption="Per-label Pearson correlation (left) and mean absolute difference (right) between the two models' predictions."
+/>
+
+The headline: **the attention layer earns its keep on the labels that matter most for safety** — the ones where over-flagging would be costly, and where the BiLSTM's restraint is the desirable behavior. On the bulk classes, the architecture difference is marginal.
+
+## What I'd do next
+
+A few directions I'd take the project in:
+
+- **Pretrained embeddings** (GloVe, fastText) instead of training from scratch — most of the FFNN's deficit is probably representation-quality, not architecture.
+- **Transformer fine-tune** as a third arm — a 4M-parameter BiLSTM was the right scope for a coursework project, but the conversation has clearly moved on from custom RNNs.
+- **Per-class threshold calibration** — the multi-label setup means a single decision threshold isn't optimal for all six labels simultaneously.
+
+## Read the paper
+
+The full write-up — methodology, hyperparameters, ablations, discussion — lives in the project's research report:
+
+[Download paper (PDF, ~4 MB) ↗](/projects/bilstm-vs-ffnn/paper.pdf)
+
+Source on [GitHub](https://github.com/EduardoRebollar/BiLSTM-vs-Feedforward-Neural-Networks-for-Toxicity-Detection).

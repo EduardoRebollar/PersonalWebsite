@@ -16,6 +16,7 @@ type MDXModule = {
 
 export const projectMDX: Record<string, () => Promise<MDXModule>> = {
   '_example': () => import('@/content/projects/_example.mdx'),
+  'bilstm-vs-ffnn': () => import('@/content/projects/bilstm-vs-ffnn.mdx'),
 };
 
 export function hasMDX(slug: string): boolean {

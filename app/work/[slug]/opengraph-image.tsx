@@ -46,18 +46,34 @@ export default async function Image({ params }: { params: Promise<RouteParams> }
           }}
         >
           <div style={{ width: 10, height: 10, borderRadius: 5, background: '#4fc3d9' }} />
-          {site.name}
+          <div style={{ display: 'flex' }}>{site.name}</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ fontSize: 72, lineHeight: 1.05, color: '#e8edf2', maxWidth: 980 }}>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 72,
+              lineHeight: 1.05,
+              color: '#e8edf2',
+              maxWidth: 980,
+            }}
+          >
             {title}
           </div>
-          {tagline && (
-            <div style={{ fontSize: 28, color: '#8fa8ff', maxWidth: 980, lineHeight: 1.4 }}>
+          {tagline ? (
+            <div
+              style={{
+                display: 'flex',
+                fontSize: 28,
+                color: '#8fa8ff',
+                maxWidth: 980,
+                lineHeight: 1.4,
+              }}
+            >
               {tagline}
             </div>
-          )}
+          ) : null}
         </div>
 
         <div
@@ -71,8 +87,8 @@ export default async function Image({ params }: { params: Promise<RouteParams> }
             textTransform: 'uppercase',
           }}
         >
-          <div>{project?.year ?? ''}</div>
-          <div>eduardorebollar.vercel.app</div>
+          <div style={{ display: 'flex' }}>{String(project?.year ?? '')}</div>
+          <div style={{ display: 'flex' }}>eduardorebollar.vercel.app</div>
         </div>
       </div>
     ),

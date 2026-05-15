@@ -31,10 +31,13 @@ export const projects: Project[] = [
     slug: 'bilstm-vs-ffnn',
     title: 'BiLSTM vs Feedforward NNs for Toxicity Detection',
     tagline:
-      'PLACEHOLDER: Comparing recurrent and feedforward architectures on a toxicity-classification benchmark.',
+      'Two neural architectures, six toxicity labels, one question: does attention earn its keep?',
     year: 2024,
     tier: 'hero',
-    tech: ['Python', 'PyTorch', 'NLP'],
+    tech: ['Python', 'PyTorch', 'pandas', 'Matplotlib'],
+    links: {
+      repo: 'https://github.com/EduardoRebollar/BiLSTM-vs-Feedforward-Neural-Networks-for-Toxicity-Detection',
+    },
   },
   {
     slug: 'reddit-sentiment',
