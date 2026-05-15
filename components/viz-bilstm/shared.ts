@@ -1,7 +1,10 @@
-// Shared palette, Nivo theme, label dictionary, and TypeScript types for the
-// FFNN vs BiLSTM prediction visualizations. Mirrors the palette used by the
-// matplotlib version in compare_predictions.py so static and interactive
-// renderings look like the same family.
+// BiLSTM-specific palette + label dictionary + data-shape types.
+// Generic chart chrome (fontStack, nivoTheme, neutral colors) is re-exported
+// from lib/nivo-theme so this directory and viz-interactivity stay in sync.
+
+import { chartNeutrals, fontStack, nivoTheme } from "@/lib/nivo-theme";
+
+export { fontStack, nivoTheme };
 
 export const palette = {
   baseline:  "#1F3A93",  // deep royal navy   -> FFNN
@@ -10,53 +13,11 @@ export const palette = {
   bilstm2:   "#F4A261",  // warm amber accent
   neutral:   "#1B9E91",  // teal accent for differences
   muted:     "#8C97A8",
-  text:      "#0F1B2D",
-  subtext:   "#5C6A82",
-  canvas:    "#F7F8FB",
-  rule:      "#E1E5EC",
+  text:      chartNeutrals.text,
+  subtext:   chartNeutrals.subtext,
+  canvas:    chartNeutrals.canvas,
+  rule:      chartNeutrals.rule,
 } as const;
-
-export const fontStack =
-  '"Inter", "DejaVu Sans", system-ui, -apple-system, "Segoe UI", sans-serif';
-
-export const nivoTheme = {
-  background: "transparent",
-  text: { fontSize: 11, fill: palette.subtext, fontFamily: fontStack },
-  axis: {
-    domain: { line: { stroke: "#D9DEE7", strokeWidth: 1 } },
-    ticks: {
-      line: { stroke: "#D9DEE7", strokeWidth: 1 },
-      text: { fill: palette.subtext, fontSize: 10, fontFamily: fontStack },
-    },
-    legend: {
-      text: {
-        fill: palette.subtext, fontSize: 11, fontWeight: 600,
-        fontFamily: fontStack,
-      },
-    },
-  },
-  grid: { line: { stroke: "#ECEFF4", strokeWidth: 1 } },
-  legends: {
-    text: {
-      fill: palette.text, fontSize: 11, fontWeight: 600, fontFamily: fontStack,
-    },
-  },
-  tooltip: {
-    container: {
-      background: "#FFFFFF",
-      color: palette.text,
-      fontSize: 12,
-      fontFamily: fontStack,
-      borderRadius: 8,
-      boxShadow: "0 4px 14px rgba(15,27,45,0.10)",
-      padding: "8px 10px",
-      border: `1px solid ${palette.rule}`,
-    },
-  },
-  annotations: {
-    text: { fontSize: 11, fill: palette.text, fontFamily: fontStack },
-  },
-};
 
 export const labelDisplayNames: Record<string, string> = {
   toxic:         "Toxic",

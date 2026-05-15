@@ -108,13 +108,10 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 
 - **`/resume.pdf`** is referenced from `site.resumeHref` but file doesn't exist yet — link 404s.
 - **Custom domain** (currently `eduardorebollar.vercel.app`).
-- **React port of the Interactivity & Interpretability dashboard** — currently shows the Tableau-rendered SVG. A `<InteractivityViz />` React component will replace it.
 - **Recorded demo / screenshots** for LA History (no app screenshots exist; case study is text-driven).
-- **Embed Nivo charts** from BiLSTM project (`viz_components/` in source). Currently text + static figures.
-- **`<noscript>` fallback** — `motion.*` entrance animations leave content at `opacity: 0` if JS doesn't hydrate. ~99 % of traffic has JS; track as known limitation.
 - **Sweep over remaining mid-sized PNGs** (270–350 KB each in projects/) — would save ~150–200 KB.
 - **Bundle analyzer pass** — run `bun run analyze` to surface dep-side optimization opportunities.
-- **`backdrop-blur-md` performance on low-end Android** — every section has it; could be a perf concern on bottom-tier devices. Auto-lite covers most of this.
+- **`backdrop-blur-md` performance** — now respects `prefers-reduced-transparency: reduce` globally. If Speed Insights flags INP/CLS regressions on low-end Android specifically, consider a lite-mode/GPU-tier gate on top.
 
 ## When something feels off
 

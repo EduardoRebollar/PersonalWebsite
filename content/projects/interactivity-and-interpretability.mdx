@@ -10,11 +10,7 @@ A four-week mini-project at Occidental tackled this directly. The senior-comps c
 
 I built **two Tableau dashboards with identical layouts** — a bar chart for cross-country snapshots, a line graph for temporal trends — and identical data: [Our World in Data's per-capita energy consumption](https://ourworldindata.org/) (compiled from the U.S. EIA and the Energy Institute's *Statistical Review of World Energy*), covering all countries from 1965 onward. The only thing differing between the two versions was **whether the interactivity was on**: filtering by country, click-to-isolate a line, sortable legend.
 
-<Figure
-  src="/projects/interactivity-and-interpretability/static-dashboard.svg"
-  alt="Static dashboard composition: bar chart on top, multi-country line graph below"
-  caption="The static variant. Bar chart for snapshot comparisons, line graph for temporal trends — the same composition the interactive group saw, minus the controls."
-/>
+<InteractivityViz />
 
 Holding the visual layout and data constant was the whole point: any difference in performance across the two groups had to be attributable to interactivity itself, not to a different chart choice or a more readable dataset.
 
@@ -74,7 +70,7 @@ And **add the directional-change indicators** the mini-project participants kept
 
 ## The interactive port
 
-The senior comps' Python dashboard is the basis for a React port that will eventually replace the static SVG above with an embedded `<InteractivityViz />` component, so visitors here can experience the comparison without leaving the page. *In progress.*
+The dashboard at the top of this page is the React port — same two-chart composition the mini-project used, with a static↔interactive toggle so visitors can replay the between-subjects condition manipulation themselves. The data is a hand-curated approximation of [Our World in Data's per-capita energy series](https://ourworldindata.org/energy); the senior comps' Plotly/Dash dashboard remains the canonical version for the actual research.
 
 ## Read the papers
 

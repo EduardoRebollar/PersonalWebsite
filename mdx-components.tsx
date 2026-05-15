@@ -10,6 +10,7 @@ import {
   HistogramsGrid,
   DiffDistGrid,
 } from '@/components/viz-bilstm';
+import { InteractivityViz } from '@/components/viz-interactivity';
 import { cn } from '@/lib/cn';
 
 /**
@@ -146,6 +147,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ScatterDensityGrid,
     HistogramsGrid,
     DiffDistGrid,
+
+    // Interactivity & Interpretability case-study viz
+    InteractivityViz,
 
     ...components,
   };
