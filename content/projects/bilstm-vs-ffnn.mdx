@@ -22,9 +22,17 @@ The training pipeline was the careful part. Tokenization, vocabulary capping at 
 
 Across the six labels, the BiLSTM and FFNN agreed strongly on the easy categories (`toxic`, `obscene`) and disagreed most on the rarer, context-heavy ones (`threat`, `identity_hate`). The feedforward model tended to over-predict — louder confidence on more comments — while the BiLSTM held back unless the surrounding tokens lined up.
 
+The underlying distributions back this up. Where the FFNN's mass sits well to the right of zero on the rare labels, the BiLSTM keeps a heavier left tail — fewer high-confidence predictions on the categories where over-flagging would be costly.
+
+<HistogramsGrid data={vizData} />
+
 <MeansBar data={vizData} />
 
 <MetricsDashboard data={vizData} />
+
+Subtracting the BiLSTM's prediction from the FFNN's, per comment per label, makes the asymmetry direct: positive differences (blue tint) dominate exactly the labels where the BiLSTM's restraint is the desirable behavior.
+
+<DiffDistGrid data={vizData} />
 
 <ScatterDensityGrid data={vizData} />
 

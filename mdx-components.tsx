@@ -7,6 +7,8 @@ import {
   SignedGapPanel,
   MetricsDashboard,
   ScatterDensityGrid,
+  HistogramsGrid,
+  DiffDistGrid,
 } from '@/components/viz-bilstm';
 import { cn } from '@/lib/cn';
 
@@ -142,6 +144,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     SignedGapPanel,
     MetricsDashboard,
     ScatterDensityGrid,
+    HistogramsGrid,
+    DiffDistGrid,
 
     ...components,
   };
