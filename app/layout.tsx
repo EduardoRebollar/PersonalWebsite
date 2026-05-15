@@ -6,6 +6,8 @@ import { Footer } from '@/components/ui/Footer';
 import { SceneMount } from '@/components/scene/SceneMount';
 import { SkipToContent } from '@/components/a11y/SkipToContent';
 import { site } from '@/content/data/site';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -56,6 +58,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
         </Providers>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
