@@ -22,7 +22,7 @@ export const projects: Project[] = [
     slug: 'interactivity-and-interpretability',
     title: 'Interactivity & Interpretability',
     tagline:
-      'A senior-comps user study on whether dashboard interactivity actually helps readers — or just hides the work.',
+      'A user study on whether dashboard interactivity actually improves interpretation — or just makes it feel easier.',
     year: 2025,
     tier: 'hero',
     tech: ['Tableau', 'SVG', 'D3', 'React (port)', 'user study'],

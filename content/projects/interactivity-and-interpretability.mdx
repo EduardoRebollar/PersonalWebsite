@@ -1,48 +1,82 @@
 ## The question
 
-PLACEHOLDER: one-paragraph framing of what the senior-comps project is asking. Something like: "Dashboard authors add interactive controls to help readers explore data, but does interactivity actually improve interpretability — or does it just hide complexity behind clicks?" Replace with the project's actual research question once you share it.
+Dashboards have moved from analyst tools into everyday decision infrastructure — doctors triage with them, journalists use them to explain elections, the Johns Hopkins COVID-19 dashboard shaped how an entire pandemic was understood. The design and interaction choices baked into these dashboards meaningfully change what people conclude from the data they show. So when authors add interactive controls — filtering, line isolation, sorting — does that interactivity actually help users *interpret* the data more accurately, or does it primarily make the experience *feel* easier while leaving the conclusions unchanged?
 
-<TechStack items={['Tableau', 'D3', 'React (port)', 'SVG', 'user study']} />
+A four-week mini-project at Occidental tackled this directly. The senior-comps continuation widens the scope and fixes the methodological holes the mini-project surfaced.
 
-## The dataset and dashboard
+<TechStack items={['Tableau Public', 'SVG', 'Google Forms', 'Likert + open-ended', 'task-based user study']} />
 
-PLACEHOLDER: 2–3 sentences on the dataset you used (subject, source, scale) and what the dashboard surfaces about it. The original is a Tableau workbook with both a static and an interactive variant — that comparison is the *experiment*.
+## The dashboards
+
+I built **two Tableau dashboards with identical layouts** — a bar chart for cross-country snapshots, a line graph for temporal trends — and identical data: [Our World in Data's per-capita energy consumption](https://ourworldindata.org/) (compiled from the U.S. EIA and the Energy Institute's *Statistical Review of World Energy*), covering all countries from 1965 onward. The only thing differing between the two versions was **whether the interactivity was on**: filtering by country, click-to-isolate a line, sortable legend.
 
 <Figure
   src="/projects/interactivity-and-interpretability/static-dashboard.svg"
-  alt="Static dashboard composition: the version shown to the control group"
-  caption="The static variant — multi-panel composition that the control group of the user study saw."
+  alt="Static dashboard composition: bar chart on top, multi-country line graph below"
+  caption="The static variant. Bar chart for snapshot comparisons, line graph for temporal trends — the same composition the interactive group saw, minus the controls."
 />
+
+Holding the visual layout and data constant was the whole point: any difference in performance across the two groups had to be attributable to interactivity itself, not to a different chart choice or a more readable dataset.
 
 ## Methodology
 
-PLACEHOLDER: paraphrase from the *Revising Methods and Performing Evaluation* report. Likely covers:
+Six participants (ages 17–21, mostly CS students at Occidental) were randomly assigned to either the static (n=2) or interactive (n=4) condition. Each participant worked through **six interpretation tasks** designed to span a range of analytical demand:
 
-- The two dashboard variants (static vs interactive) and what the interactive controls do
-- The user-study design (who, how many, what tasks, how measured)
-- The metrics — task accuracy, time-to-insight, self-reported comprehension, etc.
+- **Q1** — *value retrieval* (highest-consuming country in 1971)
+- **Q2** — *trend judgment* (most stable trend over time)
+- **Q3** — *trend judgment* (largest increase across the window)
+- **Q4–Q5** — *open-ended* (pick two countries with differing / similar trends and explain)
+- **Q6** — *rank comparison* (did country rankings change between 1993 and 1994?)
+
+Four metrics were collected per participant: **task accuracy**, **completion time** (self-reported), a **7-point Likert** on perceived clarity / confidence / cognitive load, and **open-ended written responses** that captured the reasoning process under each task. Materials lived in a single Google Form.
+
+<Aside tone="note" title="Why a between-subjects design — and why the senior comps will flip it">
+  The mini-project ran *between-subjects* (each participant saw only one
+  version) because four weeks made counter-balancing a within-subjects design
+  impractical. With n=6 the loss of statistical power was significant. The
+  senior-comps continuation goes within-subjects so each participant serves
+  as their own control.
+</Aside>
 
 ## Findings
 
-<Aside tone="note" title="The headline">
-  PLACEHOLDER: the one-line takeaway from the evaluation. Something like
-  "interactivity helped on filter-heavy questions but didn't change accuracy on
-  overall-trend questions" — but specific to your results.
+The headline result was a clean *split between subjective experience and objective performance*.
+
+**Cognitive load fell sharply with interactivity.** On a 7-point scale, "the visualization felt overwhelming" dropped from **5.50 → 2.75** (a 2.75-point delta). "It was difficult to track multiple countries" dropped from **5.50 → 3.00**. Ease-of-use rose by 1.50 points. Open-ended responses backed this up: interactive users described filtering and line isolation as the things that made their reasoning *controllable*, while static users described struggling to mentally parse a dense, unfiltered line graph.
+
+**But task accuracy was effectively identical** between conditions. Both groups scored 100% on the three closed-ended trend tasks (Q1, Q2, Q3) and 50% on the rank-comparison task (Q6). Interactivity didn't change *what conclusions people reached* — only *how those conclusions felt to produce*.
+
+**Two results complicated the simple "interactive wins" reading**:
+
+1. **Mean completion time was longer in the interactive condition** (8:40 vs 6:37) — opposite to the pre-study expectation that filtering would shorten comparison tasks. The plausible read: interactive controls *invite exploration*, and that exploration takes wall-clock time even when it isn't moving the answer.
+2. **Self-reported confidence was marginally higher in the static condition** (6.50 vs 5.75). Static users had fewer ways to second-guess their first reading; interactive users could keep poking, and the poking shook their certainty.
+
+**Half of all participants — independently — asked for a feature neither version provided**: explicit indicators of year-over-year change (numbers or arrows). That was the project's emergent finding, and it's now RQ2 of the senior comps.
+
+<Aside tone="warn" title="What the small-n caveat actually means">
+  With six participants — only two in the static condition — these results
+  are directional, not definitive. The size and consistency of the cognitive-
+  load drop is large enough that it would probably survive a bigger study,
+  but the confidence and time results sit inside the noise. The senior-comps
+  continuation widens n significantly.
 </Aside>
 
-PLACEHOLDER: 2–3 paragraphs unpacking the results. Tables / charts can be embedded as `<Figure>` blocks once you point me at the source files. The mini-project report has the raw numbers.
+## What the senior comps changes
 
-## Ethics considerations
+Four explicit fixes to the methodological gaps in the mini-project:
 
-PLACEHOLDER: short paragraph from the ethics paper — what populations interactivity might exclude (vision-impaired users, slow-network users, mobile users without precise pointing), and what your design did or did not mitigate. This is a section recruiters notice; worth keeping deliberate.
+1. **A larger, more demographically diverse participant pool.** Out from "CS students aged 17–21."
+2. **Within-subjects** — each participant sees both versions, with order counter-balanced. Each participant is their own control, which substantially raises statistical power at the same n.
+3. **A richer scoring rubric for the open-ended tasks** — credit *depth of reasoning*, not only accuracy on look-up questions. Recognises that interactivity might support reasoning-quality even when accuracy doesn't move.
+4. **Rebuild the dashboards in an open-source Python framework** (Plotly / Dash) so the findings aren't a property of Tableau specifically. **RQ3** is whether interactivity results generalize across platforms.
+
+And **add the directional-change indicators** the mini-project participants kept requesting — testing whether that addition shifts which patterns users notice (**RQ2**).
 
 ## The interactive port
 
-The dashboard's interactive variant is being ported to React for this case study so visitors can experience the comparison without leaving the page. Currently the original Tableau workbook is the source of truth; the React port is **in progress** and will replace this static SVG with an embedded `<InteractivityViz />` component when ready.
+The senior comps' Python dashboard is the basis for a React port that will eventually replace the static SVG above with an embedded `<InteractivityViz />` component, so visitors here can experience the comparison without leaving the page. *In progress.*
 
 ## Read the papers
-
-The senior-comps proposal, the revised-methods + evaluation report, and the ethics-considerations memo:
 
 - [Senior comps proposal (PDF) ↗](/projects/interactivity-and-interpretability/senior-comps-proposal.pdf)
 - [Revised methods + evaluation (PDF) ↗](/projects/interactivity-and-interpretability/mini-project-report.pdf)
