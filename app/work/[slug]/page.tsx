@@ -3,8 +3,10 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/Container';
 import { Pill } from '@/components/ui/Pill';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { projects } from '@/content/data/projects';
 import { listMDXSlugs, projectMDX } from '@/lib/mdx';
+import { projectArticleSchema } from '@/lib/seo';
 import { site } from '@/content/data/site';
 import type { Project } from '@/types/content';
 
@@ -61,6 +63,7 @@ export default async function ProjectPage({
 
   return (
     <article className="relative z-10 pt-32 pb-24">
+      {project && <JsonLd data={projectArticleSchema(project)} />}
       <Container width="prose" className="flex flex-col gap-4">
         {project && (
           <>
