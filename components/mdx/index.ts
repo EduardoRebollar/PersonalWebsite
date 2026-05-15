@@ -6,3 +6,6 @@
 export { Figure } from './Figure';
 export { Aside } from './Aside';
 export { TechStack } from './TechStack';
+export { Lessons } from './Lessons';
+export { RepoLink } from './RepoLink';
+export { DemoLink } from './DemoLink';

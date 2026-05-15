@@ -1,7 +1,7 @@
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef } from 'react';
 import Link from 'next/link';
-import { Figure, Aside, TechStack } from '@/components/mdx';
+import { Figure, Aside, TechStack, Lessons, RepoLink, DemoLink } from '@/components/mdx';
 import { cn } from '@/lib/cn';
 
 /**
@@ -127,6 +127,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Figure,
     Aside,
     TechStack,
+    Lessons,
+    RepoLink,
+    DemoLink,
 
     ...components,
   };
