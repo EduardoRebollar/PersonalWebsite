@@ -19,7 +19,7 @@ export function LiteModeToggle() {
       aria-pressed={liteMode}
       aria-label={liteMode ? 'Switch to full 3D mode' : 'Switch to lite (no 3D) mode'}
       className={cn(
-        'group inline-flex h-8 items-center gap-2 rounded-full border border-hairline bg-surface/60 px-3 font-mono text-[11px] tracking-wider uppercase backdrop-blur-md transition-colors',
+        'group inline-flex h-9 items-center gap-2 rounded-full border border-hairline bg-surface/60 px-3 font-mono text-[11px] tracking-wider uppercase backdrop-blur-md transition-colors',
         'hover:border-accent/60 hover:text-accent',
         'focus-visible:border-accent focus-visible:text-accent',
         liteMode ? 'text-fg-mute' : 'text-fg',
