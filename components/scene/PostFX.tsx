@@ -25,7 +25,7 @@ export function PostFX() {
   const enableBloom = gpuTier >= 3;
 
   return (
-    <EffectComposer multisampling={0} disableNormalPass>
+    <EffectComposer multisampling={0} enableNormalPass={false}>
       {enableBloom ? (
         <Bloom
           intensity={0.4}
