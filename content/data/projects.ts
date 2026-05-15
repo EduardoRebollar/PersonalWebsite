@@ -43,10 +43,10 @@ export const projects: Project[] = [
     slug: 'reddit-sentiment',
     title: 'Reddit Sentiment & Market Response',
     tagline:
-      'PLACEHOLDER: Time-series analysis of how subreddit sentiment relates to stock movements.',
+      'A contrarian indicator at weekly horizons, statistical noise at quarterly. The horizon flips the answer.',
     year: 2024,
     tier: 'hero',
-    tech: ['Python', 'PRAW', 'RoBERTa', 'yfinance', 'Pandas'],
+    tech: ['Python', 'VADER', 'RoBERTa', 'yfinance', 'statsmodels', 'pandas'],
   },
   {
     slug: 'econometrics-final',

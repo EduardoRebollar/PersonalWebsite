@@ -1,0 +1,68 @@
+## The question
+
+After the 2021 GameStop surge, "does Reddit move the market?" stopped being a joke. But the academic literature on social-media sentiment and stock returns is mixed — short-horizon correlation studies say one thing, longer-horizon studies another, and the direction of causation is almost never pinned down.
+
+This project — a group final for an applied econometrics course at Occidental with [Eshan Prakash](#) and [Aaron Good](#) — asks the question at **two time scales** simultaneously: does Reddit sentiment predict stock returns at the quarterly level *and* the weekly level? And if the answer differs by horizon, which one is the real signal?
+
+<TechStack items={['Python', 'PRAW + Pullpush API', 'VADER', 'RoBERTa', 'yfinance', 'pandas', 'NumPy', 'statsmodels']} />
+
+## Approach
+
+**Data — Reddit side.** We pulled posts from r/WallStreetBets, r/stocks, and r/StockMarket for all of Q2 2023 via the Pullpush archival API. After median-engagement filtering (median upvotes *or* comments per subreddit), and requiring explicit ticker / company mentions, the working set was a few hundred thousand posts across 50 candidate tickers. 23 stocks crossed the per-ticker mention threshold and survived to analysis.
+
+**Data — market side.** Daily prices from `yfinance` covering Q2 + Q3 2023, plus SPY and five sector ETFs (XLK, XLF, XLV, XLE, ITA) as benchmarks so we could compute raw, market-adjusted, and sector-adjusted returns.
+
+**Sentiment.** VADER (a lexicon-based scorer designed for social-media text) on `title + body` for each post, then aggregated to a per-ticker mean. As a robustness check we re-ran the analysis with a finance-domain RoBERTa model — see below.
+
+**Modeling.**
+
+1. **Cross-sectional, quarterly:** OLS regression of Q3 2023 return on Q2 2023 mean sentiment, across the 23 tickers. Three flavors: raw, market-adjusted (vs SPY), sector-adjusted.
+2. **Time-series, weekly:** for the five most-discussed tickers (NVDA, TSLA, AAPL, GOOGL, MSFT), pooled OLS with lagged predictors in both directions — sentiment(t) → returns(t+1), and returns(t) → sentiment(t+1).
+
+## Results
+
+<Figure
+  src="/projects/reddit-sentiment/three_models_comparison.png"
+  alt="Three quarterly regression models showing weak positive but non-significant relationships"
+  caption="Quarterly cross-sectional regression: Q2 mean sentiment vs Q3 return across the three return measures. Weak positive trend (r ≈ 0.31), p > 0.14 — not significant in any model."
+/>
+
+**Quarterly: no signal.** The cross-sectional regression turned up a weak positive direction (Pearson *r* ≈ 0.31 in all three return measures) but failed significance everywhere (p ≈ 0.15). Reddit sentiment explains ~10% of the variance in Q3 stock returns — basically nothing.
+
+<Figure
+  src="/projects/reddit-sentiment/weekly_sentiment_to_returns.png"
+  alt="Weekly lagged regression showing significant negative relationship between this week's sentiment and next week's returns"
+  caption="Lagged regression: this week's sentiment vs next week's return. Significant negative relationship for market-adjusted (r = -0.287, p = 0.029) and sector-adjusted (r = -0.334, p = 0.010) returns."
+/>
+
+**Weekly: a contrarian signal.** Here the result flips and *holds* — high weekly sentiment is followed by *weaker* returns the next week. Significant in two of three return measures (market-adjusted *p* = 0.029, sector-adjusted *p* = 0.010). The reverse direction — does last week's return predict next week's sentiment? — produces a weak positive trend that doesn't reach significance.
+
+<Figure
+  src="/projects/reddit-sentiment/top_5_discussed.png"
+  alt="Bar chart of the top 5 most-discussed stocks: NVDA, TSLA, AAPL, GOOGL, MSFT"
+  caption="The top 5 most-discussed tickers in our scraped window. The weekly analysis pooled across these five."
+/>
+
+## What it says
+
+<Aside tone="note" title="The headline">
+  Reddit sentiment is a short-term contrarian indicator, not a long-term
+  predictor. Extreme weekly optimism on r/WallStreetBets / r/stocks is
+  followed by mean reversion, not continued upside. The same signal looks
+  *positive* on a quarterly horizon — but doesn't reach significance there.
+  Horizon is the variable that flips the answer.
+</Aside>
+
+A reading that's consistent with both findings: weekly sentiment captures the noisy retail-investor overreaction layer — useful as a fade signal but not as a buy signal. Quarterly aggregation washes out the overreaction and *might* be picking up sustained interest in fundamentally interesting companies, but our sample (23 tickers over one quarter) is too small to claim that.
+
+## Robustness — and the methodology trap
+
+The most honest finding of the project came from a robustness check we almost didn't run: re-doing the entire analysis with a finance-domain RoBERTa model instead of VADER. The two sentiment models **agreed on only ~42% of post-level labels**, and the per-ticker mean sentiments correlated at only *r* = 0.24.
+
+In other words, our "is Reddit sentiment predictive?" question silently became "is *VADER-measured* Reddit sentiment predictive?" — and a different scorer would have produced different regression coefficients on the same posts. That's the boring lesson of sentiment-and-markets work: the sentiment model is half the experiment.
+
+## Read the paper
+
+The full report — methodology, full results tables, sector analysis, diagnostics, limitations, and our pre-registered hypothesis — is at:
+
+[Download Reddit Sentiment report (PDF) ↗](/projects/reddit-sentiment/report.pdf)
