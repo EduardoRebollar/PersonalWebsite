@@ -110,6 +110,19 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* Drop GPU-expensive backdrop blur when the OS reports reduced transparency
+     (iOS/macOS Increase-Contrast, Android battery-saver, low-power browsers).
+     Section backgrounds keep their semi-transparent fill — only the blur is
+     skipped. */
+  @media (prefers-reduced-transparency: reduce) {
+    *,
+    *::before,
+    *::after {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  }
 }
 
 /* -----------------------------------------------------------------------------

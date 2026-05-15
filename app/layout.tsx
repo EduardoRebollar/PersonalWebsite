@@ -53,9 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <noscript>
           <style>{`
-            [style*="opacity:0"], [style*="opacity: 0"] { opacity: 1 !important; }
-            [style*="transform"] { transform: none !important; }
-            [style*="clip-path"] { clip-path: none !important; }
+            [style*="opacity:0;"], [style*="opacity: 0;"],
+            [style$="opacity:0"], [style$="opacity: 0"] { opacity: 1 !important; }
+            [style*="transform:"] { transform: none !important; }
+            [style*="clip-path:"] { clip-path: none !important; }
           `}</style>
         </noscript>
       </head>
