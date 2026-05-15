@@ -11,12 +11,12 @@ import type { Project } from '@/types/content';
 export const projects: Project[] = [
   {
     slug: 'la-history',
-    title: 'LA History Explorer',
+    title: 'LA History',
     tagline:
-      'PLACEHOLDER: Flask + Leaflet app surfacing layers of Los Angeles history through an interactive map.',
+      'A constructivist learning game across LA — Leaflet map, era unlocks, and a Socratic AI tutor.',
     year: 2025,
     tier: 'hero',
-    tech: ['Python', 'Flask', 'Leaflet', 'SQLite', 'HTML/CSS'],
+    tech: ['Python', 'Flask', 'SQLAlchemy', 'Leaflet', 'Ollama'],
   },
   {
     slug: 'interactivity-and-interpretability',

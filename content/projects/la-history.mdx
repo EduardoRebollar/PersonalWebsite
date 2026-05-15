@@ -1,0 +1,52 @@
+## What it is
+
+**LA History** is an educational web game that walks a player through fifteen historical locations across Los Angeles — from Tongva and Kuruvungna villages through Spanish missions and the Rancho period to modern-era landmarks like the Watts Towers and the Bradbury Building. Built as a group project at Occidental for COMP 395 *AI and Learning Technologies* with [Miranda Samayoa-Cobon](#) and [Joy Botros](#).
+
+You move across an interactive Leaflet map, read a location's history, take a short quiz, build a concept map of relationships between places, and — when you're stuck — talk to a Socratic AI tutor that asks rather than answers.
+
+<TechStack items={['Python', 'Flask', 'SQLAlchemy', 'Leaflet.js', 'Ollama (gemma)', 'vanilla JS', 'SQLite']} />
+
+## The pedagogical bet
+
+We took the position that *making connections* is what produces lasting understanding — not reading facts once and moving on. The whole app is shaped around three theories of how learning works:
+
+- **Constructivism.** Players don't passively receive facts; they *build* knowledge by exploring, quizzing, and constructing concept maps. Every interaction has to produce a mental change in the player, or it's not earning its place.
+- **Vygotsky's Zone of Proximal Development.** The Socratic tutor responds to *your* current concept map and chat history with a *guiding question*, not an answer. It pulls you forward into the next thing you almost know.
+- **Schema theory.** The concept map is where the player externalises the schema they're building — relationships between locations across eras (e.g. "Mission San Gabriel forcibly relocated Tongva from Kuruvungna").
+
+<Aside tone="note" title="Why a local LLM">
+  We ran the tutor on a local Ollama instance with `gemma:latest`. That keeps the
+  prompt + chat history off third-party servers — which matters for an
+  educational tool used by minors — and means the tutor's response style is
+  controllable rather than a moving target. Trade-off: latency is real
+  (a 4 GB model on a laptop is slow) and you'd swap for an API in production.
+</Aside>
+
+## How it's built
+
+The stack is deliberately boring: Flask 3 + SQLAlchemy 2 + SQLite for the backend, vanilla JavaScript and Leaflet for the frontend, Ollama on `localhost:11434` for the LLM. No Node build, no bundler, no SPA framework. The whole app is a few hundred lines of templates and a handful of JS event handlers attached to map markers.
+
+**Three things took most of the engineering effort:**
+
+1. **The era-unlock progression.** Locations are gated by era (Native → Spanish → Rancho → Modern). You can't just hop to Watts Towers — you have to demonstrate enough understanding of earlier eras first. That gating is a per-user state machine that the database tracks alongside points and badges.
+
+2. **The Socratic tutor's prompt design.** The tutor's system prompt isn't "answer the student's question." It's a contract: *take the current concept map state, ask a question that bridges what they have to what they don't, never reveal the connection directly*. A lot of A/B testing on prompts until the model would consistently *withhold* answers and *guide* instead.
+
+3. **The concept-map evaluator.** Every concept the player adds is scored by the LLM against the canonical relationships — "is this a real connection?" — but with partial credit for novel but defensible relationships. The evaluator returns structured JSON the app can grade against.
+
+## What I'd ship to production
+
+The repo includes a [productionization plan](/projects/la-history/productionization.md) (also linked below). The short version:
+
+- **Hosting:** containerized Flask on Fly.io. Always-on rather than serverless — the tutor streams tokens, cold-starts are unacceptable when 30 students log in at once.
+- **Database:** Postgres (Fly or Supabase) replaces SQLite. SQLAlchemy makes the migration nearly free.
+- **LLM:** Anthropic's Claude API or hosted Llama instead of local Ollama. Streams from the edge, ~50× more concurrent users at the same cost.
+- **Privacy:** student chat + concept maps are FERPA-relevant. Server-side encryption at rest, no third-party analytics, a clear data-retention policy.
+- **Cost at school-district scale:** ~$0.40/student/year for inference, dominated by the chat tutor. Caches on quiz hints (the same five questions get asked daily) bring it lower.
+
+## Read the paper
+
+The full project report — pedagogical theory, system architecture, evaluation, AI disclosure — is at:
+
+[Download LA History report (PDF) ↗](/projects/la-history/report.pdf)
+&nbsp;·&nbsp; [Productionization plan ↗](/projects/la-history/productionization.md)
