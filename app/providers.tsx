@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { MotionConfig } from 'motion/react';
 import { DeviceDetector } from '@/components/a11y/DeviceDetector';
+import { SceneDiagnostics } from '@/components/a11y/SceneDiagnostics';
 import { SmoothScroll } from '@/components/scene/SmoothScroll';
 import { ScrollDriver } from '@/components/scene/ScrollDriver';
 
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <DeviceDetector />
       <SmoothScroll />
       <ScrollDriver />
+      <SceneDiagnostics />
       {children}
     </MotionConfig>
   );
