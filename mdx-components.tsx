@@ -2,6 +2,12 @@ import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef } from 'react';
 import Link from 'next/link';
 import { Figure, Aside, TechStack, Lessons, RepoLink, DemoLink } from '@/components/mdx';
+import {
+  MeansBar,
+  SignedGapPanel,
+  MetricsDashboard,
+  ScatterDensityGrid,
+} from '@/components/viz-bilstm';
 import { cn } from '@/lib/cn';
 
 /**
@@ -130,6 +136,12 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Lessons,
     RepoLink,
     DemoLink,
+
+    // BiLSTM case-study viz (lazy-bundled into the /work/bilstm-vs-ffnn route)
+    MeansBar,
+    SignedGapPanel,
+    MetricsDashboard,
+    ScatterDensityGrid,
 
     ...components,
   };

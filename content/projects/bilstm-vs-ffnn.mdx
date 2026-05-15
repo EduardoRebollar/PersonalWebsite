@@ -1,3 +1,5 @@
+import vizData from '@/content/data/bilstm-predictions.json';
+
 ## The question
 
 Manually moderating online toxicity is expensive and inconsistent, so social platforms increasingly lean on automated classifiers. But how much does the model's architecture really matter once you fix the data, the preprocessing, and the training budget?
@@ -16,31 +18,15 @@ The training pipeline was the careful part. Tokenization, vocabulary capping at 
 
 ## What the comparison surfaced
 
-<Figure
-  src="/projects/bilstm-vs-ffnn/heatmap_differences.png"
-  alt="Diverging heatmap + ranked bar showing signed mean prediction gap per label"
-  caption="Signed mean prediction gap, FFNN minus BiLSTM. Positive bars: FFNN is more confident on that label."
-/>
+<SignedGapPanel data={vizData} />
 
 Across the six labels, the BiLSTM and FFNN agreed strongly on the easy categories (`toxic`, `obscene`) and disagreed most on the rarer, context-heavy ones (`threat`, `identity_hate`). The feedforward model tended to over-predict — louder confidence on more comments — while the BiLSTM held back unless the surrounding tokens lined up.
 
-<Figure
-  src="/projects/bilstm-vs-ffnn/summary_means.png"
-  alt="Grouped bar chart of average prediction confidence per label, FFNN vs BiLSTM"
-  caption="Average prediction confidence per label. The Δ chips highlight where the two architectures diverge."
-/>
+<MeansBar data={vizData} />
 
-<Figure
-  src="/projects/bilstm-vs-ffnn/summary_metrics.png"
-  alt="Two-panel dashboard: per-label Pearson correlation and mean absolute difference"
-  caption="Per-label Pearson correlation (left) and mean absolute difference (right) between the two models' predictions."
-/>
+<MetricsDashboard data={vizData} />
 
-<Figure
-  src="/projects/bilstm-vs-ffnn/scatter_grid.jpg"
-  alt="Six-panel hexbin density scatter of FFNN vs BiLSTM agreement across the six labels"
-  caption="Per-label hexbin density of FFNN vs BiLSTM agreement. Tight diagonals on the easy labels; wider clouds on threat / identity_hate where the architectures see different things."
-/>
+<ScatterDensityGrid data={vizData} />
 
 The headline: **the attention layer earns its keep on the labels that matter most for safety** — the ones where over-flagging would be costly, and where the BiLSTM's restraint is the desirable behavior. On the bulk classes, the architecture difference is marginal.
 
