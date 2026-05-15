@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { useSceneStore, selectShouldRenderScene } from '@/stores/useSceneStore';
 import { Atmosphere } from './Atmosphere';
 import { CameraRig } from './CameraRig';
+import { PostFX } from './PostFX';
 import { Terrain } from './Terrain';
 
 /**
@@ -37,6 +38,7 @@ export function World() {
         <Atmosphere />
         <CameraRig />
         <Terrain />
+        <PostFX />
       </Canvas>
     </div>
   );
