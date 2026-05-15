@@ -22,10 +22,10 @@ export const projects: Project[] = [
     slug: 'interactivity-and-interpretability',
     title: 'Interactivity & Interpretability',
     tagline:
-      'PLACEHOLDER: How interactive controls affect comprehension in data-visualization dashboards.',
+      'A senior-comps user study on whether dashboard interactivity actually helps readers — or just hides the work.',
     year: 2025,
     tier: 'hero',
-    tech: ['Tableau', 'D3', 'React'],
+    tech: ['Tableau', 'SVG', 'D3', 'React (port)', 'user study'],
   },
   {
     slug: 'bilstm-vs-ffnn',
@@ -51,23 +51,25 @@ export const projects: Project[] = [
   {
     slug: 'econometrics-final',
     title: 'Econometrics Final Project',
-    tagline: 'PLACEHOLDER: Applied econometrics on (topic to be confirmed).',
-    year: 2024,
+    tagline:
+      "AI's effect on developer work, measured against the 2025 Stack Overflow Developer Survey.",
+    year: 2025,
     tier: 'supporting',
-    tech: ['R', 'Stata'],
+    tech: ['Stata', 'CSV pipeline', 'Econ 272'],
   },
   {
     slug: 'spring-landscape',
     title: 'Spring Landscape',
-    tagline: 'PLACEHOLDER: one-line summary — describe in chat and I will fill in.',
+    tagline:
+      'An animated Java spring scene in progress — bouncing balls, trees, and a drifting motivating quote.',
     year: 2024,
     tier: 'supporting',
-    tech: ['PLACEHOLDER'],
+    tech: ['Java', 'AWT'],
   },
   {
     slug: 'pac-mania',
     title: 'Pac-Mania',
-    tagline: 'PLACEHOLDER: Java arcade game inspired by Pac-Man.',
+    tagline: 'A Java Pac-Man clone with maze rendering, ghost AI, and full game-state screens.',
     year: 2023,
     tier: 'supporting',
     tech: ['Java', 'Swing/AWT'],

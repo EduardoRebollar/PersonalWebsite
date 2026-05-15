@@ -4,7 +4,7 @@ export const site: SiteConfig = {
   name: 'Eduardo Rebollar',
   initials: 'ER',
   role: 'Computer Science & Economics @ Occidental College',
-  tagline: 'PLACEHOLDER: hero tagline — building at the intersection of ML, data, and the web.',
+  tagline: 'Building at the intersection of ML, data, and the web.',
   description:
     'Personal portfolio for Eduardo Rebollar — Computer Science & Economics student at Occidental College, building at the intersection of ML, data, and the web.',
   url: 'https://eduardorebollar.vercel.app',

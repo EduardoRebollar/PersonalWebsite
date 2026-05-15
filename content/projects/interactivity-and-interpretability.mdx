@@ -1,0 +1,49 @@
+## The question
+
+PLACEHOLDER: one-paragraph framing of what the senior-comps project is asking. Something like: "Dashboard authors add interactive controls to help readers explore data, but does interactivity actually improve interpretability — or does it just hide complexity behind clicks?" Replace with the project's actual research question once you share it.
+
+<TechStack items={['Tableau', 'D3', 'React (port)', 'SVG', 'user study']} />
+
+## The dataset and dashboard
+
+PLACEHOLDER: 2–3 sentences on the dataset you used (subject, source, scale) and what the dashboard surfaces about it. The original is a Tableau workbook with both a static and an interactive variant — that comparison is the *experiment*.
+
+<Figure
+  src="/projects/interactivity-and-interpretability/static-dashboard.svg"
+  alt="Static dashboard composition: the version shown to the control group"
+  caption="The static variant — multi-panel composition that the control group of the user study saw."
+/>
+
+## Methodology
+
+PLACEHOLDER: paraphrase from the *Revising Methods and Performing Evaluation* report. Likely covers:
+
+- The two dashboard variants (static vs interactive) and what the interactive controls do
+- The user-study design (who, how many, what tasks, how measured)
+- The metrics — task accuracy, time-to-insight, self-reported comprehension, etc.
+
+## Findings
+
+<Aside tone="note" title="The headline">
+  PLACEHOLDER: the one-line takeaway from the evaluation. Something like
+  "interactivity helped on filter-heavy questions but didn't change accuracy on
+  overall-trend questions" — but specific to your results.
+</Aside>
+
+PLACEHOLDER: 2–3 paragraphs unpacking the results. Tables / charts can be embedded as `<Figure>` blocks once you point me at the source files. The mini-project report has the raw numbers.
+
+## Ethics considerations
+
+PLACEHOLDER: short paragraph from the ethics paper — what populations interactivity might exclude (vision-impaired users, slow-network users, mobile users without precise pointing), and what your design did or did not mitigate. This is a section recruiters notice; worth keeping deliberate.
+
+## The interactive port
+
+The dashboard's interactive variant is being ported to React for this case study so visitors can experience the comparison without leaving the page. Currently the original Tableau workbook is the source of truth; the React port is **in progress** and will replace this static SVG with an embedded `<InteractivityViz />` component when ready.
+
+## Read the papers
+
+The senior-comps proposal, the revised-methods + evaluation report, and the ethics-considerations memo:
+
+- [Senior comps proposal (PDF) ↗](/projects/interactivity-and-interpretability/senior-comps-proposal.pdf)
+- [Revised methods + evaluation (PDF) ↗](/projects/interactivity-and-interpretability/mini-project-report.pdf)
+- [Ethics considerations (PDF) ↗](/projects/interactivity-and-interpretability/ethics-considerations.pdf)
