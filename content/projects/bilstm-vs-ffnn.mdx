@@ -36,6 +36,12 @@ Across the six labels, the BiLSTM and FFNN agreed strongly on the easy categorie
   caption="Per-label Pearson correlation (left) and mean absolute difference (right) between the two models' predictions."
 />
 
+<Figure
+  src="/projects/bilstm-vs-ffnn/scatter_grid.jpg"
+  alt="Six-panel hexbin density scatter of FFNN vs BiLSTM agreement across the six labels"
+  caption="Per-label hexbin density of FFNN vs BiLSTM agreement. Tight diagonals on the easy labels; wider clouds on threat / identity_hate where the architectures see different things."
+/>
+
 The headline: **the attention layer earns its keep on the labels that matter most for safety** — the ones where over-flagging would be costly, and where the BiLSTM's restraint is the desirable behavior. On the bulk classes, the architecture difference is marginal.
 
 ## What I'd do next
