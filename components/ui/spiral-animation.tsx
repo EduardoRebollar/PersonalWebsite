@@ -27,8 +27,7 @@ class AnimationController {
   private timeline: gsap.core.Timeline;
   private time = 0;
   private ctx: CanvasRenderingContext2D;
-  private width: number;
-  private height: number;
+  private size: number;
   private stars: Star[] = [];
 
   private readonly changeEventTime = 0.32;
@@ -39,10 +38,9 @@ class AnimationController {
   private readonly numberOfStars = 5000;
   private readonly trailLength = 80;
 
-  constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  constructor(ctx: CanvasRenderingContext2D, size: number) {
     this.ctx = ctx;
-    this.width = width;
-    this.height = height;
+    this.size = size;
     this.timeline = gsap.timeline({ repeat: -1 });
 
     this.setupRandomGenerator();
@@ -174,13 +172,10 @@ class AnimationController {
     if (!ctx) return;
 
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.fillRect(0, 0, this.size, this.size);
 
     ctx.save();
-    // Translate origin to the visual center of the viewport. We nudge up by
-    // startDotYOffset (the spiral's baked-in Y offset) so the swirl reads as
-    // centered instead of sitting slightly low.
-    ctx.translate(this.width / 2, this.height / 2 - this.startDotYOffset);
+    ctx.translate(this.size / 2, this.size / 2);
 
     const t1 = this.constrain(this.map(this.time, 0, this.changeEventTime + 0.25, 0, 1), 0, 1);
     const t2 = this.constrain(this.map(this.time, this.changeEventTime, 1, 0, 1), 0, 1);
@@ -377,16 +372,17 @@ export function SpiralAnimation() {
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
+    const size = Math.max(dimensions.width, dimensions.height);
 
-    canvas.width = dimensions.width * dpr;
-    canvas.height = dimensions.height * dpr;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
 
     canvas.style.width = `${dimensions.width}px`;
     canvas.style.height = `${dimensions.height}px`;
 
     ctx.scale(dpr, dpr);
 
-    animationRef.current = new AnimationController(ctx, dimensions.width, dimensions.height);
+    animationRef.current = new AnimationController(ctx, size);
 
     return () => {
       if (animationRef.current) {
