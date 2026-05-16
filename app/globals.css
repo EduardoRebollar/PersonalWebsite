@@ -248,4 +248,37 @@
     white-space: nowrap;
     border: 0;
   }
+
+  /* Ripple-button effect — click feedback for RippleButton / RippleLink.
+     `--button-ripple-color` is the site-wide default; per-component overrides
+     pass a `rippleColor` prop. The keyframe lives globally so 50+ buttons
+     don't each inject a <style> tag. */
+  :root {
+    --button-ripple-color: oklch(0.985 0 0 / 0.35);
+  }
+
+  @keyframes ripple-expand {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  .ripple-effect {
+    animation: ripple-expand var(--ripple-duration, 600ms) ease-out forwards;
+  }
+
+  /* Reduced-motion users still get the click feedback, just snappier.
+     The global animation-duration clamp above would otherwise force this to
+     0.01ms and skip the feedback entirely. Duration is driven by the JS hook
+     (clamped to 150ms via useSceneStore.reducedMotion). */
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-effect {
+      animation-duration: var(--ripple-duration, 150ms) !important;
+    }
+  }
 }

@@ -69,6 +69,7 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 5. **TypeScript strict — non-negotiable.** No `any`, no `@ts-ignore` without a comment explaining why.
 6. **Verify before declaring done.** `bun run type-check`, `bun run lint`, `bun run build`. Boot the dev server when you can; say so plainly when you can't fully verify.
 7. **Don't silently descope or overrun.** If something is harder than the plan anticipated, stop and report it.
+8. **Primary CTAs use `RippleButton` / `RippleLink`** (`components/ui/RippleButton.tsx`, `components/ui/RippleLink.tsx`, shared logic in `lib/useRipple.tsx`). New top-level CTAs — page-level buttons, hero/contact CTAs, MDX badge links, modal opens — should use these and pass `className` to preserve site styling. The ripple paints at `-z-10` so children don't need wrapping. Dense interactive surfaces (LA History tools at `components/laHistory/*`, viz toggles in `components/viz-*/`) intentionally keep native `<button>` for DOM-weight reasons — don't sweep those without checking.
 
 ## Constraints + gotchas
 

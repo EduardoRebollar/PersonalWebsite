@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { Container } from './Container';
+import { RippleButton } from './RippleButton';
 import { navLinks, site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
 import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
@@ -62,8 +63,7 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <RippleButton
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? 'Close menu' : 'Open menu'}
@@ -84,7 +84,7 @@ export function Nav() {
                 <path d="M4 7 L20 7 M4 17 L20 17" strokeLinecap="round" />
               )}
             </svg>
-          </button>
+          </RippleButton>
         </div>
       </Container>
 

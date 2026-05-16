@@ -11,6 +11,7 @@
 
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { RippleButton } from './RippleButton';
 import { Spotlight } from './Spotlight';
 
 const SpiralAnimation = lazy(() =>
@@ -106,15 +107,15 @@ export function SpiralSplash() {
         >
           <div className="relative rounded-full px-16 py-10">
             <Spotlight size={260} className="from-white/70 via-white/30 to-white/0" />
-            <button
+            <RippleButton
               ref={buttonRef}
-              type="button"
               onClick={() => setVisible(false)}
               aria-label="Enter site"
-              className="relative z-10 animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
+              rippleColor="rgba(255, 255, 255, 0.5)"
+              className="z-10 animate-pulse text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
             >
               Enter
-            </button>
+            </RippleButton>
           </div>
         </div>
       </div>

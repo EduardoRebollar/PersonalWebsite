@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { Container } from '@/components/ui/Container';
 import { Heading } from '@/components/ui/Heading';
+import { RippleLink } from '@/components/ui/RippleLink';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 
@@ -36,7 +37,7 @@ export function Contact() {
           transition={{ duration: 0.8, ease: easing.outExpo, delay: 0.1 }}
           className="grid gap-6 sm:grid-cols-2"
         >
-          <a
+          <RippleLink
             href={`mailto:${site.email.primary}`}
             className="group flex flex-col gap-2 rounded-2xl border border-hairline bg-surface/60 p-6 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:bg-surface/80"
           >
@@ -46,9 +47,9 @@ export function Contact() {
             <p className="font-display text-h3 leading-tight text-fg transition-colors group-hover:text-accent">
               {site.email.primary}
             </p>
-          </a>
+          </RippleLink>
           {site.email.secondary && (
-            <a
+            <RippleLink
               href={`mailto:${site.email.secondary}`}
               className="group flex flex-col gap-2 rounded-2xl border border-hairline bg-surface/60 p-6 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:bg-surface/80"
             >
@@ -58,7 +59,7 @@ export function Contact() {
               <p className="font-display text-h3 leading-tight text-fg transition-colors group-hover:text-accent">
                 {site.email.secondary}
               </p>
-            </a>
+            </RippleLink>
           )}
         </motion.div>
 

@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Container } from '@/components/ui/Container';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import { RippleLink } from '@/components/ui/RippleLink';
 import { ScrollHint } from '@/components/ui/ScrollHint';
 import { SplineScene } from '@/components/ui/SplineScene';
 import { Spotlight } from '@/components/ui/Spotlight';
@@ -83,8 +83,9 @@ export function Hero() {
               transition={{ duration: 0.8, ease: easing.outExpo, delay: 1.4 }}
               className="mt-2 flex flex-wrap items-center gap-3"
             >
-              <Link
+              <RippleLink
                 href="#work"
+                internal
                 className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/50 px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg uppercase backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:bg-surface hover:text-accent focus-visible:border-accent focus-visible:text-accent"
               >
                 See work
@@ -94,13 +95,14 @@ export function Hero() {
                 >
                   →
                 </span>
-              </Link>
-              <Link
+              </RippleLink>
+              <RippleLink
                 href="#contact"
+                internal
                 className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
               >
                 Get in touch
-              </Link>
+              </RippleLink>
             </motion.div>
           </div>
 
