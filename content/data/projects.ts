@@ -68,6 +68,9 @@ export const projects: Project[] = [
     year: 2024,
     tier: 'supporting',
     tech: ['Java', 'AWT'],
+    links: {
+      repo: 'https://github.com/EduardoRebollar/Spring-Landscape',
+    },
   },
   {
     slug: 'pac-mania',
@@ -76,6 +79,9 @@ export const projects: Project[] = [
     year: 2023,
     tier: 'supporting',
     tech: ['Java', 'Swing/AWT'],
+    links: {
+      repo: 'https://github.com/EduardoRebollar/Pac-Mania',
+    },
   },
 ];
 

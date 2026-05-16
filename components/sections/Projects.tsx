@@ -6,8 +6,20 @@ import { Heading } from '@/components/ui/Heading';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { heroProjects, supportingProjects } from '@/content/data/projects';
+import { hasMDX } from '@/lib/mdx';
 import type { Project } from '@/types/content';
 import { easing } from '@/lib/motion';
+
+function resolveSupportingLink(project: Project): { href?: string; external?: boolean } {
+  if (project.links?.repo) return { href: project.links.repo, external: true };
+  if (hasMDX(project.slug)) return { href: `/work/${project.slug}` };
+  return {};
+}
+
+function supportingAriaLabel(project: Project, external: boolean | undefined): string {
+  if (external) return `Open ${project.title} on GitHub (opens in new tab)`;
+  return `Read case study: ${project.title}`;
+}
 
 function HeroCard({ project, index }: { project: Project; index: number }) {
   return (
@@ -44,6 +56,7 @@ function HeroCard({ project, index }: { project: Project; index: number }) {
 }
 
 function SupportingCard({ project, index }: { project: Project; index: number }) {
+  const { href, external } = resolveSupportingLink(project);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -51,11 +64,24 @@ function SupportingCard({ project, index }: { project: Project; index: number })
       viewport={{ once: true, margin: '-10%' }}
       transition={{ duration: 0.6, ease: easing.outExpo, delay: index * 0.05 }}
     >
-      <Card className="gap-3 p-5">
+      <Card
+        href={href}
+        external={external}
+        ariaLabel={href ? supportingAriaLabel(project, external) : undefined}
+        className="gap-3 p-5"
+      >
         <div className="flex items-baseline justify-between gap-3">
           <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
             {project.year}
           </p>
+          {href && (
+            <span
+              aria-hidden="true"
+              className="font-mono text-[10px] text-fg-mute transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
+            >
+              ↗
+            </span>
+          )}
         </div>
         <h3 className="font-display text-lg leading-tight text-fg">{project.title}</h3>
         <p className="text-sm text-fg-mute">{project.tagline}</p>

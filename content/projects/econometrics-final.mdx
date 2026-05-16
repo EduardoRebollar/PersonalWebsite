@@ -1,0 +1,25 @@
+## What I was actually testing
+
+The 2025 Stack Overflow Developer Survey shipped with a question I had been waiting for: how often do you use AI tools in your daily work, and how do you feel about them? I wanted to know whether self-reported AI use predicted compensation once you held the obvious confounders flat — country, years of experience, education, organization size, and developer type.
+
+## Method
+
+Stata 18 throughout. I pulled the public-use survey, dropped respondents with missing or non-numeric compensation, winsorized the top and bottom 1% of `ConvertedCompYearly` to blunt the influence of a handful of half-million-dollar outliers, and converted the categorical AI-usage variable into an ordered indicator (`Never` → `Sometimes` → `Daily`).
+
+The headline regression was log-compensation on AI use, with country fixed effects and controls for `YearsCodePro`, `EdLevel`, `OrgSize`, and `DevType` (collapsed into a smaller taxonomy I built in the CSV pipeline before Stata ever saw the file). I also ran the same spec with an interaction between AI use and years of experience, because the prior I cared about — does AI flatten or steepen the seniority curve? — was an interaction question, not a level question.
+
+## Key finding
+
+The level effect was small and noisy: heavy AI users earn a few percent more than non-users, but the coefficient was statistically indistinguishable from zero once country fixed effects went in. The interaction was the interesting result. Among developers with fewer than three years of professional experience, daily AI use was associated with a meaningfully positive compensation bump; past about seven years, the sign flipped slightly negative. The compounding-on-juniors story the survey vendors like to tell shows up in the data; the senior-replacement story does not.
+
+## Limitations I want to be loud about
+
+This is a cross-sectional survey of self-selected respondents, not a treatment effect. The respondents who answered "daily" are the same population that opted into a long survey about their relationship to AI, and that's a thicker selection bias than fixed effects can sweep up. The interaction effect is the kind of finding that would not survive a panel, and I would not run a hiring decision off it.
+
+<Aside tone="note" title="Course context">
+  Final project for Econ 272 (Econometrics) at Occidental, Fall 2025. The
+  graded writeup leans harder on the regression tables; this page is the
+  shorter human-readable version.
+</Aside>
+
+<TechStack items={['Stata 18', 'Python (CSV pipeline)', 'Stack Overflow 2025 Developer Survey']} />

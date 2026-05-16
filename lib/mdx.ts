@@ -21,6 +21,7 @@ export const projectMDX: Record<string, () => Promise<MDXModule>> = {
   'reddit-sentiment': () => import('@/content/projects/reddit-sentiment.mdx'),
   'interactivity-and-interpretability': () =>
     import('@/content/projects/interactivity-and-interpretability.mdx'),
+  'econometrics-final': () => import('@/content/projects/econometrics-final.mdx'),
 };
 
 export function hasMDX(slug: string): boolean {
