@@ -30,13 +30,26 @@ export function SpiralSplash() {
     setHydrated(true);
   }, []);
 
+  // Lock body scroll only while the overlay is visible. Tied to `visible` (not
+  // unmount) so reduced-motion users — whose global CSS clamps transitions to
+  // 0.01ms — get scroll back the instant they click Enter, even if the
+  // `transitionend` event that drives unmount is flaky.
   useEffect(() => {
+    if (!visible) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, []);
+  }, [visible]);
+
+  // Fallback unmount: if `transitionend` never fires (reduced-motion clamp,
+  // tab backgrounded, etc.), force-unmount slightly after the fade window.
+  useEffect(() => {
+    if (visible) return;
+    const t = window.setTimeout(() => setMounted(false), 900);
+    return () => window.clearTimeout(t);
+  }, [visible]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -70,7 +83,7 @@ export function SpiralSplash() {
         if (!visible) setMounted(false);
       }}
       className={`fixed inset-0 z-[100] overflow-hidden bg-black transition-opacity duration-700 ease-out ${
-        visible ? 'opacity-100' : 'opacity-0'
+        visible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
       <div className="absolute inset-0">

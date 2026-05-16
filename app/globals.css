@@ -1,23 +1,114 @@
 @import "tailwindcss";
 
 /* -----------------------------------------------------------------------------
- * Design tokens — Palette A "Deep Oceanic"
- * Source of truth for colors, fonts, motion. Consumed by Tailwind v4 via @theme.
- * Token names map directly to utilities: --color-base → bg-base, text-base, etc.
+ * Design tokens — shadcn-style palette (dark-only).
+ * Legacy custom tokens (--color-base, --color-fg, etc.) are aliased in the
+ * @theme inline block below so all existing utility usages keep working.
  * --------------------------------------------------------------------------- */
 
-@theme {
-  /* Colors */
-  --color-base: #0a1018;
-  --color-surface: #131b26;
-  --color-elev: #1a2433;
-  --color-fg: #e8edf2;
-  --color-fg-mute: #8893a0;
-  --color-hairline: #243040;
-  --color-accent: #4fc3d9;
-  --color-glow: #8fa8ff;
-  --color-warn: #e8b96e;
+:root {
+  color-scheme: dark;
 
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1a212b;
+  --card-foreground: #ffffff;
+  --popover: #1a212b;
+  --popover-foreground: #ffffff;
+  --primary: #818cf8;
+  --primary-foreground: #000000;
+  --secondary: #2dd4bf;
+  --secondary-foreground: #000000;
+  --muted: #333333;
+  --muted-foreground: #cccccc;
+  --accent: #fcd34d;
+  --accent-foreground: #000000;
+  --destructive: #f87171;
+  --destructive-foreground: #000000;
+  --border: #545454;
+  --input: #ffffff;
+  --ring: #818cf8;
+
+  --chart-1: #818cf8;
+  --chart-2: #2dd4bf;
+  --chart-3: #fcd34d;
+  --chart-4: #f472b6;
+  --chart-5: #4ade80;
+
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #818cf8;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #fcd34d;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #ffffff;
+  --sidebar-ring: #818cf8;
+
+  --radius: 1rem;
+  --shadow-color: #1a1a1a;
+  --shadow-opacity: 0.05;
+  --shadow-blur: 0px;
+  --shadow-spread: 0px;
+  --shadow-offset-x: 0px;
+  --shadow-offset-y: 0px;
+}
+
+@theme inline {
+  /* Expose new shadcn tokens as Tailwind utilities
+     (bg-background, text-foreground, bg-primary, bg-card, border-border,
+      text-muted-foreground, ring-ring, etc.) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Legacy aliases — keeps every bg-base/text-fg/border-hairline/... usage
+     working without touching ~509 utility sites across 35+ files. */
+  --color-base: var(--background);
+  --color-surface: var(--card);
+  --color-elev: var(--popover);
+  --color-fg: var(--foreground);
+  --color-fg-mute: var(--muted-foreground);
+  --color-hairline: var(--border);
+  --color-accent: var(--primary);
+  --color-glow: var(--ring);
+  --color-warn: var(--accent);
+}
+
+@theme {
   /* Font families — variables set by next/font/google in app/fonts.ts */
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
@@ -58,10 +149,6 @@
  * --------------------------------------------------------------------------- */
 
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
-
   *,
   *::before,
   *::after {
