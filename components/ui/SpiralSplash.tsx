@@ -85,7 +85,7 @@ export function SpiralSplash() {
              so its translate doesn't clobber the outer's centering transform.
           3. Inner: Spotlight host (Spotlight mutates parent.style.position
              to relative + overflow:hidden, which would break #1 if applied there). */}
-      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute top-[calc(50%+1rem)] left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
         <div
           className={`transition-all duration-[1500ms] ease-out ${
             enterVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
