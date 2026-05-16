@@ -2,7 +2,7 @@
 
 import { Suspense, lazy } from 'react';
 
-const Spline = lazy(() => import('@splinetool/react-spline/next'));
+const Spline = lazy(() => import('@splinetool/react-spline'));
 
 type SplineSceneProps = {
   scene: string;
