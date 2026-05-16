@@ -6,6 +6,7 @@
 // underneath remain mounted the whole time, so anchor links work immediately.
 
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Spotlight } from './Spotlight';
 
 const SpiralAnimation = lazy(() =>
   import('./spiral-animation').then((m) => ({ default: m.SpiralAnimation })),
@@ -66,16 +67,17 @@ export function SpiralSplash() {
       </div>
 
       <div
-        className={`absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transition-all duration-[1500ms] ease-out ${
+        className={`absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full px-12 py-6 transition-all duration-[1500ms] ease-out ${
           enterVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
         }`}
       >
+        <Spotlight size={260} className="from-white/70 via-white/30 to-white/0" />
         <button
           ref={buttonRef}
           type="button"
           onClick={() => setVisible(false)}
           aria-label="Enter site"
-          className="animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.3em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
+          className="relative z-10 animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
         >
           Enter
         </button>
