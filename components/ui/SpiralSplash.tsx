@@ -75,7 +75,7 @@ export function SpiralSplash() {
           type="button"
           onClick={() => setVisible(false)}
           aria-label="Enter site"
-          className="animate-pulse text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.3em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
+          className="animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.3em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
         >
           Enter
         </button>
