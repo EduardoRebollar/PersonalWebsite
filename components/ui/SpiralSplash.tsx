@@ -79,24 +79,30 @@ export function SpiralSplash() {
         </Suspense>
       </div>
 
-      <div
-        className={`absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transition-all duration-[1500ms] ease-out ${
-          enterVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-        }`}
-      >
-        {/* Inner wrapper exists so <Spotlight /> can mutate ITS position to
-            relative without breaking the absolute centering above. */}
-        <div className="relative rounded-full px-16 py-10">
-          <Spotlight size={260} className="from-white/70 via-white/30 to-white/0" />
-          <button
-            ref={buttonRef}
-            type="button"
-            onClick={() => setVisible(false)}
-            aria-label="Enter site"
-            className="relative z-10 animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
-          >
-            Enter
-          </button>
+      {/* Three nested wrappers, each with a single job:
+          1. Outer: absolute centering only (-translate-1/2 on both axes).
+          2. Middle: entrance animation (translate-y / opacity). Kept separate
+             so its translate doesn't clobber the outer's centering transform.
+          3. Inner: Spotlight host (Spotlight mutates parent.style.position
+             to relative + overflow:hidden, which would break #1 if applied there). */}
+      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className={`transition-all duration-[1500ms] ease-out ${
+            enterVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          }`}
+        >
+          <div className="relative rounded-full px-16 py-10">
+            <Spotlight size={260} className="from-white/70 via-white/30 to-white/0" />
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={() => setVisible(false)}
+              aria-label="Enter site"
+              className="relative z-10 animate-pulse cursor-pointer text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"
+            >
+              Enter
+            </button>
+          </div>
         </div>
       </div>
     </div>
