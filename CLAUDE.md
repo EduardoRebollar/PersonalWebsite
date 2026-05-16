@@ -16,16 +16,18 @@ A personal portfolio for Eduardo Rebollar — Computer Science & Economics stude
 |-------|--------|-------|
 | Framework | Next.js 16 (App Router, Turbopack) | Migrated from 15 mid-build; supporting `@next/*` packages all bumped to ^16.2.6 |
 | Runtime / pkg mgr | bun 1.3+ | Installed via `npm install -g bun`. Vercel auto-detects the `bun.lock` |
-| React | 18.3 (NOT 19) | Stable; would need a coordinated R3F bump to move |
+| React | 19.2 | Moved off 18.3 alongside the R3F v8→v9 jump (commit `f43d45e`) — see [[project-3d-never-rendered]] for why |
 | Styling | Tailwind v4 (CSS-first) | `@theme` in `app/globals.css`; **no `tailwind.config.ts`** |
-| 3D | three.js 0.171, R3F v8, drei v9 | R3F v9 / drei v10 are out but we stay on v8 for stability |
+| 3D | three.js 0.171, R3F v9, drei v10 | Upgraded from v8/v9 to match React 19; postprocessing also bumped |
 | Smooth scroll | Lenis 1.3 | Runs on GSAP's ticker; auto-disabled under reduced motion / lite mode |
 | Scroll animation | GSAP 3 + ScrollTrigger | Drives the camera/terrain morph; per-section `top top → bottom top` |
 | UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference |
-| Post-FX | `@react-three/postprocessing` v2 + `postprocessing` 6 | v2 for R3F v8 compat |
+| Post-FX | `@react-three/postprocessing` v3 + `postprocessing` 6 | v3 for R3F v9 compat |
 | State | Zustand 5 | `stores/useSceneStore.ts` is the only global store |
 | GPU/device detect | detect-gpu 5 | Runs in DeviceDetector on mount |
 | Content | TS data files + MDX case studies | `content/data/*.ts` + `content/projects/*.mdx` |
+| Case-study viz | `@nivo/*` (bar/line/heatmap), `cytoscape` + `react-cytoscapejs`, `leaflet` + `react-leaflet` | Bundled lazily into the routes that use them (BiLSTM, Interactivity, LA History) |
+| LA History AI | `ai` v6 + `@ai-sdk/react` v3 | Tutor + concept-map chat under `/work/la-history/play`; routes in `app/api/la-history/*` |
 | Image opt | `sharp` (via Next 16) | Run-once compression in `scripts/optimize-images.mjs` |
 
 ## Folder map
@@ -39,8 +41,12 @@ components/
   sections/          One per page section (Hero, About, Education, Experience,
                        Skills, Projects, Contact)
   ui/                Container, Nav, Footer, Card, Pill, Heading, Eyebrow, ScrollHint
-  a11y/              DeviceDetector, LiteModeToggle, SkipToContent
-  mdx/               Figure, Aside, TechStack
+  a11y/              DeviceDetector, LiteModeToggle, SceneDiagnostics, SkipToContent
+  mdx/               Figure, Aside, TechStack, Lessons, RepoLink, DemoLink
+  viz-bilstm/        BiLSTM case-study charts (Nivo) — bundled into /work/bilstm-vs-ffnn
+  viz-interactivity/ Interactivity dashboard (Nivo + SVG) — bundled into /work/interactivity-…
+  laHistory/         Native Next.js port of LA History: Leaflet map, Cytoscape concept map,
+                       tutor + concept-map chat (AI SDK)
   seo/               JsonLd
 content/
   data/              site, projects, experience, education, skills (typed TS)
@@ -95,7 +101,7 @@ bun run analyze                        # ANALYZE=true next build
 bun run scripts/optimize-images.mjs    # one-off image compression
 ```
 
-## Phase status (as of last session — Phase 4 polish complete)
+## Phase status
 
 | Phase | Status |
 |-------|--------|
@@ -103,14 +109,15 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 | Phase 2 — Lenis + ScrollTrigger + camera/terrain/atmosphere morph + PostFX + cursor parallax | ✓ |
 | Phase 3 — 4 hero case studies + 3 supporting taglines; all routes live | ✓ |
 | Phase 4 — Schema.org structured data + WCAG AA contrast fix + image opt + mobile menu | ✓ |
+| Phase 5 — analytics/speed-insights, R3F v9 + React 19 upgrade, scene-actually-renders fix, embedded BiLSTM viz, InteractivityViz dashboard, native LA History port (Leaflet + Cytoscape + AI tutor), clickable supporting cards | ✓ |
 
 ## Known follow-ups (not blocking launch)
 
-- **`/resume.pdf`** is referenced from `site.resumeHref` but file doesn't exist yet — link 404s.
 - **Custom domain** (currently `eduardorebollar.vercel.app`).
 - **Recorded demo / screenshots** for LA History (no app screenshots exist; case study is text-driven).
-- **Sweep over remaining mid-sized PNGs** (270–350 KB each in projects/) — would save ~150–200 KB.
-- **Bundle analyzer pass** — run `bun run analyze` to surface dep-side optimization opportunities.
+- **Sweep over remaining mid-sized PNGs** (270–350 KB each in `public/projects/`) — would save ~150–200 KB.
+- **`remark-gfm`** is installed but not wired into `next.config.mjs` — either re-add via the Turbopack string-ref form or drop the dep.
+- **Bundle analyzer pass** — run `bun run analyze` to surface dep-side optimization opportunities (Cytoscape, Leaflet, and the Nivo bundle are the obvious heavy hitters; they're route-scoped, but worth a check).
 - **`backdrop-blur-md` performance** — now respects `prefers-reduced-transparency: reduce` globally. If Speed Insights flags INP/CLS regressions on low-end Android specifically, consider a lite-mode/GPU-tier gate on top.
 
 ## When something feels off

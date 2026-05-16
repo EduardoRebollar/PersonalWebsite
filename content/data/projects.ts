@@ -2,11 +2,8 @@ import type { Project } from '@/types/content';
 
 /**
  * Source of truth for the project showcase. Hero projects ship as deep MDX
- * case studies in Phase 3 (Step 8 wires the route); supporting projects ship
- * as compact cards only.
- *
- * Taglines marked PLACEHOLDER will be refined when the README + paper
- * mining happens in Phase 3.
+ * case studies at /work/<slug>; supporting projects render as compact cards
+ * on the home page that link to their repos.
  */
 export const projects: Project[] = [
   {
