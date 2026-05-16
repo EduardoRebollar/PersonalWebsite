@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { Container } from './Container';
-import { LiteModeToggle } from '@/components/a11y/LiteModeToggle';
 import { navLinks, site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
 import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
@@ -86,7 +85,6 @@ export function Nav() {
               )}
             </svg>
           </button>
-          <LiteModeToggle />
         </div>
       </Container>
 
