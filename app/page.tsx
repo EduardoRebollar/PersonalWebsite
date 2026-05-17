@@ -3,6 +3,7 @@ import { About } from '@/components/sections/About';
 import { Education } from '@/components/sections/Education';
 import { Experience } from '@/components/sections/Experience';
 import { Skills } from '@/components/sections/Skills';
+import { FeaturedProject } from '@/components/sections/FeaturedProject';
 import { Projects } from '@/components/sections/Projects';
 import { Contact } from '@/components/sections/Contact';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -19,6 +20,7 @@ export default function HomePage() {
       <Education />
       <Experience />
       <Skills />
+      <FeaturedProject />
       <Projects />
       <Contact />
     </>
