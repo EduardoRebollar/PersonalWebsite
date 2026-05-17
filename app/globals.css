@@ -136,7 +136,7 @@
 
   /* Container widths */
   --container-prose: 42rem; /* max-w-prose-custom */
-  --container-shell: 72rem; /* max-w-shell */
+  --container-shell: 78rem; /* max-w-shell */
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
