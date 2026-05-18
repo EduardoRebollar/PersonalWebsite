@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
+import { BackgroundBeams } from '@/components/ui/BackgroundBeams';
 import { Container } from '@/components/ui/Container';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { RippleLink } from '@/components/ui/RippleLink';
@@ -63,6 +64,8 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className="relative flex items-start overflow-hidden [zoom:0.9]"
     >
+      <BackgroundBeams />
+
       {showSpline ? (
         <div className="container-shell pointer-events-none absolute inset-x-0 inset-y-0 z-0 hidden md:block">
           <div className="relative h-full w-full">

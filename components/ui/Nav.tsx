@@ -1,18 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
+import { Briefcase, FolderGit2, Mail, User } from 'lucide-react';
 import { Container } from './Container';
+import { FloatingDock, type DockItem } from './FloatingDock';
 import { RippleButton } from './RippleButton';
 import { navLinks, site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
 import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
 
+const NAV_ICONS: Record<string, React.ReactNode> = {
+  '#about': <User className="h-full w-full" strokeWidth={1.6} />,
+  '#experience': <Briefcase className="h-full w-full" strokeWidth={1.6} />,
+  '#work': <FolderGit2 className="h-full w-full" strokeWidth={1.6} />,
+  '#contact': <Mail className="h-full w-full" strokeWidth={1.6} />,
+};
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | undefined>(undefined);
   const isDemoRoute = useIsLaHistoryDemoRoute();
+
+  const dockItems = useMemo<DockItem[]>(
+    () =>
+      navLinks.map((link) => ({
+        title: link.label,
+        href: link.href,
+        icon: NAV_ICONS[link.href] ?? null,
+      })),
+    [],
+  );
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -29,6 +49,26 @@ export function Nav() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+
+  useEffect(() => {
+    if (isDemoRoute) return;
+    const sections = navLinks
+      .map((link) => document.querySelector<HTMLElement>(link.href))
+      .filter((el): el is HTMLElement => el !== null);
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveHref(`#${visible.target.id}`);
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, [isDemoRoute]);
 
   if (isDemoRoute) return null;
 
@@ -49,18 +89,7 @@ export function Nav() {
           {site.initials}
         </Link>
 
-        <ul className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="font-mono text-[11px] tracking-wider text-fg-mute uppercase transition-colors hover:text-fg"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FloatingDock items={dockItems} activeHref={activeHref} />
 
         <div className="flex items-center gap-2">
           <RippleButton

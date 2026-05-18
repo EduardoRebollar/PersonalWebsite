@@ -18,7 +18,7 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="relative bg-base/40 py-24 backdrop-blur-md md:py-32"
+      className="relative py-24 md:py-32"
     >
       <Container>
         <motion.div

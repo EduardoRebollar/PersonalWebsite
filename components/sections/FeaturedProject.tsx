@@ -11,7 +11,7 @@ export function FeaturedProject() {
     <section
       id="featured"
       aria-labelledby="featured-heading"
-      className="relative bg-base/40 backdrop-blur-md"
+      className="relative"
     >
       <Container>
         <ContainerScroll

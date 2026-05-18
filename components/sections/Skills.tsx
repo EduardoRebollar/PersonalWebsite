@@ -51,7 +51,7 @@ export function Skills() {
     <section
       id="skills"
       aria-labelledby="skills-heading"
-      className="relative bg-base/40 py-24 backdrop-blur-md md:py-32"
+      className="relative py-24 md:py-32"
     >
       <Container className="flex flex-col gap-16">
         <Heading as="h2" id="skills-heading" eyebrow="Skills">

@@ -18,7 +18,7 @@ export function Education() {
     <section
       id="education"
       aria-labelledby="education-heading"
-      className="relative bg-base/40 py-24 backdrop-blur-md md:py-32"
+      className="relative py-24 md:py-32"
     >
       <Container className="flex flex-col gap-12">
         <Heading as="h2" id="education-heading" eyebrow="Education">

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { BackgroundBeams } from '@/components/ui/BackgroundBeams';
 import { Container } from '@/components/ui/Container';
 import { Heading } from '@/components/ui/Heading';
 import { RippleLink } from '@/components/ui/RippleLink';
@@ -12,9 +13,11 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="relative bg-base/40 py-24 backdrop-blur-md md:py-32"
+      className="relative overflow-hidden py-24 md:py-32"
     >
-      <Container className="flex flex-col gap-12">
+      <BackgroundBeams />
+
+      <Container className="relative z-10 flex flex-col gap-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
