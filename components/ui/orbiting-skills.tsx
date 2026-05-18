@@ -568,7 +568,7 @@ const SkillNode = memo(function SkillNode({
       style={{
         width: `${NODE_SIZE}px`,
         height: `${NODE_SIZE}px`,
-        transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%))`,
+        transform: `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px) translate(-50%, -50%)`,
         zIndex: hovered ? 30 : 10,
       }}
       onMouseEnter={() => setHovered(true)}
