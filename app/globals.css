@@ -279,6 +279,7 @@
     }
   }
 
+
   .ripple-effect {
     animation: ripple-expand var(--ripple-duration, 600ms) ease-out forwards;
   }

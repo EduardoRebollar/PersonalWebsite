@@ -28,7 +28,7 @@ export function Experience() {
           Where I&apos;ve worked
         </Heading>
 
-        <ul className="flex flex-col gap-6 md:gap-8">
+        <ol className="relative flex flex-col gap-6 border-l border-hairline pl-6 md:gap-8 md:pl-8">
           {experience.map((item, i) => (
             <motion.li
               key={`${item.org}-${item.start}`}
@@ -36,8 +36,12 @@ export function Experience() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.7, ease: easing.outExpo, delay: i * 0.06 }}
-              className="rounded-2xl border border-hairline bg-surface/60 p-6 backdrop-blur-md md:p-8"
+              className="relative rounded-2xl border border-hairline bg-surface/60 p-6 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_8px_24px_-12px_var(--color-accent)] md:p-8"
             >
+              <span
+                aria-hidden="true"
+                className="absolute top-7 -left-[1.84rem] h-2 w-2 rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)] md:top-9 md:-left-[2.34rem]"
+              />
               <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:justify-between md:gap-6">
                 <div className="flex flex-col gap-0.5">
                   <h3 className="font-display text-h3 leading-tight text-fg">{item.role}</h3>
@@ -74,7 +78,7 @@ export function Experience() {
               )}
             </motion.li>
           ))}
-        </ul>
+        </ol>
       </Container>
     </section>
   );

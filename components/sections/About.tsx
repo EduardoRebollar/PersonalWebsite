@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { CardBody, CardContainer, CardItem } from '@/components/ui/3DCard';
 import { Container } from '@/components/ui/Container';
 import { Heading } from '@/components/ui/Heading';
 import { site } from '@/content/data/site';
@@ -50,16 +51,23 @@ export function About() {
             )}
           </div>
 
-          <div className="relative aspect-[3/4] w-full max-w-[18rem] overflow-hidden rounded-2xl border border-hairline bg-surface/40 md:w-72">
-            <Image
-              src="/photo.jpg"
-              alt={`${site.name} portrait`}
-              fill
-              sizes="(max-width: 768px) 100vw, 288px"
-              className="object-cover"
-              priority={false}
-            />
-          </div>
+          <CardContainer>
+            <CardBody className="h-auto w-full max-w-[18rem] md:w-72">
+              <CardItem
+                translateZ={40}
+                className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-hairline bg-surface/40"
+              >
+                <Image
+                  src="/photo.jpg"
+                  alt={`${site.name} portrait`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 288px"
+                  className="object-cover"
+                  priority={false}
+                />
+              </CardItem>
+            </CardBody>
+          </CardContainer>
         </motion.div>
       </Container>
     </section>
