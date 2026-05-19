@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { Briefcase, FolderGit2, Mail, User } from 'lucide-react';
@@ -24,14 +24,26 @@ export function Nav() {
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined);
   const isDemoRoute = useIsLaHistoryDemoRoute();
 
+  const scrollToBottom = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (typeof window === 'undefined') return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
+    history.replaceState(null, '', '#contact');
+  }, []);
+
   const dockItems = useMemo<DockItem[]>(
     () =>
       navLinks.map((link) => ({
         title: link.label,
         href: link.href,
         icon: NAV_ICONS[link.href] ?? null,
+        onClick: link.href === '#contact' ? scrollToBottom : undefined,
       })),
-    [],
+    [scrollToBottom],
   );
 
   useEffect(() => {
@@ -133,7 +145,10 @@ export function Nav() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      onClick={() => setOpen(false)}
+                      onClick={(e) => {
+                        if (link.href === '#contact') scrollToBottom(e);
+                        setOpen(false);
+                      }}
                       className="block py-3 font-mono text-[12px] tracking-wider text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
                     >
                       {link.label}

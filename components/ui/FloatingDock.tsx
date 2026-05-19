@@ -17,6 +17,7 @@ export interface DockItem {
   title: string;
   href: string;
   icon: React.ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 /**
@@ -69,6 +70,7 @@ function IconContainer({
   title,
   icon,
   href,
+  onClick,
   isActive,
 }: DockItem & { mouseX: MotionValue; isActive: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -92,7 +94,7 @@ function IconContainer({
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Link href={href} aria-label={title}>
+    <Link href={href} aria-label={title} onClick={onClick}>
       <motion.div
         ref={ref}
         style={{ width, height }}
