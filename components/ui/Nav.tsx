@@ -35,15 +35,47 @@ export function Nav() {
     history.replaceState(null, '', '#contact');
   }, []);
 
+  // Place the "work-controls" row's bottom edge flush at the bottom of the
+  // viewport (minus a small gap). Computed explicitly because scrollIntoView's
+  // block:'end' is honored inconsistently across browsers.
+  const scrollWorkControlsIntoView = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const target = document.getElementById('work-controls');
+    if (!target) return;
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    const GAP = 16;
+    const rect = target.getBoundingClientRect();
+    const top = window.scrollY + rect.bottom - window.innerHeight + GAP;
+    window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+  }, []);
+
+  // "Work" scrolls to the carousel's arrow/dot controls (bottom of the
+  // section) rather than the heading, so the interactive cards are framed.
+  const scrollToWorkControls = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      scrollWorkControlsIntoView();
+      history.replaceState(null, '', '#work');
+    },
+    [scrollWorkControlsIntoView],
+  );
+
   const dockItems = useMemo<DockItem[]>(
     () =>
       navLinks.map((link) => ({
         title: link.label,
         href: link.href,
         icon: NAV_ICONS[link.href] ?? null,
-        onClick: link.href === '#contact' ? scrollToBottom : undefined,
+        onClick:
+          link.href === '#contact'
+            ? scrollToBottom
+            : link.href === '#work'
+              ? scrollToWorkControls
+              : undefined,
       })),
-    [scrollToBottom],
+    [scrollToBottom, scrollToWorkControls],
   );
 
   useEffect(() => {
@@ -81,6 +113,22 @@ export function Nav() {
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
   }, [isDemoRoute]);
+
+  // When the hash becomes #work via real navigation (link click, initial load,
+  // back/forward), the browser jumps to the section top — override it to land
+  // on the controls. pushState/replaceState don't fire hashchange, so the nav
+  // click handler above isn't double-triggered. The rAF lets the browser's
+  // native jump and layout settle before we measure.
+  useEffect(() => {
+    if (isDemoRoute) return;
+    const handleHashWork = () => {
+      if (window.location.hash !== '#work') return;
+      requestAnimationFrame(() => scrollWorkControlsIntoView());
+    };
+    handleHashWork();
+    window.addEventListener('hashchange', handleHashWork);
+    return () => window.removeEventListener('hashchange', handleHashWork);
+  }, [isDemoRoute, scrollWorkControlsIntoView]);
 
   if (isDemoRoute) return null;
 
@@ -147,6 +195,7 @@ export function Nav() {
                       href={link.href}
                       onClick={(e) => {
                         if (link.href === '#contact') scrollToBottom(e);
+                        else if (link.href === '#work') scrollToWorkControls(e);
                         setOpen(false);
                       }}
                       className="block py-3 font-mono text-[12px] tracking-wider text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"

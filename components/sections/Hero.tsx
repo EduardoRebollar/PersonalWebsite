@@ -13,7 +13,10 @@ import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 import { useSceneStore } from '@/stores/useSceneStore';
 
-const SPLINE_SCENE_URL = 'https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode';
+// Self-hosted from /public so the scene is served from Vercel's edge (with
+// long-lived caching) instead of a third-party CDN round-trip. Textures are
+// embedded in the file. To refresh, re-download the source .splinecode.
+const SPLINE_SCENE_URL = '/spline/hero.splinecode';
 
 /**
  * Hero section. Two-column layout on md+: animated copy on the left,

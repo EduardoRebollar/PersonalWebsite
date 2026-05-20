@@ -23,7 +23,7 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="relative overflow-hidden pt-24 pb-8 md:pt-32 md:pb-12"
+      className="relative overflow-hidden pt-12 pb-8 md:pt-16 md:pb-12"
     >
       <StarfieldBackground />
 

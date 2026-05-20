@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}</style>
         </noscript>
       </head>
-      <body className="font-sans">
+      <body className="font-sans" suppressHydrationWarning>
         <Providers>
           <SkipToContent />
           <Nav />

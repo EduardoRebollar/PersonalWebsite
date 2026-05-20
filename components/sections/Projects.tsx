@@ -7,6 +7,7 @@ import {
   Card,
   type CarouselCard,
 } from '@/components/ui/AppleCardsCarousel';
+import { SparklesCore } from '@/components/ui/sparkles';
 import { projects } from '@/content/data/projects';
 import { hasMDX } from '@/lib/mdx';
 import type { Project } from '@/types/content';
@@ -74,20 +75,36 @@ export function Projects() {
   const cards = projects.map((project, index) => (
     <Card key={project.slug} card={toCard(project)} index={index} />
   ));
+  const labels = projects.map((project) => project.title);
 
   return (
     <section
       id="work"
       aria-labelledby="work-heading"
-      className="relative py-24 md:py-32"
+      className="relative overflow-hidden pt-24 pb-12 md:pt-32 md:pb-16"
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
+      >
+        <SparklesCore
+          background="transparent"
+          minSize={0.4}
+          maxSize={1}
+          particleDensity={60}
+          speed={2}
+          particleColor="#ffffff"
+          className="h-full w-full"
+        />
+      </div>
+
       <Container className="flex flex-col gap-12">
-        <Heading as="h2" id="work-heading" eyebrow="Work">
+        <Heading as="h2" id="work-heading" eyebrow="Work" gapClassName="gap-2">
           Selected projects
         </Heading>
       </Container>
 
-      <Carousel items={cards} />
+      <Carousel items={cards} labels={labels} />
     </section>
   );
 }

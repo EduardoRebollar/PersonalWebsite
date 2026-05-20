@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -11,7 +12,7 @@ import {
 } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
-import { X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useOutsideClick } from '@/lib/useOutsideClick';
 import { useSceneStore } from '@/stores/useSceneStore';
@@ -54,21 +55,82 @@ export const CarouselContext = createContext<{
 const MARQUEE_MASK =
   'linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%)';
 
-const AUTO_SCROLL_PX_PER_FRAME = 0.6;
-const USER_INTERACTION_TIMEOUT_MS = 1500;
+// Shared tooltip bubble — sits above its `group relative` parent, revealed on
+// hover/focus. Used by the nav arrows and the dot controls.
+const TOOLTIP_CLASS =
+  'pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 scale-95 whitespace-nowrap rounded-md border border-hairline bg-surface px-2 py-1 font-mono text-[10px] tracking-[0.1em] text-fg opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100';
 
-export function Carousel({ items }: { items: ReactElement[] }) {
+const AUTO_SCROLL_PX_PER_FRAME = 0.6;
+const USER_INTERACTION_TIMEOUT_MS = 2500;
+
+export function Carousel({
+  items,
+  labels,
+}: {
+  items: ReactElement[];
+  /** One label per item, index-aligned — shown as a tooltip on dot hover/focus. */
+  labels?: readonly string[];
+}) {
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const userInteractingRef = useRef(false);
   const userInteractTimerRef = useRef<number | null>(null);
   const hasCenteredRef = useRef(false);
 
+  const itemCount = items.length;
+
   // Triple the items so the user can wrap-around in either direction with
   // room to spare. The middle copy is canonical; the outer copies are clones.
   const tripled = [...items, ...items, ...items];
+
+  // Mark the user as actively interacting, which suspends the auto-scroll loop
+  // until the timeout elapses. Shared by the native wheel/touch listeners and
+  // the arrow/dot controls. Refs only → stable identity.
+  const markInteracting = useCallback(() => {
+    userInteractingRef.current = true;
+    if (userInteractTimerRef.current !== null) {
+      window.clearTimeout(userInteractTimerRef.current);
+    }
+    userInteractTimerRef.current = window.setTimeout(() => {
+      userInteractingRef.current = false;
+      userInteractTimerRef.current = null;
+    }, USER_INTERACTION_TIMEOUT_MS);
+  }, []);
+
+  // Derive the leading (left-most) canonical card from live scroll position.
+  // The list is tripled, so reduce scrollLeft into one copy before indexing.
+  const computeActiveIndex = () => {
+    const el = scrollRef.current;
+    if (!el || el.scrollWidth === 0) return;
+    const setWidth = el.scrollWidth / 3;
+    const stride = setWidth / itemCount;
+    const within = ((el.scrollLeft % setWidth) + setWidth) % setWidth;
+    setActiveIndex(Math.round(within / stride) % itemCount);
+  };
+
+  // Scroll by exactly one card. Reduced-motion users get an instant jump.
+  const scrollByCards = (dir: 1 | -1) => {
+    const el = scrollRef.current;
+    if (!el || el.scrollWidth === 0) return;
+    const stride = el.scrollWidth / 3 / itemCount;
+    markInteracting();
+    el.scrollBy({ left: dir * stride, behavior: reducedMotion ? 'auto' : 'smooth' });
+  };
+
+  // Jump to a canonical card, picking the occurrence nearest the current
+  // position so the wrap-around clones make for the shortest travel.
+  const scrollToIndex = (target: number) => {
+    const el = scrollRef.current;
+    if (!el || el.scrollWidth === 0) return;
+    const setWidth = el.scrollWidth / 3;
+    const stride = setWidth / itemCount;
+    const copyStart = Math.floor(el.scrollLeft / setWidth) * setWidth;
+    markInteracting();
+    el.scrollTo({ left: copyStart + target * stride, behavior: reducedMotion ? 'auto' : 'smooth' });
+  };
 
   // Wrap-around: keep scrollLeft within the middle copy of the tripled set.
   // Called on every scroll event (user + programmatic) and after every
@@ -92,6 +154,7 @@ export function Carousel({ items }: { items: ReactElement[] }) {
     if (!el || el.scrollWidth === 0) return;
     el.scrollLeft = el.scrollWidth / 3;
     hasCenteredRef.current = true;
+    computeActiveIndex();
   });
 
   // Auto-scroll loop. Suspended while hovered, while a modal is open, while
@@ -119,17 +182,6 @@ export function Carousel({ items }: { items: ReactElement[] }) {
     const el = scrollRef.current;
     if (!el) return;
 
-    const markInteracting = () => {
-      userInteractingRef.current = true;
-      if (userInteractTimerRef.current !== null) {
-        window.clearTimeout(userInteractTimerRef.current);
-      }
-      userInteractTimerRef.current = window.setTimeout(() => {
-        userInteractingRef.current = false;
-        userInteractTimerRef.current = null;
-      }, USER_INTERACTION_TIMEOUT_MS);
-    };
-
     const onWheel = (e: WheelEvent) => {
       // Observation-only: mark interaction only when the wheel has a
       // horizontal component (trackpad swipe). Vertical wheels pass through
@@ -153,7 +205,7 @@ export function Carousel({ items }: { items: ReactElement[] }) {
         window.clearTimeout(userInteractTimerRef.current);
       }
     };
-  }, []);
+  }, [markInteracting]);
 
   return (
     <CarouselContext.Provider
@@ -165,14 +217,17 @@ export function Carousel({ items }: { items: ReactElement[] }) {
       }}
     >
       <div
-        className="relative w-full overflow-hidden py-8 md:py-12"
+        className="relative w-full overflow-hidden pt-2 pb-4 md:pt-3 md:pb-6"
         style={{ maskImage: MARQUEE_MASK, WebkitMaskImage: MARQUEE_MASK }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div
           ref={scrollRef}
-          onScroll={wrapIfNeeded}
+          onScroll={() => {
+            wrapIfNeeded();
+            computeActiveIndex();
+          }}
           className="flex w-full overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex w-max gap-4 md:gap-6">
@@ -188,6 +243,66 @@ export function Carousel({ items }: { items: ReactElement[] }) {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Manual controls — arrows flanking one dot per card. Rendered outside
+          the masked wrapper so they aren't faded by the edge gradient. */}
+      <div
+        id="work-controls"
+        className="mt-2 flex items-center justify-center gap-4 md:mt-3"
+      >
+        <div className="group relative flex items-center">
+          <button
+            type="button"
+            aria-label="Previous project"
+            onClick={() => scrollByCards(-1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-base text-fg-mute transition-colors hover:border-accent/40 hover:text-fg"
+          >
+            <ChevronLeft className="h-5 w-5" strokeWidth={1.6} />
+          </button>
+          <span aria-hidden="true" className={TOOLTIP_CLASS}>
+            Previous
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {items.map((_, i) => {
+            const label = labels?.[i];
+            return (
+              <div key={`dot-${i}`} className="group relative flex items-center">
+                <button
+                  type="button"
+                  aria-label={label ? `Go to ${label}` : `Go to card ${i + 1}`}
+                  aria-current={i === activeIndex}
+                  onClick={() => scrollToIndex(i)}
+                  className={cn(
+                    'h-2 rounded-full transition-all',
+                    i === activeIndex ? 'w-5 bg-accent' : 'w-2 bg-fg-mute/40 hover:bg-fg-mute/70',
+                  )}
+                />
+                {label && (
+                  <span aria-hidden="true" className={TOOLTIP_CLASS}>
+                    {label}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="group relative flex items-center">
+          <button
+            type="button"
+            aria-label="Next project"
+            onClick={() => scrollByCards(1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-base text-fg-mute transition-colors hover:border-accent/40 hover:text-fg"
+          >
+            <ChevronRight className="h-5 w-5" strokeWidth={1.6} />
+          </button>
+          <span aria-hidden="true" className={TOOLTIP_CLASS}>
+            Next
+          </span>
         </div>
       </div>
     </CarouselContext.Provider>
@@ -281,8 +396,8 @@ export function Card({
         layoutId={useLayout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
         className={cn(
-          'group relative z-10 flex h-80 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl border border-hairline bg-surface text-left',
-          'md:h-[34rem] md:w-80',
+          'group relative z-10 flex aspect-[2/3] w-[78vw] flex-col items-start justify-start overflow-hidden rounded-3xl border border-hairline bg-surface text-left',
+          'sm:w-[44vw] lg:w-[23vw]',
         )}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-2/3 bg-gradient-to-b from-base/85 via-base/20 to-transparent" />
@@ -316,7 +431,7 @@ export function Card({
           src={card.src}
           alt={card.title}
           fill
-          sizes="(min-width: 768px) 320px, 224px"
+          sizes="(min-width: 1024px) 23vw, (min-width: 640px) 44vw, 78vw"
           className="absolute inset-0 z-10 object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </motion.button>

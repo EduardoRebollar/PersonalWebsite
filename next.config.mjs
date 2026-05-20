@@ -18,6 +18,22 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  async headers() {
+    return [
+      {
+        // Self-hosted Spline scene(s). Long edge cache (Vercel purges on each
+        // deploy, so re-exports go live immediately); shorter browser cache so
+        // returning visitors pick up a swapped scene within a day.
+        source: '/spline/:file*.splinecode',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withBundleAnalyzer(withMDX(nextConfig));
