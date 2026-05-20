@@ -396,8 +396,11 @@ export function Card({
         layoutId={useLayout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
         className={cn(
-          'group relative z-10 flex aspect-[2/3] w-[78vw] flex-col items-start justify-start overflow-hidden rounded-3xl border border-hairline bg-surface text-left',
-          'sm:w-[44vw] lg:w-[23vw]',
+          // 4-up within the shell-bounded window: each card is a quarter of the
+          // visible window (capped at the container-shell) minus its share of the
+          // 3 inter-card gaps. min() keeps it viewport-relative below the cap.
+          'group relative z-10 flex aspect-[2/3] w-[calc(min(100vw,var(--container-shell))/4_-_0.75rem)] flex-col items-start justify-start overflow-hidden rounded-3xl border border-hairline bg-surface text-left',
+          'md:w-[calc(min(100vw,var(--container-shell))/4_-_1.125rem)]',
         )}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-2/3 bg-gradient-to-b from-base/85 via-base/20 to-transparent" />

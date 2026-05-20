@@ -25,7 +25,12 @@ export function Contact() {
       aria-labelledby="contact-heading"
       className="relative overflow-hidden pt-12 pb-8 md:pt-16 md:pb-12"
     >
-      <StarfieldBackground />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
+      >
+        <StarfieldBackground />
+      </div>
 
       <Container className="relative z-10 grid items-center gap-12 md:grid-cols-2 md:gap-10">
         <div className="flex flex-col gap-12">

@@ -1,0 +1,82 @@
+'use client';
+
+import { motion, useScroll, useTransform } from 'motion/react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+
+/**
+ * Aceternity Timeline — single-rail timeline: a sticky period label per entry
+ * and a gradient beam down the left spine that fills as the user scrolls.
+ *
+ * Source: https://ui.aceternity.com/components/timeline
+ *         (registry: https://ui.aceternity.com/registry/timeline.json)
+ * Adaptations from upstream:
+ *   - Dropped the demo header/intro block — callers supply their own <Heading>.
+ *   - Dropped the light-mode classes + outer max-width/background; recolored to
+ *     the project dark palette (spine via-hairline, beam accent→secondary, dot
+ *     bg-accent with glow).
+ *   - Tightened the per-entry vertical rhythm (upstream md:pt-40 → md:pt-20).
+ */
+
+export interface TimelineEntry {
+  title: string;
+  content: ReactNode;
+}
+
+export function Timeline({ data }: { data: TimelineEntry[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (ref.current) {
+      setHeight(ref.current.getBoundingClientRect().height);
+    }
+  }, []);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start center', 'end center'],
+  });
+
+  const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height]);
+  const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <div ref={ref} className="relative w-full pb-4">
+        <div
+          style={{ height: `${height}px` }}
+          className="absolute top-0 left-8 w-[2px] overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,var(--color-hairline)_10%,var(--color-hairline)_90%,transparent_100%)] [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)]"
+        >
+          <motion.div
+            style={{ height: heightTransform, opacity: opacityTransform }}
+            className="absolute inset-x-0 top-0 w-[2px] rounded-full bg-gradient-to-t from-accent from-[0%] via-secondary via-[10%] to-transparent"
+          />
+        </div>
+
+        {data.map((item, index) => (
+          <div key={index} className="flex justify-start pt-10 md:gap-6 md:pt-20">
+            <div className="relative flex flex-col items-center self-start md:w-auto md:shrink-0 md:flex-row">
+              <span
+                aria-hidden="true"
+                className="absolute left-3 flex h-10 w-10 items-center justify-center rounded-full bg-base"
+              >
+                <span className="h-3 w-3 rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)]" />
+              </span>
+              <h3 className="hidden font-mono text-3xl tracking-[0.1em] text-fg-mute uppercase md:block md:pl-14">
+                {item.title}
+              </h3>
+            </div>
+
+            <div className="relative w-full pr-2 pl-16 md:pl-0">
+              <h3 className="mb-2 block font-mono text-lg tracking-[0.12em] text-fg-mute uppercase md:hidden">
+                {item.title}
+              </h3>
+              {item.content}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -4,7 +4,7 @@ This file is auto-loaded by Claude Code at the start of each session in this rep
 
 ## What this project is
 
-A personal portfolio for Eduardo Rebollar — Computer Science & Economics student at Occidental College. Single-page site with an interactive Spline 3D scene anchored to the hero's right column (gated on capable, non-reduced-motion devices).
+A personal portfolio for Eduardo Rebollar — Computer Science & Economics student at Occidental College. Single-page site that opens with a full-bleed `SpiralSplash` intro, then an interactive Spline 3D scene rendered full-bleed behind the hero (gated on capable, non-reduced-motion devices). Sections, top to bottom: Hero → About → Journey → Skills → Projects → Contact.
 
 - **Deployed**: `https://eduardorebollar.vercel.app/`
 - **Repo**: `https://github.com/EduardoRebollar` (push to `main` → Vercel auto-deploys)
@@ -18,8 +18,8 @@ A personal portfolio for Eduardo Rebollar — Computer Science & Economics stude
 | Runtime / pkg mgr | bun 1.3+ | Installed via `npm install -g bun`. Vercel auto-detects the `bun.lock` |
 | React | 19.2 | |
 | Styling | Tailwind v4 (CSS-first) | `@theme` in `app/globals.css`; **no `tailwind.config.ts`** |
-| 3D | `@splinetool/react-spline` 4 + `@splinetool/runtime` 1 | Lazy + Suspense in `components/ui/SplineScene.tsx`; mounted in `components/sections/Hero.tsx` right column; gated on `hasWebGL2 && !isMobile && !reducedMotion`. Replaced the prior R3F terrain stack (commit refreshing this file) |
-| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Used by Hero entrance + cursor `Spotlight` |
+| 3D | `@splinetool/react-spline` 4 + `@splinetool/runtime` 1 | Lazy + Suspense in `components/ui/SplineScene.tsx`; mounted full-bleed (absolute, masked) behind `components/sections/Hero.tsx` and again in the `Contact` greeting robot; gated on `hasWebGL2 && !isMobile && !reducedMotion`. Scene is **self-hosted** at `/public/spline/hero.splinecode` (served from Vercel's edge), not the old demo CDN asset. Replaced the prior R3F terrain stack |
+| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Drives Hero entrance, cursor `Spotlight`, the `timeline` scroll beam, `FloatingDock`, `AppleCardsCarousel`, and the animated backgrounds (`BackgroundBeams`, `meteors`, `sparkles`, `StarfieldBackground`, `orbiting-skills`) |
 | State | Zustand 5 | `stores/useSceneStore.ts` — single global store; now mostly feeds the Hero's Spline gate via `DeviceDetector`. `gpuTier`/`activeSection`/`sectionProgress` fields are dead-after-R3F-removal (kept for now; safe follow-up to trim) |
 | Content | TS data files + MDX case studies | `content/data/*.ts` + `content/projects/*.mdx` |
 | Case-study viz | `@nivo/*` (bar/line/heatmap), `cytoscape` + `react-cytoscapejs`, `leaflet` + `react-leaflet` | Bundled lazily into the routes that use them (BiLSTM, Interactivity, LA History) |
@@ -32,10 +32,19 @@ A personal portfolio for Eduardo Rebollar — Computer Science & Economics stude
 app/                 Next.js App Router (routes, layouts, OG, sitemap, robots, icon)
 mdx-components.tsx   Next.js convention — typography + MDX component map
 components/
-  sections/          One per page section (Hero, About, Education, Experience,
-                       Skills, Projects, Contact). Hero hosts the Spline scene
-  ui/                Container, Nav, Footer, Card, CardShadcn, Pill, Heading,
-                       Eyebrow, ScrollHint, SplineScene, Spotlight
+  sections/          One per page section: Hero, About, Journey, Skills,
+                       Projects, Contact. (Education + Experience were merged
+                       into Journey — a single chronological timeline.)
+  ui/                Layout/typography: Container, Nav, Footer, Card, CardShadcn,
+                       Pill, Heading, Eyebrow, ScrollHint
+                     CTAs: RippleButton, RippleLink (+ lib/useRipple)
+                     3D / cursor: SplineScene, Spotlight
+                     Nav chrome: FloatingDock (dock nav driven by Nav.tsx)
+                     Journey: timeline (adapted Aceternity)
+                     Projects: AppleCardsCarousel, 3DCard
+                     Skills: orbiting-skills
+                     Intro/backgrounds: SpiralSplash + spiral-animation,
+                       BackgroundBeams, meteors, sparkles, StarfieldBackground
   a11y/              DeviceDetector, SkipToContent
   mdx/               Figure, Aside, TechStack, Lessons, RepoLink, DemoLink
   viz-bilstm/        BiLSTM case-study charts (Nivo) — bundled into /work/bilstm-vs-ffnn
@@ -48,7 +57,9 @@ content/
   projects/          MDX case studies — registered in lib/mdx.ts
 lib/                 cn, device, mdx, motion, seo
 stores/              useSceneStore (Zustand) — feeds Hero's Spline gate
-types/               content (Project, ExperienceItem, …)
+types/               content (Project, ExperienceItem, EducationItem,
+                       MediaImage, …). Journey cards take an optional
+                       `images?: MediaImage[]` on Education/Experience items.
 public/              photo.jpg, projects/<slug>/*, OG, favicon
 scripts/             optimize-images.mjs (one-off sharp pipeline)
 Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
@@ -56,8 +67,9 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 
 ## Architecture in 30 seconds
 
-- **Hero Spline scene**: `components/sections/Hero.tsx` is a 2-column grid on `md+`. Left = animated copy (Eyebrow / display name / tagline / CTA). Right = `<SplineScene />` (lazy + Suspense around `@splinetool/react-spline/next`) with `<Spotlight />` cursor overlay, inside a bordered/rounded container. Right column is hidden on `<md`.
-- **Device gating**: `components/a11y/DeviceDetector.tsx` runs on mount inside `<Providers />`, detects WebGL2 + viewport + `prefers-reduced-motion`, and writes to `useSceneStore`. Hero reads `initialized && hasWebGL2 && !isMobile && !reducedMotion` — only when true does `<SplineScene />` mount and the heavy runtime loads.
+- **Intro splash**: `components/ui/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page.
+- **Hero Spline scene**: `components/sections/Hero.tsx` renders the animated copy (Eyebrow / display name / tagline / CTAs) in a left column; the `<SplineScene />` is **not** in a bordered right column anymore — it's positioned `absolute`, full-bleed and edge-masked, behind the section on `md+` (the right grid cell is now an empty placeholder). `<Spotlight />` rides on the same host. `BackgroundBeams` paints behind it. The hero CTAs (`scrollToWork`/`scrollToContact`) mirror the dock's scroll targets (`#work-controls` row, page bottom) rather than jumping to anchor tops.
+- **Device gating**: `components/a11y/DeviceDetector.tsx` runs on mount inside `<Providers />`, detects WebGL2 + viewport + `prefers-reduced-motion`, and writes to `useSceneStore`. Hero reads `initialized && hasWebGL2 && !isMobile && !reducedMotion` — only when true does `<SplineScene />` mount and the heavy runtime loads. The `timeline` beam and other motion surfaces read `useSceneStore.reducedMotion` directly to render static fallbacks.
 - **No persistent canvas, no smooth scroll, no scroll-linked animation.** The prior R3F terrain + GSAP/ScrollTrigger + Lenis stack was removed when the Spline hero swap landed. Native browser scroll only.
 
 ## Working agreement (READ THIS)
@@ -105,6 +117,7 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 | Phase 4 — Schema.org structured data + WCAG AA contrast fix + image opt + mobile menu | ✓ |
 | Phase 5 — analytics/speed-insights, R3F v9 + React 19 upgrade, scene-actually-renders fix, embedded BiLSTM viz, InteractivityViz dashboard, native LA History port (Leaflet + Cytoscape + AI tutor), clickable supporting cards | ✓ |
 | Phase 6 — replaced R3F terrain + GSAP/Lenis stack with a Spline hero scene + cursor Spotlight; pruned 9 unused deps; simplified DeviceDetector | ✓ |
+| Phase 7 — visual overhaul: self-hosted full-bleed Spline hero + `BackgroundBeams`; `SpiralSplash` intro; `FloatingDock` nav; `AppleCardsCarousel` + `3DCard` projects (dropped FeaturedProject); `orbiting-skills` Skills; merged Education + Experience into a `Journey` timeline; `meteors`/`sparkles`/`StarfieldBackground` accents; Contact Spline greeting robot + single-row Footer | ✓ |
 
 ## Known follow-ups (not blocking launch)
 
@@ -114,7 +127,7 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 - **`remark-gfm`** is installed but not wired into `next.config.mjs` — either re-add via the Turbopack string-ref form or drop the dep.
 - **Bundle analyzer pass** — run `bun run analyze` to surface dep-side optimization opportunities (Cytoscape, Leaflet, and the Nivo bundle are the obvious heavy hitters; they're route-scoped, but worth a check).
 - **`backdrop-blur-md` performance** — now respects `prefers-reduced-transparency: reduce` globally. If Speed Insights flags INP/CLS regressions on low-end Android specifically, consider a lite-mode/GPU-tier gate on top.
-- **Spline scene URL is a placeholder** — `Hero.tsx` points at the Spline demo asset (`kZDDjO5HuC9GJUM2/scene.splinecode`). Author a scene matching the Deep Oceanic palette and swap the constant at the top of `Hero.tsx`.
+- **Journey timeline photos** — Education/Experience items support an optional `images?: MediaImage[]`; cards currently show a dashed placeholder until real photos are added to the entries in `content/data/{education,experience}.ts`.
 - **Trim dead store fields** — `useSceneStore` still exposes `gpuTier`, `activeSection`, `sectionProgress`, `liteMode`, `toggleLiteMode` etc. after R3F removal; no consumer reads them. Safe to prune.
 
 ## When something feels off

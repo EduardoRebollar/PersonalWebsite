@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
-import { Briefcase, Code2, FolderGit2, GraduationCap, Mail, User } from 'lucide-react';
+import { Code2, FolderGit2, Mail, Milestone, User } from 'lucide-react';
 import { Container } from './Container';
 import { FloatingDock, type DockItem } from './FloatingDock';
 import { RippleButton } from './RippleButton';
@@ -13,8 +13,7 @@ import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
   '#about': <User className="h-full w-full" strokeWidth={1.6} />,
-  '#education': <GraduationCap className="h-full w-full" strokeWidth={1.6} />,
-  '#experience': <Briefcase className="h-full w-full" strokeWidth={1.6} />,
+  '#journey': <Milestone className="h-full w-full" strokeWidth={1.6} />,
   '#skills': <Code2 className="h-full w-full" strokeWidth={1.6} />,
   '#work': <FolderGit2 className="h-full w-full" strokeWidth={1.6} />,
   '#contact': <Mail className="h-full w-full" strokeWidth={1.6} />,

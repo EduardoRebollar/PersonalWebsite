@@ -20,11 +20,11 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="relative py-24 md:py-32"
+      className="relative pt-24 pb-12 md:pt-32 md:pb-16"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]"
       >
         <Meteors number={30} />
       </div>
@@ -53,7 +53,7 @@ export function About() {
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-hairline bg-surface/50 px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg uppercase backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:text-accent"
               >
-                Download résumé
+                View resume
                 <span aria-hidden="true">↗</span>
               </a>
             )}

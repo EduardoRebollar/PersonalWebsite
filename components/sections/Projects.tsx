@@ -85,7 +85,7 @@ export function Projects() {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
       >
         <SparklesCore
           background="transparent"
@@ -104,7 +104,9 @@ export function Projects() {
         </Heading>
       </Container>
 
-      <Carousel items={cards} labels={labels} />
+      <div className="mx-auto w-full max-w-[var(--container-shell)]">
+        <Carousel items={cards} labels={labels} />
+      </div>
     </section>
   );
 }

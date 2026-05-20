@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { BackgroundBeams } from '@/components/ui/BackgroundBeams';
 import { Container } from '@/components/ui/Container';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -37,6 +37,36 @@ export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const splineHostRef = useRef<HTMLDivElement>(null);
 
+  // Mirror Nav's contact link: scroll to the very bottom of the page (where the
+  // contact section's content sits) rather than the top of the #contact anchor,
+  // so this CTA lands on the same spot as the dock's contact button.
+  const scrollToContact = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (typeof window === 'undefined') return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
+    history.replaceState(null, '', '#contact');
+  }, []);
+
+  // Mirror Nav's "Work" link: scroll so the carousel's controls row sits flush
+  // at the bottom of the viewport (framing the interactive cards) rather than
+  // jumping to the top of the #work anchor, matching the dock's work button.
+  const scrollToWork = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (typeof window === 'undefined') return;
+    const target = document.getElementById('work-controls');
+    if (!target) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const GAP = 16;
+    const rect = target.getBoundingClientRect();
+    const top = window.scrollY + rect.bottom - window.innerHeight + GAP;
+    window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+    history.replaceState(null, '', '#work');
+  }, []);
+
   useEffect(() => {
     if (!showSpline) return;
 
@@ -67,7 +97,7 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className="relative flex items-start overflow-hidden [zoom:0.9]"
     >
-      <BackgroundBeams />
+      <BackgroundBeams className="mx-auto max-w-[calc(var(--container-shell)*1.5)]" />
 
       {showSpline ? (
         <div className="container-shell pointer-events-none absolute inset-x-0 inset-y-0 z-0 hidden md:block">
@@ -141,6 +171,7 @@ export function Hero() {
               <RippleLink
                 href="#work"
                 internal
+                onClick={scrollToWork}
                 className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/50 px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg uppercase backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:bg-surface hover:text-accent focus-visible:border-accent focus-visible:text-accent"
               >
                 See work
@@ -154,6 +185,7 @@ export function Hero() {
               <RippleLink
                 href="#contact"
                 internal
+                onClick={scrollToContact}
                 className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
               >
                 Get in touch

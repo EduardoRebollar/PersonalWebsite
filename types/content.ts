@@ -9,6 +9,11 @@ export type SocialLink = {
   handle?: string;
 };
 
+export type MediaImage = {
+  src: string;
+  alt: string;
+};
+
 export type SiteConfig = {
   name: string;
   initials: string;
@@ -58,6 +63,8 @@ export type ExperienceItem = {
   impact: string;
   bullets: string[];
   tech?: string[];
+  /** Optional photos for the Journey timeline card. */
+  images?: MediaImage[];
 };
 
 export type EducationItem = {
@@ -69,6 +76,8 @@ export type EducationItem = {
   honors?: string[];
   activities?: string[];
   notes?: string;
+  /** Optional photos for the Journey timeline card. */
+  images?: MediaImage[];
 };
 
 export type SkillGroup = {
