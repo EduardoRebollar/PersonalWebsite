@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3DCard';
 import { Container } from '@/components/ui/Container';
+import { Meteors } from '@/components/ui/meteors';
 import { Heading } from '@/components/ui/Heading';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
@@ -21,6 +22,13 @@ export function About() {
       aria-labelledby="about-heading"
       className="relative py-24 md:py-32"
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]"
+      >
+        <Meteors number={30} />
+      </div>
+
       <Container>
         <motion.div
           initial={{ opacity: 0, y: 24 }}

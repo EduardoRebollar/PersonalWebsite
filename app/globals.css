@@ -142,6 +142,25 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
   --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Meteor shower background (components/ui/meteors.tsx). Generates the
+     `animate-meteor-effect` utility; per-meteor duration/delay are overridden
+     inline. Ported from the source's tailwind.config.js (no config file here). */
+  --animate-meteor-effect: meteor 5s linear infinite;
+
+  @keyframes meteor {
+    0% {
+      transform: rotate(215deg) translateX(0);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(215deg) translateX(-500px);
+      opacity: 0;
+    }
+  }
 }
 
 /* -----------------------------------------------------------------------------

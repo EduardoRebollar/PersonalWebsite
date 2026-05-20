@@ -88,7 +88,7 @@ export function Hero() {
         </div>
       ) : null}
 
-      <Container as="div" className="relative z-10 pt-[6.5rem] pb-32 md:pb-40">
+      <Container as="div" className="relative z-10 pt-[6.5rem] pb-16 md:pb-20">
         <div className="grid items-center gap-12 md:grid-cols-2 md:gap-10">
           {/* Left column — copy */}
           <div className="flex flex-col gap-10 md:gap-12">
@@ -166,7 +166,7 @@ export function Hero() {
         </div>
       </Container>
 
-      <div className="container-shell absolute inset-x-0 bottom-8 z-20 md:bottom-10">
+      <div className="container-shell absolute inset-x-0 bottom-4 z-20 md:bottom-5">
         <ScrollHint />
       </div>
     </section>
