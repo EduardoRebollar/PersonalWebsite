@@ -1,12 +1,12 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Container } from '@/components/ui/Container';
-import { GradientDots } from '@/components/ui/gradient-dots';
-import { Heading } from '@/components/ui/Heading';
+import { Container } from '@/components/ui/primitives/Container';
+import { GradientDots } from '@/components/ui/backgrounds/gradient-dots';
+import { Heading } from '@/components/ui/primitives/Heading';
 import { OrbitingSkills } from '@/components/ui/orbiting-skills';
 import { SkillMarquee } from '@/components/ui/skill-marquee';
-import { SplineScene } from '@/components/ui/SplineScene';
+import { SplineScene } from '@/components/ui/three/SplineScene';
 import { skillHighlights, skills } from '@/content/data/skills';
 import { easing } from '@/lib/motion';
 import { useSceneStore } from '@/stores/useSceneStore';
@@ -88,7 +88,21 @@ export function Skills() {
           // not black. A contrast filter crushes that dark grey to true black
           // while leaving the white particles white. Bump contrast if any grey
           // remains; ease it down if the particles start clipping.
-          <SplineScene scene={SKILLS_SCENE_URL} className="h-full w-full [filter:contrast(1.6)]" />
+          <>
+            <SplineScene
+              scene={SKILLS_SCENE_URL}
+              className="h-full w-full [filter:contrast(1.6)]"
+            />
+            {/* The Spline runtime paints a "Built with Spline" badge in the
+                bottom-right of the canvas that can't be disabled from
+                react-spline (free plan). Cover it with an opaque swatch matching
+                the crushed-black backdrop. Compositing happens before the band's
+                mask, so the badge never shows through. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute right-0 bottom-0 h-14 w-44 bg-background"
+            />
+          </>
         ) : (
           <>
             <GradientDots className="opacity-50" />

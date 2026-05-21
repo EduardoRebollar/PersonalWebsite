@@ -2,13 +2,13 @@
 
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
-import { BackgroundBeams } from '@/components/ui/BackgroundBeams';
-import { Container } from '@/components/ui/Container';
-import { Eyebrow } from '@/components/ui/Eyebrow';
-import { RippleLink } from '@/components/ui/RippleLink';
-import { ScrollHint } from '@/components/ui/ScrollHint';
-import { SplineScene } from '@/components/ui/SplineScene';
-import { Spotlight } from '@/components/ui/Spotlight';
+import { BackgroundBeams } from '@/components/ui/backgrounds/BackgroundBeams';
+import { Container } from '@/components/ui/primitives/Container';
+import { Eyebrow } from '@/components/ui/primitives/Eyebrow';
+import { RippleLink } from '@/components/ui/cta/RippleLink';
+import { ScrollHint } from '@/components/ui/nav/ScrollHint';
+import { SplineScene } from '@/components/ui/three/SplineScene';
+import { Spotlight } from '@/components/ui/three/Spotlight';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 import { useSceneStore } from '@/stores/useSceneStore';

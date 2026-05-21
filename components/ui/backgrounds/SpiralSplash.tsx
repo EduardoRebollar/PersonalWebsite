@@ -11,8 +11,8 @@
 
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { RippleButton } from './RippleButton';
-import { Spotlight } from './Spotlight';
+import { RippleButton } from '../cta/RippleButton';
+import { Spotlight } from '../three/Spotlight';
 
 const SpiralAnimation = lazy(() =>
   import('./spiral-animation').then((m) => ({ default: m.SpiralAnimation })),

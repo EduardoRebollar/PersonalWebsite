@@ -3,12 +3,12 @@
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Briefcase, GraduationCap, ImagePlus } from 'lucide-react';
-import { Container } from '@/components/ui/Container';
-import { Heading } from '@/components/ui/Heading';
-import { Pill } from '@/components/ui/Pill';
+import { Container } from '@/components/ui/primitives/Container';
+import { Heading } from '@/components/ui/primitives/Heading';
+import { Pill } from '@/components/ui/primitives/Pill';
 import { Timeline, type TimelineEntry } from '@/components/ui/timeline';
-import { ShootingStars } from '@/components/ui/shooting-stars';
-import { StarsBackground } from '@/components/ui/stars-background';
+import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
+import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { education } from '@/content/data/education';
 import { experience } from '@/content/data/experience';
 import { easing } from '@/lib/motion';

@@ -1,13 +1,13 @@
-import { Container } from '@/components/ui/Container';
-import { Heading } from '@/components/ui/Heading';
-import { Pill } from '@/components/ui/Pill';
-import { RippleLink } from '@/components/ui/RippleLink';
+import { Container } from '@/components/ui/primitives/Container';
+import { Heading } from '@/components/ui/primitives/Heading';
+import { Pill } from '@/components/ui/primitives/Pill';
+import { RippleLink } from '@/components/ui/cta/RippleLink';
 import {
   Carousel,
   Card,
   type CarouselCard,
 } from '@/components/ui/AppleCardsCarousel';
-import { SparklesCore } from '@/components/ui/sparkles';
+import { SparklesCore } from '@/components/ui/backgrounds/sparkles';
 import { projects } from '@/content/data/projects';
 import { hasMDX } from '@/lib/mdx';
 import type { Project } from '@/types/content';

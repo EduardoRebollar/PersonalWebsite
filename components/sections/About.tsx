@@ -3,9 +3,9 @@
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3DCard';
-import { Container } from '@/components/ui/Container';
-import { Meteors } from '@/components/ui/meteors';
-import { Heading } from '@/components/ui/Heading';
+import { Container } from '@/components/ui/primitives/Container';
+import { Meteors } from '@/components/ui/backgrounds/meteors';
+import { Heading } from '@/components/ui/primitives/Heading';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 

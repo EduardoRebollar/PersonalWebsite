@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Container } from '@/components/ui/Container';
-import { Pill } from '@/components/ui/Pill';
+import { Container } from '@/components/ui/primitives/Container';
+import { Pill } from '@/components/ui/primitives/Pill';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { projects } from '@/content/data/projects';
 import { listMDXSlugs, projectMDX } from '@/lib/mdx';

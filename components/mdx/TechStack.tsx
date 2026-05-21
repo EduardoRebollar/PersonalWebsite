@@ -1,4 +1,4 @@
-import { Pill } from '@/components/ui/Pill';
+import { Pill } from '@/components/ui/primitives/Pill';
 
 type TechStackProps = {
   items: string[];

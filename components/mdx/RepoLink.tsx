@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { RippleLink } from '@/components/ui/RippleLink';
+import { RippleLink } from '@/components/ui/cta/RippleLink';
 
 type RepoLinkProps = {
   href: string;

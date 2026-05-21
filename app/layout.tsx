@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { fontClassNames } from './fonts';
 import { Providers } from './providers';
-import { Nav } from '@/components/ui/Nav';
-import { Footer } from '@/components/ui/Footer';
+import { Nav } from '@/components/ui/nav/Nav';
+import { Footer } from '@/components/ui/primitives/Footer';
 import { SkipToContent } from '@/components/a11y/SkipToContent';
 import { site } from '@/content/data/site';
 import { SpeedInsights } from '@vercel/speed-insights/next';

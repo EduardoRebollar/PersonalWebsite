@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { StarfieldBackground } from '@/components/ui/StarfieldBackground';
-import { Container } from '@/components/ui/Container';
-import { Heading } from '@/components/ui/Heading';
-import { RippleLink } from '@/components/ui/RippleLink';
-import { SplineScene } from '@/components/ui/SplineScene';
+import { StarfieldBackground } from '@/components/ui/backgrounds/StarfieldBackground';
+import { Container } from '@/components/ui/primitives/Container';
+import { Heading } from '@/components/ui/primitives/Heading';
+import { RippleLink } from '@/components/ui/cta/RippleLink';
+import { SplineScene } from '@/components/ui/three/SplineScene';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 import { useSceneStore } from '@/stores/useSceneStore';

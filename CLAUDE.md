@@ -35,18 +35,19 @@ components/
   sections/          One per page section: Hero, About, Journey, Skills,
                        Projects, Contact. (Education + Experience were merged
                        into Journey — a single chronological timeline.)
-  ui/                Layout/typography: Container, Nav, Footer, Card, CardShadcn,
-                       Pill, Heading, Eyebrow, ScrollHint
-                     CTAs: RippleButton, RippleLink (+ lib/useRipple)
-                     3D / cursor: SplineScene, Spotlight
-                     Nav chrome: FloatingDock (dock nav driven by Nav.tsx)
-                     Journey: timeline (adapted Aceternity)
-                     Projects: AppleCardsCarousel, 3DCard
-                     Skills: orbiting-skills, skill-marquee, SkillHighlightCard,
-                       animated-gradient-border (BorderRotate), animated-gradient-text,
+  ui/                Grouped into subfolders (all import via the
+                       @/components/ui/<sub>/<Name> alias):
+    primitives/        Container, Card, CardShadcn, Pill, Heading, Eyebrow, Footer
+    nav/               Nav (drives the dock), FloatingDock, ScrollHint
+    cta/               RippleButton, RippleLink (+ lib/useRipple)
+    three/             SplineScene, Spotlight (3D / cursor)
+    backgrounds/       SpiralSplash + spiral-animation, BackgroundBeams, meteors,
+                       sparkles, StarfieldBackground, shooting-stars, stars-background,
                        gradient-dots (Spline-fallback backdrop)
-                     Intro/backgrounds: SpiralSplash + spiral-animation,
-                       BackgroundBeams, meteors, sparkles, StarfieldBackground
+    (ui/ root)         Section-specific widgets kept flat: timeline (Journey),
+                       AppleCardsCarousel + 3DCard (Projects), orbiting-skills +
+                       skill-marquee + SkillHighlightCard + animated-gradient-border
+                       (BorderRotate) + animated-gradient-text (Skills)
   a11y/              DeviceDetector, SkipToContent
   mdx/               Figure, Aside, TechStack, Lessons, RepoLink, DemoLink
   viz-bilstm/        BiLSTM case-study charts (Nivo) — bundled into /work/bilstm-vs-ffnn
@@ -70,7 +71,7 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 
 ## Architecture in 30 seconds
 
-- **Intro splash**: `components/ui/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page.
+- **Intro splash**: `components/ui/backgrounds/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page.
 - **Hero Spline scene**: `components/sections/Hero.tsx` renders the animated copy (Eyebrow / display name / tagline / CTAs) in a left column; the `<SplineScene />` is **not** in a bordered right column anymore — it's positioned `absolute`, full-bleed and edge-masked, behind the section on `md+` (the right grid cell is now an empty placeholder). `<Spotlight />` rides on the same host. `BackgroundBeams` paints behind it. The hero CTAs (`scrollToWork`/`scrollToContact`) mirror the dock's scroll targets (`#work-controls` row, page bottom) rather than jumping to anchor tops.
 - **Device gating**: `components/a11y/DeviceDetector.tsx` runs on mount inside `<Providers />`, detects WebGL2 + viewport + `prefers-reduced-motion`, and writes to `useSceneStore`. Hero reads `initialized && hasWebGL2 && !isMobile && !reducedMotion` — only when true does `<SplineScene />` mount and the heavy runtime loads. The `timeline` beam and other motion surfaces read `useSceneStore.reducedMotion` directly to render static fallbacks.
 - **Skills section**: `components/sections/Skills.tsx` filters `skills` (in `content/data/skills.ts`) into two `OrbitingSkills` groups (Technical / Productivity). Coursework + "Other" live separately as `skillHighlights: SkillCardGroup[]` (name + descriptor + lucide `icon` string key) and render through `skill-marquee.tsx` → `SkillHighlightCard.tsx` — a continuously-scrolling row of cards, each a `BorderRotate` (rotating conic-gradient border) wrapping an icon + `AnimatedGradientText` title + descriptor. The backdrop is a third Spline scene (`/spline/skills.splinecode`, same gate as Hero) over a `gradient-dots` fallback. The string→component icon indirection (in `SkillHighlightCard`) keeps the data file JSX-free, mirroring `orbiting-skills.tsx`.
@@ -86,7 +87,7 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 5. **TypeScript strict — non-negotiable.** No `any`, no `@ts-ignore` without a comment explaining why.
 6. **Verify before declaring done.** `bun run type-check`, `bun run lint`, `bun run build`. Boot the dev server when you can; say so plainly when you can't fully verify.
 7. **Don't silently descope or overrun.** If something is harder than the plan anticipated, stop and report it.
-8. **Primary CTAs use `RippleButton` / `RippleLink`** (`components/ui/RippleButton.tsx`, `components/ui/RippleLink.tsx`, shared logic in `lib/useRipple.tsx`). New top-level CTAs — page-level buttons, hero/contact CTAs, MDX badge links, modal opens — should use these and pass `className` to preserve site styling. The ripple paints at `-z-10` so children don't need wrapping. Dense interactive surfaces (LA History tools at `components/laHistory/*`, viz toggles in `components/viz-*/`) intentionally keep native `<button>` for DOM-weight reasons — don't sweep those without checking.
+8. **Primary CTAs use `RippleButton` / `RippleLink`** (`components/ui/cta/RippleButton.tsx`, `components/ui/cta/RippleLink.tsx`, shared logic in `lib/useRipple.tsx`). New top-level CTAs — page-level buttons, hero/contact CTAs, MDX badge links, modal opens — should use these and pass `className` to preserve site styling. The ripple paints at `-z-10` so children don't need wrapping. Dense interactive surfaces (LA History tools at `components/laHistory/*`, viz toggles in `components/viz-*/`) intentionally keep native `<button>` for DOM-weight reasons — don't sweep those without checking.
 
 ## Constraints + gotchas
 
@@ -95,7 +96,7 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 - **`bun` is invoked through `cmd.exe`** because the Bash tool's PATH doesn't include it directly. Pattern: `cmd.exe //c "bun run …"`. Same for `node` / `bunx`.
 - **OG images at `app/**/opengraph-image.tsx`** must have `display: flex` on EVERY multi-child `<div>`. Next 16's satori-validator rejects without it.
 - **OG with `generateStaticParams` cannot use `runtime: 'edge'`** under Next 16. We use build-time prerendering.
-- **`next/dynamic({ ssr: false })` causes SSR subtree bailout in Next 16.** Use manual `lazy()` + `<Suspense>` inside a `'use client'` component instead. See `components/ui/SplineScene.tsx`.
+- **`next/dynamic({ ssr: false })` causes SSR subtree bailout in Next 16.** Use manual `lazy()` + `<Suspense>` inside a `'use client'` component instead. See `components/ui/three/SplineScene.tsx`.
 - **`tsconfig.json` is auto-modified by Next 16** on first build (`jsx: preserve` → `react-jsx`; adds `.next/dev/types/**/*.ts` to includes). Don't fight it.
 - **MDX plugins must be string references**, not function imports, in `next.config.mjs` under Turbopack. We dropped `remarkGfm` at the function-ref level; can re-add when needed via the new shape.
 

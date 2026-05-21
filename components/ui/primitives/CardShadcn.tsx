@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 
 /**
  * shadcn/ui Card primitive set, saved under a distinct name so it does not
- * shadow the project's own link-wrapper [components/ui/Card.tsx].
+ * shadow the project's own link-wrapper [components/ui/primitives/Card.tsx].
  *
  * Uses shadcn semantic tokens (bg-card, text-card-foreground, …) that are not
  * defined in this project's Tailwind v4 @theme. Callers typically override
