@@ -1,4 +1,4 @@
-import type { SkillGroup } from '@/types/content';
+import type { SkillCardGroup, SkillGroup } from '@/types/content';
 
 export const skills: SkillGroup[] = [
   {
@@ -62,22 +62,66 @@ export const skills: SkillGroup[] = [
     label: 'Network & Creative',
     items: ['LinkedIn', 'Handshake', 'Notion', 'Airtable', 'Softr', 'Canva', 'Zotero'],
   },
+];
+
+/**
+ * Coursework + Other — rendered as animated highlight cards (icon + gradient
+ * title + descriptor) rather than the orbits or plain pills. `icon` is a lucide
+ * component name resolved in components/ui/SkillHighlightCard.tsx.
+ */
+export const skillHighlights: SkillCardGroup[] = [
   {
     label: 'Coursework',
     items: [
-      'Data Structures',
-      'NLP',
-      'Linear Algebra',
-      'Discrete Math',
-      'Statistics',
-      'Applied Econometrics',
-      'Game Theory',
-      'Social Data Science',
-      'Computer Organization',
+      {
+        name: 'Data Structures',
+        descriptor: 'Trees, graphs, hashing, complexity',
+        icon: 'Binary',
+      },
+      {
+        name: 'NLP',
+        descriptor: 'Sequence models, embeddings, spaCy/NLTK',
+        icon: 'MessagesSquare',
+      },
+      {
+        name: 'Linear Algebra',
+        descriptor: 'Vectors, matrices, eigen-decomposition',
+        icon: 'Grid3x3',
+      },
+      { name: 'Discrete Math', descriptor: 'Logic, proofs, combinatorics', icon: 'Hash' },
+      { name: 'Statistics', descriptor: 'Inference, regression, distributions', icon: 'Sigma' },
+      {
+        name: 'Applied Econometrics',
+        descriptor: 'Causal inference, panel models (Stata)',
+        icon: 'TrendingUp',
+      },
+      { name: 'Game Theory', descriptor: 'Nash equilibria, strategic models', icon: 'Dices' },
+      {
+        name: 'Social Data Science',
+        descriptor: 'Networks, computational social analysis',
+        icon: 'Network',
+      },
+      {
+        name: 'Computer Organization',
+        descriptor: 'Assembly, memory, CPU architecture',
+        icon: 'Cpu',
+      },
     ],
   },
   {
     label: 'Other',
-    items: ['Bilingual (English / Spanish)', 'Mentorship', 'Technical Writing'],
+    items: [
+      {
+        name: 'Bilingual (Eng/Span)',
+        descriptor: 'Native fluency — written & spoken',
+        icon: 'Languages',
+      },
+      {
+        name: 'Mentorship',
+        descriptor: 'Peer tutoring & student leadership',
+        icon: 'HeartHandshake',
+      },
+      { name: 'Technical Writing', descriptor: 'Case studies, research, docs', icon: 'PenLine' },
+    ],
   },
 ];

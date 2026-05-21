@@ -84,3 +84,20 @@ export type SkillGroup = {
   label: string;
   items: string[];
 };
+
+/**
+ * A richer skill entry for the Coursework / Other highlight cards: a name, a
+ * one-line descriptor, and a string `icon` key resolved to a lucide-react
+ * component in SkillHighlightCard (string key keeps this data JSX-free, mirroring
+ * the aliasIcons → brandIcons indirection in components/ui/orbiting-skills.tsx).
+ */
+export type SkillCard = {
+  name: string;
+  descriptor: string;
+  icon: string;
+};
+
+export type SkillCardGroup = {
+  label: string;
+  items: SkillCard[];
+};

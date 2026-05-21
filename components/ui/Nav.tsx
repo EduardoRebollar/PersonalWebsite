@@ -63,6 +63,28 @@ export function Nav() {
     [scrollWorkControlsIntoView],
   );
 
+  // About / Journey / Skills: scroll explicitly instead of leaning on Next's
+  // <Link> hash navigation, which only scrolls when the hash *changes*. Once
+  // the URL hash already matches the target (clicked before, or left stale),
+  // a repeat click is a silent no-op — the "sometimes works" bug. Driving the
+  // scroll ourselves fires every time and honors each section's
+  // scroll-margin-top (scrollIntoView respects it) and reduced-motion.
+  const scrollToSection = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      const href = e.currentTarget.getAttribute('href');
+      if (typeof window === 'undefined' || !href?.startsWith('#')) return;
+      const target = document.querySelector<HTMLElement>(href);
+      if (!target) return;
+      e.preventDefault();
+      const reduced = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches;
+      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+      history.replaceState(null, '', href);
+    },
+    [],
+  );
+
   const dockItems = useMemo<DockItem[]>(
     () =>
       navLinks.map((link) => ({
@@ -74,9 +96,9 @@ export function Nav() {
             ? scrollToBottom
             : link.href === '#work'
               ? scrollToWorkControls
-              : undefined,
+              : scrollToSection,
       })),
-    [scrollToBottom, scrollToWorkControls],
+    [scrollToBottom, scrollToWorkControls, scrollToSection],
   );
 
   useEffect(() => {
@@ -197,6 +219,7 @@ export function Nav() {
                       onClick={(e) => {
                         if (link.href === '#contact') scrollToBottom(e);
                         else if (link.href === '#work') scrollToWorkControls(e);
+                        else scrollToSection(e);
                         setOpen(false);
                       }}
                       className="block py-3 font-mono text-[12px] tracking-wider text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"

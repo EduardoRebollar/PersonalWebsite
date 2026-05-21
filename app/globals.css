@@ -161,6 +161,37 @@
       opacity: 0;
     }
   }
+
+  /* Coursework / Other highlight card titles (components/ui/animated-gradient-text.tsx).
+     `gradient-text` pans the title's clipped gradient; relies on an oversized
+     background-size set on the element. Frozen to a static gradient under
+     prefers-reduced-motion by the global clamp in @layer base. */
+  --animate-gradient-text: gradient-text 8s linear infinite;
+
+  @keyframes gradient-text {
+    to {
+      background-position: var(--bg-size, 200%) center;
+    }
+  }
+}
+
+/* Rotating conic-gradient border (components/ui/animated-gradient-border.tsx).
+   `--gradient-angle` must be registered with @property as <angle> so it
+   interpolates; without this the conic gradient would snap, not spin. The
+   global prefers-reduced-motion clamp freezes it to a static border. */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes gradient-rotate {
+  from {
+    --gradient-angle: 0deg;
+  }
+  to {
+    --gradient-angle: 360deg;
+  }
 }
 
 /* -----------------------------------------------------------------------------
@@ -177,8 +208,72 @@
 
   html {
     scroll-behavior: smooth;
+    /* Anchor-jump offset is now per-section via scroll-margin-top (below) rather
+       than one global value here — scroll-padding-top can only ever be uniform
+       for every target. Kept at 0 so it doesn't stack on top of the per-section
+       margins. */
+    scroll-padding-top: 0;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+  }
+
+  /* --- Per-section scroll offset -------------------------------------------
+     Sections carry very different top paddings (About/Work pt-32, Journey/
+     Contact py-16, Skills pt-4), so a single offset lands their headings at
+     different heights under the fixed nav (h-16 = 4rem).
+
+     One knob: --heading-clear is where a section's heading should land below
+     the viewport top after a jump. Each section's scroll-margin-top is that
+     target MINUS its own top padding, so every heading stops the same distance
+     under the nav. Bump --heading-clear to push all headings further down.
+     Negative results just let big-padding sections snap a hair into the prior
+     section's empty padding (hidden behind the nav). */
+  :root {
+    --heading-clear: 5.5rem; /* mobile (< md): nav 4rem + 1.5rem breathing room */
+  }
+  @media (min-width: 48rem) {
+    :root {
+      --heading-clear: 6.5rem; /* md+ */
+    }
+  }
+
+  /* mobile top paddings: About/Work pt-24 (6rem), Journey/Contact py-12 (3rem),
+     Skills pt-3 (0.75rem) */
+  #about,
+  #work {
+    scroll-margin-top: calc(var(--heading-clear) - 6rem);
+  }
+  #journey,
+  #contact {
+    scroll-margin-top: calc(var(--heading-clear) - 3rem);
+  }
+  #skills {
+    scroll-margin-top: calc(var(--heading-clear) - 0.75rem);
+  }
+
+  /* md+ top paddings: About/Work pt-32 (8rem), Journey/Contact py-16 (4rem),
+     Skills pt-4 (1rem) */
+  @media (min-width: 48rem) {
+    #about,
+    #work {
+      scroll-margin-top: calc(var(--heading-clear) - 8rem);
+    }
+    #journey {
+      scroll-margin-top: calc(var(--heading-clear) - 6.5rem);
+    }
+    #contact {
+      scroll-margin-top: calc(var(--heading-clear) - 4rem);
+    }
+    #skills {
+      scroll-margin-top: calc(var(--heading-clear) - 3rem);
+    }
+  }
+
+  /* Mid-section jump target (Apple-cards carousel controls, hit by the hero CTA
+     and the dock) — it sits below the Work heading in flow, so it only needs to
+     clear the nav, not compensate for section padding. */
+  #work-controls {
+    scroll-margin-top: 5rem;
   }
 
   body {
@@ -311,5 +406,28 @@
     .ripple-effect {
       animation-duration: var(--ripple-duration, 150ms) !important;
     }
+  }
+
+  /* Rotating gradient border (components/ui/animated-gradient-border.tsx).
+     Inline styles set the gradient + clip; these classes drive the spin. */
+  .gradient-border-auto {
+    animation: gradient-rotate var(--animation-duration, 6s) linear infinite;
+  }
+
+  .gradient-border-hover {
+    animation: gradient-rotate var(--animation-duration, 6s) linear infinite;
+    animation-play-state: paused;
+  }
+
+  .gradient-border-hover:hover {
+    animation-play-state: running;
+  }
+
+  .gradient-border-stop-hover {
+    animation: gradient-rotate var(--animation-duration, 6s) linear infinite;
+  }
+
+  .gradient-border-stop-hover:hover {
+    animation-play-state: paused;
   }
 }

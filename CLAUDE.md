@@ -18,8 +18,8 @@ A personal portfolio for Eduardo Rebollar — Computer Science & Economics stude
 | Runtime / pkg mgr | bun 1.3+ | Installed via `npm install -g bun`. Vercel auto-detects the `bun.lock` |
 | React | 19.2 | |
 | Styling | Tailwind v4 (CSS-first) | `@theme` in `app/globals.css`; **no `tailwind.config.ts`** |
-| 3D | `@splinetool/react-spline` 4 + `@splinetool/runtime` 1 | Lazy + Suspense in `components/ui/SplineScene.tsx`; mounted full-bleed (absolute, masked) behind `components/sections/Hero.tsx` and again in the `Contact` greeting robot; gated on `hasWebGL2 && !isMobile && !reducedMotion`. Scene is **self-hosted** at `/public/spline/hero.splinecode` (served from Vercel's edge), not the old demo CDN asset. Replaced the prior R3F terrain stack |
-| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Drives Hero entrance, cursor `Spotlight`, the `timeline` scroll beam, `FloatingDock`, `AppleCardsCarousel`, and the animated backgrounds (`BackgroundBeams`, `meteors`, `sparkles`, `StarfieldBackground`, `orbiting-skills`) |
+| 3D | `@splinetool/react-spline` 4 + `@splinetool/runtime` 1 | Lazy + Suspense in `components/ui/SplineScene.tsx`; mounted full-bleed (absolute, masked) behind `components/sections/Hero.tsx`, again in the `Contact` greeting robot, and a **third** scene as the `Skills` backdrop; all gated on `hasWebGL2 && !isMobile && !reducedMotion`. Scenes are **self-hosted** under `/public/spline/*.splinecode` (`hero.splinecode`, `skills.splinecode`; served from Vercel's edge), not the old demo CDN asset. Replaced the prior R3F terrain stack |
+| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Drives Hero entrance, cursor `Spotlight`, the `timeline` scroll beam, `FloatingDock`, `AppleCardsCarousel`, the `skill-marquee`, and the animated backgrounds (`BackgroundBeams`, `meteors`, `sparkles`, `StarfieldBackground`, `orbiting-skills`, `gradient-dots`). Several Skills accents are pure-CSS keyframes in `globals.css` (`gradient-text`, `gradient-rotate`) that the global reduced-motion clamp freezes automatically |
 | State | Zustand 5 | `stores/useSceneStore.ts` — single global store; now mostly feeds the Hero's Spline gate via `DeviceDetector`. `gpuTier`/`activeSection`/`sectionProgress` fields are dead-after-R3F-removal (kept for now; safe follow-up to trim) |
 | Content | TS data files + MDX case studies | `content/data/*.ts` + `content/projects/*.mdx` |
 | Case-study viz | `@nivo/*` (bar/line/heatmap), `cytoscape` + `react-cytoscapejs`, `leaflet` + `react-leaflet` | Bundled lazily into the routes that use them (BiLSTM, Interactivity, LA History) |
@@ -42,7 +42,9 @@ components/
                      Nav chrome: FloatingDock (dock nav driven by Nav.tsx)
                      Journey: timeline (adapted Aceternity)
                      Projects: AppleCardsCarousel, 3DCard
-                     Skills: orbiting-skills
+                     Skills: orbiting-skills, skill-marquee, SkillHighlightCard,
+                       animated-gradient-border (BorderRotate), animated-gradient-text,
+                       gradient-dots (Spline-fallback backdrop)
                      Intro/backgrounds: SpiralSplash + spiral-animation,
                        BackgroundBeams, meteors, sparkles, StarfieldBackground
   a11y/              DeviceDetector, SkipToContent
@@ -58,8 +60,9 @@ content/
 lib/                 cn, device, mdx, motion, seo
 stores/              useSceneStore (Zustand) — feeds Hero's Spline gate
 types/               content (Project, ExperienceItem, EducationItem,
-                       MediaImage, …). Journey cards take an optional
-                       `images?: MediaImage[]` on Education/Experience items.
+                       MediaImage, SkillGroup, SkillCard/SkillCardGroup, …).
+                       Journey cards take an optional `images?: MediaImage[]`
+                       on Education/Experience items.
 public/              photo.jpg, projects/<slug>/*, OG, favicon
 scripts/             optimize-images.mjs (one-off sharp pipeline)
 Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
@@ -70,6 +73,8 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 - **Intro splash**: `components/ui/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page.
 - **Hero Spline scene**: `components/sections/Hero.tsx` renders the animated copy (Eyebrow / display name / tagline / CTAs) in a left column; the `<SplineScene />` is **not** in a bordered right column anymore — it's positioned `absolute`, full-bleed and edge-masked, behind the section on `md+` (the right grid cell is now an empty placeholder). `<Spotlight />` rides on the same host. `BackgroundBeams` paints behind it. The hero CTAs (`scrollToWork`/`scrollToContact`) mirror the dock's scroll targets (`#work-controls` row, page bottom) rather than jumping to anchor tops.
 - **Device gating**: `components/a11y/DeviceDetector.tsx` runs on mount inside `<Providers />`, detects WebGL2 + viewport + `prefers-reduced-motion`, and writes to `useSceneStore`. Hero reads `initialized && hasWebGL2 && !isMobile && !reducedMotion` — only when true does `<SplineScene />` mount and the heavy runtime loads. The `timeline` beam and other motion surfaces read `useSceneStore.reducedMotion` directly to render static fallbacks.
+- **Skills section**: `components/sections/Skills.tsx` filters `skills` (in `content/data/skills.ts`) into two `OrbitingSkills` groups (Technical / Productivity). Coursework + "Other" live separately as `skillHighlights: SkillCardGroup[]` (name + descriptor + lucide `icon` string key) and render through `skill-marquee.tsx` → `SkillHighlightCard.tsx` — a continuously-scrolling row of cards, each a `BorderRotate` (rotating conic-gradient border) wrapping an icon + `AnimatedGradientText` title + descriptor. The backdrop is a third Spline scene (`/spline/skills.splinecode`, same gate as Hero) over a `gradient-dots` fallback. The string→component icon indirection (in `SkillHighlightCard`) keeps the data file JSX-free, mirroring `orbiting-skills.tsx`.
+- **Per-section scroll offset**: anchor jumps are tuned per section via `scroll-margin-top` in `globals.css`, driven by one `--heading-clear` knob (sections carry different top paddings, so a single global `scroll-padding-top` would land headings at uneven heights under the fixed nav). `Nav.tsx`'s `scrollToSection` drives the scroll explicitly (Next `<Link>` hash nav is a no-op when the hash already matches — the old "sometimes works" bug) and honors reduced-motion.
 - **No persistent canvas, no smooth scroll, no scroll-linked animation.** The prior R3F terrain + GSAP/ScrollTrigger + Lenis stack was removed when the Spline hero swap landed. Native browser scroll only.
 
 ## Working agreement (READ THIS)
@@ -118,6 +123,7 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 | Phase 5 — analytics/speed-insights, R3F v9 + React 19 upgrade, scene-actually-renders fix, embedded BiLSTM viz, InteractivityViz dashboard, native LA History port (Leaflet + Cytoscape + AI tutor), clickable supporting cards | ✓ |
 | Phase 6 — replaced R3F terrain + GSAP/Lenis stack with a Spline hero scene + cursor Spotlight; pruned 9 unused deps; simplified DeviceDetector | ✓ |
 | Phase 7 — visual overhaul: self-hosted full-bleed Spline hero + `BackgroundBeams`; `SpiralSplash` intro; `FloatingDock` nav; `AppleCardsCarousel` + `3DCard` projects (dropped FeaturedProject); `orbiting-skills` Skills; merged Education + Experience into a `Journey` timeline; `meteors`/`sparkles`/`StarfieldBackground` accents; Contact Spline greeting robot + single-row Footer | ✓ |
+| Phase 8 — Skills overhaul: third self-hosted Spline backdrop (`skills.splinecode`) over a `gradient-dots` fallback; Coursework + Other moved to `skillHighlights` (`SkillCardGroup`) rendered as a `skill-marquee` of `SkillHighlightCard`s (`BorderRotate` + `AnimatedGradientText`); per-section `scroll-margin-top` system + `Nav` `scrollToSection` fix; `BackgroundBeams` recolored to white | ◧ working tree, not yet committed |
 
 ## Known follow-ups (not blocking launch)
 
@@ -135,4 +141,6 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 - **The deployed page is blank or rendering wrong?** Check the served HTML for `BAILOUT_TO_CLIENT_SIDE_RENDERING` — Next 16 emits this when a server component contains `dynamic({ ssr: false })`. We had this bug once (`36fe738`); recurrence is the same fix pattern.
 - **A new MDX file isn't appearing at `/work/<slug>`?** Register it in `lib/mdx.ts`'s `projectMDX` map — the build relies on explicit static imports, not filesystem scan.
 - **OG image fails to build for a new slug?** Check `app/work/[slug]/opengraph-image.tsx` for any `<div>` with multiple children missing `display: flex`.
-- **Spline scene doesn't appear in the hero?** Check the store flags in DevTools: it only mounts when `initialized && hasWebGL2 && !isMobile && !reducedMotion`. OS-level reduced-motion (which Eduardo has) silently hides it — toggle via DevTools Rendering → "Emulate prefers-reduced-motion: no-preference" to confirm.
+- **Spline scene doesn't appear in the hero (or Skills)?** Check the store flags in DevTools: it only mounts when `initialized && hasWebGL2 && !isMobile && !reducedMotion`. OS-level reduced-motion (which Eduardo has) silently hides it and shows the fallback (Hero: beams only; Skills: `gradient-dots`) — toggle via DevTools Rendering → "Emulate prefers-reduced-motion: no-preference" to confirm.
+- **Skills backdrop reads charcoal grey, not black?** The Spline scene bakes in a ~#121212 canvas background whose alpha can't be overridden from react-spline; `Skills.tsx` crushes it with a `[filter:contrast(1.6)]` on `<SplineScene />`. Bump the contrast if grey remains; ease it down if the particles start clipping.
+- **A nav link only scrolls sometimes?** Next `<Link>` hash navigation is a no-op when the URL hash already matches the target. `Nav.tsx`'s `scrollToSection` drives the scroll explicitly to fix this — new nav links should route through it (or `scrollToBottom`/`scrollToWorkControls`), not bare `<Link href="#…">`.
