@@ -12,6 +12,11 @@ export type SocialLink = {
 export type MediaImage = {
   src: string;
   alt: string;
+  /**
+   * Optional curated description shown under the image in the expand-to-view
+   * Lightbox. Falls back to `alt` when omitted.
+   */
+  caption?: string;
 };
 
 export type SiteConfig = {

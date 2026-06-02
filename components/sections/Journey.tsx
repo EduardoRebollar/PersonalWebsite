@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Briefcase, GraduationCap, ImagePlus } from 'lucide-react';
 import { Container } from '@/components/ui/primitives/Container';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { Pill } from '@/components/ui/primitives/Pill';
+import { Lightbox } from '@/components/ui/Lightbox';
 import { Timeline, type TimelineEntry } from '@/components/ui/timeline';
 import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
 import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
@@ -16,10 +18,9 @@ import type { EducationItem, ExperienceItem, MediaImage } from '@/types/content'
 
 /**
  * Journey — a single chronological timeline that merges Education + Experience.
- * Eduardo studied while working (College Match LA even appears in both, as a
- * prep program then a SWE internship), so one interleaved spine tells the story
- * better than two separate lists. Each entry carries a 🎓/💼 chip so the two
- * tracks stay scannable. Built on the adapted Aceternity Timeline.
+ * Eduardo studied while working, so one interleaved spine tells the story better
+ * than two separate lists. Each entry carries a 🎓/💼 chip so the two tracks stay
+ * scannable. Built on the adapted Aceternity Timeline.
  */
 
 type JourneyItem =
@@ -35,10 +36,12 @@ const journeyItems: JourneyItem[] = [
   ...education.map((e): JourneyItem => ({ kind: 'education', ...e })),
   ...experience.map((x): JourneyItem => ({ kind: 'experience', ...x })),
 ].sort((a, b) =>
-  // most recent first; same start → ongoing first, then later end first
+  // most recent first; same start → earlier end first, so a completed stint
+  // (e.g. the STEAM:CODERS internship) surfaces above a long/ongoing entry
+  // that shares its start month (e.g. starting at Occidental).
   a.start !== b.start
     ? b.start.localeCompare(a.start)
-    : endKey(b.end).localeCompare(endKey(a.end)),
+    : endKey(a.end).localeCompare(endKey(b.end)),
 );
 
 function formatYearRange(start: string, end: string | 'present'): string {
@@ -57,30 +60,48 @@ function formatMonthRange(start: string, end: string | 'present'): string {
   return `${fmt(start)} — ${end === 'present' ? 'Present' : fmt(end)}`;
 }
 
+// Single source of truth for the timeline's descriptive lists so Education and
+// Experience stay visually identical (dash marker, spacing, color). Tag-style
+// rows (focus / tech) intentionally render as <Pill> instead — a separate,
+// consistent category.
+function BulletList({ items, className }: { items: string[]; className?: string }) {
+  return (
+    <ul className={`flex flex-col gap-2 text-fg-mute${className ? ` ${className}` : ''}`}>
+      {items.map((item, i) => (
+        <li
+          key={i}
+          className="relative pl-5 before:absolute before:top-2.5 before:left-0 before:h-px before:w-3 before:bg-fg-mute/40"
+        >
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PillRow({ items, className }: { items: string[]; className?: string }) {
+  return (
+    <ul className={`flex flex-wrap justify-center gap-2${className ? ` ${className}` : ''}`}>
+      {items.map((item) => (
+        <li key={item}>
+          <Pill subtle>{item}</Pill>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function EducationBody({ item }: { item: EducationItem }) {
+  // Honors + activities render as one list so every bullet shares a single
+  // uniform gap (two separate lists would double the spacing between groups).
+  const lines = [...(item.honors ?? []), ...(item.activities ?? [])];
   return (
     <div className="mt-4 flex flex-col gap-2">
       <h3 className="font-display text-h3 leading-tight text-fg">{item.institution}</h3>
       <p className="text-fg-mute">{item.credential}</p>
-      {item.focus && item.focus.length > 0 && (
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {item.focus.map((f) => (
-            <li key={f}>
-              <Pill subtle>{f}</Pill>
-            </li>
-          ))}
-        </ul>
-      )}
-      {item.honors && item.honors.length > 0 && (
-        <ul className="mt-2 list-disc pl-5 text-sm text-fg-mute">
-          {item.honors.map((h) => (
-            <li key={h}>{h}</li>
-          ))}
-        </ul>
-      )}
-      {item.activities && item.activities.length > 0 && (
-        <p className="mt-1 text-sm text-fg-mute">{item.activities.join(' · ')}</p>
-      )}
+      {lines.length > 0 && <BulletList items={lines} className="mt-2" />}
+      {/* Skill pills render last, mirroring the `tech` row on Experience cards. */}
+      {item.focus && item.focus.length > 0 && <PillRow items={item.focus} className="mt-5" />}
     </div>
   );
 }
@@ -96,46 +117,52 @@ function ExperienceBody({ item }: { item: ExperienceItem }) {
         </p>
       </div>
       <p className="mt-4 text-fg">{item.impact}</p>
-      <ul className="mt-4 flex flex-col gap-2 text-fg-mute">
-        {item.bullets.map((b, j) => (
-          <li
-            key={j}
-            className="relative pl-5 before:absolute before:top-2.5 before:left-0 before:h-px before:w-3 before:bg-fg-mute/40"
-          >
-            {b}
-          </li>
-        ))}
-      </ul>
-      {item.tech && item.tech.length > 0 && (
-        <ul className="mt-5 flex flex-wrap gap-2">
-          {item.tech.map((t) => (
-            <li key={t}>
-              <Pill subtle>{t}</Pill>
-            </li>
-          ))}
-        </ul>
-      )}
+      <BulletList items={item.bullets} className="mt-4" />
+      {item.tech && item.tech.length > 0 && <PillRow items={item.tech} className="mt-5" />}
     </>
   );
 }
 
-function JourneyMedia({ title, images }: { title: string; images?: MediaImage[] }) {
+function JourneyMedia({
+  title,
+  images,
+  onExpand,
+}: {
+  title: string;
+  images?: MediaImage[];
+  onExpand: (img: MediaImage) => void;
+}) {
   if (images && images.length > 0) {
     return (
       <div className="flex flex-col gap-3 md:h-full md:flex-1">
         {images.map((img) => (
-          <div
+          <button
             key={img.src}
-            className="relative aspect-[3/4] overflow-hidden rounded-xl border border-hairline md:aspect-auto md:flex-1"
+            type="button"
+            onClick={() => onExpand(img)}
+            aria-label={`Expand image: ${img.alt}`}
+            className="group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-xl border border-hairline transition-[border-color,box-shadow] duration-300 hover:border-accent/50 hover:shadow-[0_8px_24px_-12px_var(--color-accent)] focus-visible:border-accent/60 md:aspect-auto md:flex-1"
           >
             <Image
               src={img.src}
               alt={img.alt}
               fill
-              sizes="(max-width: 768px) 14rem, 16rem"
-              className="object-cover"
+              // Bump above Next's default quality of 75 so the optimizer
+              // doesn't add visible recompression softness.
+              quality={95}
+              // The card only renders ~256px wide, but advertise a much larger
+              // size so Next serves a high-res variant (~1080px). This gives the
+              // bitmap resolution headroom so it stays sharp when visitors
+              // pinch/zoom into the photo on the page.
+              sizes="(max-width: 768px) 40rem, 34rem"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             />
-          </div>
+            {/* Subtle dim on hover/focus as an affordance (no icon). */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10 group-focus-visible:bg-black/10"
+            />
+          </button>
         ))}
       </div>
     );
@@ -190,24 +217,30 @@ function JourneyCard({ item }: { item: JourneyItem }) {
   );
 }
 
-const timelineData: TimelineEntry[] = journeyItems.map((item) => ({
-  title: item.start.slice(0, 4),
-  content: (
-    <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-      <div className="w-full max-w-[14rem] shrink-0 md:flex md:w-56 md:max-w-none md:flex-col lg:w-64">
-        <JourneyMedia
-          title={item.kind === 'education' ? item.institution : item.role}
-          images={item.images}
-        />
+function buildTimelineData(onExpand: (img: MediaImage) => void): TimelineEntry[] {
+  return journeyItems.map((item) => ({
+    title: item.start.slice(0, 4),
+    content: (
+      <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
+        <div className="w-full max-w-[14rem] shrink-0 md:flex md:w-56 md:max-w-none md:flex-col lg:w-64">
+          <JourneyMedia
+            title={item.kind === 'education' ? item.institution : item.role}
+            images={item.images}
+            onExpand={onExpand}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <JourneyCard item={item} />
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <JourneyCard item={item} />
-      </div>
-    </div>
-  ),
-}));
+    ),
+  }));
+}
 
 export function Journey() {
+  const [active, setActive] = useState<MediaImage | null>(null);
+  const timelineData = buildTimelineData(setActive);
+
   return (
     <section
       id="journey"
@@ -239,6 +272,8 @@ export function Journey() {
         </Heading>
         <Timeline data={timelineData} />
       </Container>
+
+      <Lightbox image={active} onClose={() => setActive(null)} />
     </section>
   );
 }

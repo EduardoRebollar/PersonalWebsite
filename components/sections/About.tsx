@@ -1,13 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3DCard';
 import { Container } from '@/components/ui/primitives/Container';
+import { Lightbox } from '@/components/ui/Lightbox';
 import { Meteors } from '@/components/ui/backgrounds/meteors';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
+import type { MediaImage } from '@/types/content';
+
+const portrait: MediaImage = {
+  src: '/photo.jpg',
+  alt: `${site.name} portrait`,
+  caption: `${site.name} — ${site.role}.`,
+};
 
 const aboutParagraphs = [
   `I'm Eduardo, a Computer Science & Economics student at Occidental College working across machine learning, data, and the web.`,
@@ -16,6 +25,8 @@ const aboutParagraphs = [
 ];
 
 export function About() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <section
       id="about"
@@ -62,22 +73,36 @@ export function About() {
           <CardContainer>
             <CardBody className="h-auto w-full max-w-[18rem] md:w-72">
               <CardItem
+                as="button"
+                type="button"
+                onClick={() => setExpanded(true)}
+                aria-label={`Expand portrait: ${portrait.alt}`}
                 translateZ={40}
-                className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-hairline bg-surface/40"
+                className="group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl border border-hairline bg-surface/40 transition-[border-color] duration-300 hover:border-accent/50 focus-visible:border-accent/60"
               >
                 <Image
-                  src="/photo.jpg"
-                  alt={`${site.name} portrait`}
+                  src={portrait.src}
+                  alt={portrait.alt}
                   fill
                   sizes="(max-width: 768px) 100vw, 288px"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   priority={false}
+                />
+                {/* Subtle dim on hover/focus as an affordance (no icon). */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10 group-focus-visible:bg-black/10"
                 />
               </CardItem>
             </CardBody>
           </CardContainer>
         </motion.div>
       </Container>
+
+      <Lightbox
+        image={expanded ? portrait : null}
+        onClose={() => setExpanded(false)}
+      />
     </section>
   );
 }

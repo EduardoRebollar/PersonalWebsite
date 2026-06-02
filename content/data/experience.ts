@@ -14,7 +14,13 @@ export const experience: ExperienceItem[] = [
       'Diagnose and repair Windows and macOS systems — updates, configurations, password resets, printer connectivity, basic laptop repairs.',
       'Maintain Active Directory accounts and software deployments using the department’s ITSM workflow.',
     ],
-    tech: ['Active Directory', 'Freshservice ITSM', 'Windows', 'macOS'],
+    tech: [
+      'Active Directory',
+      'Freshservice ITSM',
+      'Windows',
+      'macOS',
+      'Printer Support',
+    ],
   },
   {
     role: 'Software Development Intern',
@@ -30,7 +36,20 @@ export const experience: ExperienceItem[] = [
       'Launched the portal at Scholar Success Day to an audience of 100+ alumni, scholars, organization members, and partner-org reps.',
       'Mentored rising high-school applicants during CMLA’s prep workshop — essay coaching, interview prep, college selection.',
     ],
-    tech: ['Softr', 'Airtable', 'No-code'],
+    tech: [
+      'Softr',
+      'Airtable',
+      'Web App Development',
+      'Database Design',
+      'UX Design',
+      'Mentorship',
+    ],
+    images: [
+      {
+        src: '/journey/collegematch.jpg',
+        alt: 'Eduardo with fellow College Match LA scholars at a CMLA program event.',
+      },
+    ],
   },
   {
     role: 'Student Intern',
@@ -46,6 +65,20 @@ export const experience: ExperienceItem[] = [
       'Authored Jupyter dashboards in Pandas, Matplotlib, and Seaborn answering key program questions about reach and outcomes.',
       'Improved the data-analyst onboarding site so new hires could ramp without 1:1 hand-holding.',
     ],
-    tech: ['Python', 'Pandas', 'Seaborn', 'Matplotlib', 'Snowflake', 'Jupyter'],
+    tech: [
+      'Python',
+      'Pandas',
+      'Seaborn',
+      'Matplotlib',
+      'Snowflake',
+      'Jupyter',
+      'ETL Pipelines',
+    ],
+    images: [
+      {
+        src: '/journey/steamcoders.jpg',
+        alt: 'Eduardo with two fellow STEAM:CODERS interns outside the idealab building in Pasadena.',
+      },
+    ],
   },
 ];

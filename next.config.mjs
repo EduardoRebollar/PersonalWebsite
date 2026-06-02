@@ -17,6 +17,10 @@ const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Next 16 only honors `quality` values listed here (default is [75]).
+    // 95 is used for the Journey photos so the optimizer doesn't add
+    // recompression softness on top of modest-res source shots.
+    qualities: [75, 95],
   },
   async headers() {
     return [
