@@ -9,6 +9,13 @@ export const education: EducationItem[] = [
     focus: ['Machine Learning', 'NLP', 'Econometrics', 'Data Structures', 'Algorithms', 'Statistics'],
     honors: ["Dean's List, 2023 – present"],
     activities: ['Latine Student Union', 'Computer Science Club'],
+    images: [
+      {
+        src: '/journey/occidental-college.jpg',
+        alt: 'Eduardo presenting his data-visualization interactivity research at a podium in an Occidental College lecture hall.',
+        objectPosition: 'center 25%',
+      },
+    ],
   },
   {
     institution: 'Bell Senior High School',

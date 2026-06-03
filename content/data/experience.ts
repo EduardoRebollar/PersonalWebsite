@@ -21,6 +21,13 @@ export const experience: ExperienceItem[] = [
       'macOS',
       'Printer Support',
     ],
+    images: [
+      {
+        src: '/journey/occidental-its.jpg',
+        alt: 'Eduardo at the Occidental College ITS help desk wearing a headset, Dell monitor in front and a repair bench behind.',
+        zoom: 1.15,
+      },
+    ],
   },
   {
     role: 'Software Development Intern',

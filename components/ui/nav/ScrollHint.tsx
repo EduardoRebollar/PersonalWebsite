@@ -6,13 +6,17 @@ import { easing } from '@/lib/motion';
 /**
  * Subtle "scroll" indicator that lives at the bottom of the hero.
  * Bobs gently; fades and stops at scroll > 80px.
+ *
+ * `play` gates the entrance on the hero's intro being dismissed, so the rise
+ * shares the same clock as the CTA cascade and lands as its third beat
+ * (~2.3s after the splash clears) — rather than animating behind the overlay.
  */
-export function ScrollHint() {
+export function ScrollHint({ play = true }: { play?: boolean }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, delay: 1.8, ease: easing.outExpo }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={play ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+      transition={{ duration: 0.7, delay: 2.3, ease: easing.outExpo }}
       className="flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase"
     >
       <span>scroll</span>

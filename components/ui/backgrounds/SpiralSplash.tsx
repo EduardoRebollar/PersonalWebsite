@@ -9,10 +9,11 @@
 // `relative z-10` stacking context — otherwise the Nav (fixed z-50) would
 // paint on top of the splash.
 
-import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { RippleButton } from '../cta/RippleButton';
 import { Spotlight } from '../three/Spotlight';
+import { useSceneStore } from '@/stores/useSceneStore';
 
 const SpiralAnimation = lazy(() =>
   import('./spiral-animation').then((m) => ({ default: m.SpiralAnimation })),
@@ -24,6 +25,14 @@ export function SpiralSplash() {
   const [visible, setVisible] = useState(true);
   const [enterVisible, setEnterVisible] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const dismissSplash = useSceneStore((s) => s.dismissSplash);
+
+  // Single dismissal path: fade the overlay AND signal the store so the Hero
+  // can kick off its name reveal as the intro clears.
+  const dismiss = useCallback(() => {
+    setVisible(false);
+    dismissSplash();
+  }, [dismissSplash]);
 
   useEffect(() => {
     // Flip the SSR/client boundary so createPortal only runs after hydration.
@@ -65,12 +74,12 @@ export function SpiralSplash() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Enter') {
         e.preventDefault();
-        setVisible(false);
+        dismiss();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible]);
+  }, [visible, dismiss]);
 
   if (!hydrated || !mounted) return null;
 
@@ -109,7 +118,7 @@ export function SpiralSplash() {
             <Spotlight size={260} className="from-white/70 via-white/30 to-white/0" />
             <RippleButton
               ref={buttonRef}
-              onClick={() => setVisible(false)}
+              onClick={dismiss}
               aria-label="Enter site"
               rippleColor="rgba(255, 255, 255, 0.5)"
               className="z-10 animate-pulse text-2xl font-extralight tracking-[0.2em] text-white uppercase transition-all duration-700 hover:tracking-[0.4em] focus-visible:tracking-[0.3em] focus-visible:outline-none"

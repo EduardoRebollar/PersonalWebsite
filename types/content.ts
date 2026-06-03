@@ -17,6 +17,18 @@ export type MediaImage = {
    * Lightbox. Falls back to `alt` when omitted.
    */
   caption?: string;
+  /**
+   * Optional zoom factor (1 = none) applied inside the object-cover frame, so a
+   * too-wide/too-tall source can crop tighter on its subject without a separate
+   * asset. Composes with the card's hover scale.
+   */
+  zoom?: number;
+  /**
+   * Optional CSS object-position for the object-cover crop (default 'center').
+   * e.g. 'top' to anchor the crop to the top edge so more of the upper part of
+   * a tall photo stays in frame.
+   */
+  objectPosition?: string;
 };
 
 export type SiteConfig = {

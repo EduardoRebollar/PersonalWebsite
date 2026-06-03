@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Briefcase, GraduationCap, ImagePlus } from 'lucide-react';
@@ -155,12 +155,18 @@ function JourneyMedia({
               // bitmap resolution headroom so it stays sharp when visitors
               // pinch/zoom into the photo on the page.
               sizes="(max-width: 768px) 40rem, 34rem"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              // Per-image base zoom (--img-zoom, default 1) composed with the
+              // hover scale; lets a single photo crop tighter on its subject.
+              // objectPosition steers which part of the cover crop stays in frame.
+              style={
+                { '--img-zoom': img.zoom ?? 1, objectPosition: img.objectPosition } as CSSProperties
+              }
+              className="scale-[var(--img-zoom)] object-cover transition-transform duration-500 group-hover:scale-[calc(var(--img-zoom)*1.03)]"
             />
             {/* Subtle dim on hover/focus as an affordance (no icon). */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10 group-focus-visible:bg-black/10"
+              className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/30 group-focus-visible:bg-black/30"
             />
           </button>
         ))}
@@ -183,6 +189,34 @@ function JourneyMedia({
   );
 }
 
+// A single masked gradient border with TWO lighter regions sitting across from
+// each other: the conic has a soft #29245e peak at 25% and again at 75% (180°
+// apart) over the dark #121026 base, so two subtle glows travel around the one
+// ring on opposite sides as it rotates. Masked to just the 1px ring via
+// mask-composite, so the translucent surface + starfield show through. Same
+// gradient-border-auto / --gradient-angle engine as the 21st.dev BorderRotate
+// (globals.css); the global reduced-motion clamp freezes the rotation.
+const RING_STYLE = {
+  '--animation-duration': '14s',
+  padding: '1px',
+  background:
+    'conic-gradient(from var(--gradient-angle), #121026 0%, #1c1942 15%, #29245e 25%, #1c1942 35%, #121026 50%, #1c1942 65%, #29245e 75%, #1c1942 85%, #121026 100%)',
+  WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+  WebkitMaskComposite: 'xor',
+  mask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+  maskComposite: 'exclude',
+} as CSSProperties;
+
+function CardGradientRing() {
+  return (
+    <span
+      aria-hidden="true"
+      className="gradient-border-auto pointer-events-none absolute inset-0 rounded-[inherit]"
+      style={RING_STYLE}
+    />
+  );
+}
+
 function JourneyCard({ item }: { item: JourneyItem }) {
   const isEdu = item.kind === 'education';
   const Icon = isEdu ? GraduationCap : Briefcase;
@@ -196,23 +230,29 @@ function JourneyCard({ item }: { item: JourneyItem }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-10%' }}
       transition={{ duration: 0.7, ease: easing.outExpo }}
-      className="rounded-2xl border border-hairline bg-surface/60 p-6 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_8px_24px_-12px_var(--color-accent)] md:p-8"
+      className="rounded-2xl transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_var(--color-accent)]"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline px-2.5 py-1 font-mono text-[10px] tracking-[0.12em] text-fg-mute uppercase">
-          <Icon className="h-3 w-3" strokeWidth={1.8} aria-hidden="true" />
-          {isEdu ? 'Education' : 'Experience'}
-        </span>
-        <span className="font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase">
-          {range}
-        </span>
-      </div>
+      {/* Translucent surface (starfield shows through) with a subtle animated
+          gradient border drawn by CardGradientRing as a masked overlay. */}
+      <div className="relative rounded-2xl bg-surface/60 p-6 backdrop-blur-md md:p-8">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline px-2.5 py-1 font-mono text-[10px] tracking-[0.12em] text-fg-mute uppercase">
+            <Icon className="h-3 w-3" strokeWidth={1.8} aria-hidden="true" />
+            {isEdu ? 'Education' : 'Experience'}
+          </span>
+          <span className="font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase">
+            {range}
+          </span>
+        </div>
 
-      {item.kind === 'education' ? (
-        <EducationBody item={item} />
-      ) : (
-        <ExperienceBody item={item} />
-      )}
+        {item.kind === 'education' ? (
+          <EducationBody item={item} />
+        ) : (
+          <ExperienceBody item={item} />
+        )}
+
+        <CardGradientRing />
+      </div>
     </motion.div>
   );
 }

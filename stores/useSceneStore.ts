@@ -25,6 +25,9 @@ export type SceneState = {
   liteModeOverridden: boolean;
   activeSection: string;
   sectionProgress: number;
+  /** Flipped true once the SpiralSplash "Enter" is dismissed. Lets the Hero
+   *  defer its name reveal until the intro overlay clears. */
+  splashDismissed: boolean;
 
   initialize: (params: {
     hasWebGL2: boolean;
@@ -38,6 +41,7 @@ export type SceneState = {
   setLiteMode: (value: boolean) => void;
   setActiveSection: (slug: string) => void;
   setSectionProgress: (progress: number) => void;
+  dismissSplash: () => void;
 };
 
 function computeAutoLite(params: {
@@ -58,6 +62,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   liteModeOverridden: false,
   activeSection: 'hero',
   sectionProgress: 0,
+  splashDismissed: false,
 
   initialize: (params) =>
     set({
@@ -95,6 +100,8 @@ export const useSceneStore = create<SceneState>((set) => ({
   setActiveSection: (slug) => set({ activeSection: slug }),
 
   setSectionProgress: (progress) => set({ sectionProgress: progress }),
+
+  dismissSplash: () => set({ splashDismissed: true }),
 }));
 
 /**

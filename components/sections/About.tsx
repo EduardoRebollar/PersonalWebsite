@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3DCard';
 import { Container } from '@/components/ui/primitives/Container';
 import { Lightbox } from '@/components/ui/Lightbox';
+import { ShinyButton } from '@/components/ui/cta/ShinyButton';
 import { Meteors } from '@/components/ui/backgrounds/meteors';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { site } from '@/content/data/site';
@@ -58,7 +59,7 @@ export function About() {
               ))}
             </div>
             {site.resumeHref && (
-              <a
+              <ShinyButton
                 href={site.resumeHref}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -66,7 +67,7 @@ export function About() {
               >
                 View resume
                 <span aria-hidden="true">↗</span>
-              </a>
+              </ShinyButton>
             )}
           </div>
 
