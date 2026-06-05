@@ -10,6 +10,7 @@ const eslintConfig = [
       'node_modules/**',
       'Personal Data/**',
       'public/**',
+      'design_handoff_hero_orbital/**', // design reference prototype, not app code
       'next-env.d.ts',
     ],
   },

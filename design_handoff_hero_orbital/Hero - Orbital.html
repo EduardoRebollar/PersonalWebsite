@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hero — Orbital</title>
+<link rel="stylesheet" href="hero.css" />
+<link rel="stylesheet" href="hero-orbital.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; }
+  #scaler { width: 1440px; height: 860px; transform-origin: center center; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="scaler"><div id="root"></div></div></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="hero-shared.jsx"></script>
+<script type="text/babel" src="hero-orbital.jsx"></script>
+
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById('root')).render(<HeroOrbital />);
+</script>
+
+<script>
+  /* ── Orbital animation engine — plain JS, no Babel ──────────────
+     Polls via rAF until .hero.orb exists, caches elements, loops. */
+  // Animation engine — auto-starts once React has committed .orb-planet-wrap to the DOM.
+  window._startOrbits = function() {
+    var TAU = Math.PI * 2, CX = 720, CY = 430;
+    var cfg = [
+      { rx: 430, ry: 265, sz: 4, dur: 16, dir:  1, phase: 305, sec: true  },
+      { rx: 490, ry: 298, sz: 7, dur: 30, dir: -1, phase:  25, sec: false },
+      { rx: 545, ry: 328, sz: 5, dur: 21, dir:  1, phase: 150, sec: false },
+      { rx: 600, ry: 356, sz: 3, dur: 38, dir: -1, phase: 235, sec: false },
+    ];
+    var hero    = document.querySelector('.hero.orb');
+    if (!hero) return;
+    var planets = hero.querySelectorAll('.orb-planet-wrap');
+    var labels  = hero.querySelectorAll('.orb-label');
+    var spokes  = hero.querySelectorAll('.orb-spoke-line');
+    var field   = hero.querySelector('.orb-field');
+
+    /* gradient elements for tapered spokes */
+    var grads = cfg.map(function(o, i) { return document.getElementById('spk-grad-' + i); });
+
+    /* pulse cooldown per orbit */
+    var lastPulse = [-99999, -99999, -99999, -99999];
+    var PULSE_CD  = 5000;
+
+    function spawnPulse(x, y, isSec) {
+      var el = document.createElement('div');
+      el.className = 'orb-pulse' + (isSec ? ' sec' : '');
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      field.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+    }
+
+    var start = performance.now();
+    function tick(now) {
+      var elapsed = (now - start) / 1000;
+      for (var i = 0; i < cfg.length; i++) {
+        var o  = cfg[i];
+        var t  = (o.phase / 360) * TAU + (elapsed / o.dur) * TAU * o.dir;
+        var px = o.rx * Math.cos(t), py = o.ry * Math.sin(t);
+
+        planets[i].style.left = (CX + px) + 'px';
+        planets[i].style.top  = (CY + py) + 'px';
+
+        var dist = Math.sqrt(px * px + py * py);
+        var nx = dist > 1e-9 ? px / dist : 0, ny = dist > 1e-9 ? py / dist : -1;
+        var pad = o.sz * 2 + 26;
+        labels[i].style.left = (CX + px + nx * pad) + 'px';
+        labels[i].style.top  = (CY + py + ny * pad) + 'px';
+
+        spokes[i].setAttribute('x2', CX + px);
+        spokes[i].setAttribute('y2', CY + py);
+
+        /* update gradient endpoint so taper follows the spoke */
+        if (grads[i]) {
+          grads[i].setAttribute('x2', CX + px);
+          grads[i].setAttribute('y2', CY + py);
+        }
+
+
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  };
+
+  // Poll until React has rendered the orbital elements, then launch.
+  ;(function tryLaunch() {
+    if (document.querySelector('.hero.orb .orb-planet-wrap')) {
+      window._startOrbits();
+    } else {
+      setTimeout(tryLaunch, 30);
+    }
+  })();
+
+  const scaler = document.getElementById('scaler');
+  function fit() {
+    const w = window.innerWidth  || document.documentElement.clientWidth  || 1440;
+    const h = window.innerHeight || document.documentElement.clientHeight || 860;
+    if (!w || !h) return;
+    const s = Math.min(w / 1440, h / 860);
+    scaler.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('load', fit);
+  document.addEventListener('DOMContentLoaded', fit);
+  requestAnimationFrame(fit);
+</script>
+</body>
+</html>

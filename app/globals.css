@@ -223,6 +223,46 @@
   animation: glow-pulse 2.2s ease-in-out infinite;
 }
 
+/* Hero orbital field (components/ui/backgrounds/OrbitalField.tsx). The breathing
+   halo + label styling for the four field-nodes. Kept top-level (not in @theme)
+   so Tailwind v4 always emits the `orb-breathe` keyframe — it's referenced via a
+   plain class, which the @theme tree-shaker can't see. The global reduced-motion
+   clamp in @layer base freezes the halo to its resting frame; the rAF orbit loop
+   self-suppresses in JS on the same preference. */
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.13;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.05;
+  }
+}
+
+.orbital-field .orb-halo {
+  /* Scale around the circle's own center (it sits at the group's local origin),
+     independent of the rAF-driven translate on the parent <g>. */
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orb-breathe 4.6s ease-in-out infinite;
+  animation-delay: var(--orb-bd, 0s);
+}
+
+.orbital-field .orb-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  fill: #fff;
+  /* Resting opacity (0.72) is driven inline by motion's center-out fade in
+     OrbitalField.tsx, so it isn't set here — a CSS `opacity` would compete with
+     the animated inline value. */
+}
+.orbital-field .orb-label.sec {
+  fill: color-mix(in oklab, var(--secondary) 40%, #fff);
+}
+
 /* -----------------------------------------------------------------------------
  * Base layer — resets, body defaults, accessibility utilities.
  * --------------------------------------------------------------------------- */
