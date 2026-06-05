@@ -2,7 +2,8 @@
 
 import { motion, type Variants } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
-import { BackgroundBeams } from '@/components/ui/backgrounds/BackgroundBeams';
+import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
+import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { Container } from '@/components/ui/primitives/Container';
 import { Eyebrow } from '@/components/ui/primitives/Eyebrow';
 import { RippleLink } from '@/components/ui/cta/RippleLink';
@@ -127,7 +128,19 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className="relative flex items-start overflow-hidden [zoom:0.9]"
     >
-      <BackgroundBeams className="mx-auto max-w-[calc(var(--container-shell)*1.5)]" />
+      {/* Top of the continuous starfield that runs Hero → About → Journey →
+          Skills → Work → Contact. Fades in at the very top (under the nav);
+          solid at the bottom so it hands off into About. Same centered
+          1.5x-shell band the section's overflow-hidden crops. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_100%)]"
+      >
+        <StarsBackground />
+        <ShootingStars minDelay={400} maxDelay={1800} />
+        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
+        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
+      </div>
 
       {showSpline ? (
         <div className="container-shell pointer-events-none absolute inset-x-0 inset-y-0 z-0 hidden md:block">

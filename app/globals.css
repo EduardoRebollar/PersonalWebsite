@@ -460,3 +460,865 @@
     animation-play-state: paused;
   }
 }
+
+/* -----------------------------------------------------------------------------
+ * About — interactive terminal (Design B1). Port of the prototype's `.tm-*`
+ * styles, scoped under .about-terminal.
+ *
+ * Local token block: the prototype CSS uses short names (--accent = indigo,
+ * --warn = amber, …). In this repo raw --accent is amber and the indigo lives
+ * in --primary, so we re-map the short names locally here. This override only
+ * affects raw var(--accent) etc. inside the subtree; Tailwind utilities use the
+ * --color-* names (unaffected), so nothing else on the page changes.
+ *
+ * These rules + their @keyframes live at top level (NOT in @theme) so Tailwind
+ * v4 doesn't tree-shake the keyframes — same precedent as glow-pulse/.cta-glow.
+ * --------------------------------------------------------------------------- */
+
+.about-terminal {
+  --base: var(--background);
+  --fg: var(--foreground);
+  --fg-mute: var(--muted-foreground);
+  --surface: var(--card);
+  --hairline: var(--border);
+  --accent: var(--primary); /* indigo — repo's raw --accent is amber; localize */
+  --warn: var(--chart-3); /* amber #fcd34d */
+  /* --secondary (teal #2dd4bf) inherits from :root — do NOT redefine it here
+     (a self-referential var(--secondary) would be invalid). */
+}
+
+/* faint 32px grid + radial vignette, masked top/bottom so it blends into the
+   black sections above/below. */
+.about-terminal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background:
+    linear-gradient(transparent 31px, color-mix(in oklab, var(--hairline) 12%, transparent) 32px) 0 0 / 100% 32px,
+    linear-gradient(90deg, transparent 31px, color-mix(in oklab, var(--hairline) 12%, transparent) 32px) 0 0 / 32px 100%,
+    radial-gradient(120% 70% at 80% -10%, #0a0c14 0%, #000 60%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+/* eyebrow code-comment */
+.about-terminal .tm-comment {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  color: color-mix(in oklab, var(--fg-mute) 65%, transparent);
+  margin-bottom: 18px;
+}
+.about-terminal .tm-comment b {
+  color: var(--secondary);
+  font-weight: 500;
+}
+
+/* two-column grid */
+.about-terminal .about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.92fr);
+  gap: clamp(28px, 4vw, 52px);
+  align-items: start;
+}
+.about-terminal .about-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.about-terminal .about-side {
+  position: sticky;
+  top: 96px;
+}
+@media (min-width: 901px) {
+  .about-terminal .about-grid {
+    align-items: stretch;
+  }
+  .about-terminal .about-side {
+    display: flex;
+    flex-direction: column;
+  }
+  .about-terminal .about-side > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .about-terminal .about-side .tm-hud {
+    flex: 1 1 0;
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+  .about-terminal .about-side .tm-imgwrap {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+}
+
+/* panel chrome */
+.about-terminal .tm-panel {
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--surface) 52%, var(--base));
+}
+.about-terminal .tm-term {
+  display: flex;
+  flex-direction: column;
+  height: clamp(520px, 72vh, 780px);
+}
+.about-terminal .tm-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 65%, transparent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.about-terminal .tm-dots {
+  display: flex;
+  gap: 6px;
+}
+.about-terminal .tm-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--hairline);
+}
+.about-terminal .tm-dots i:nth-child(1) {
+  background: color-mix(in oklab, var(--warn) 82%, black);
+}
+.about-terminal .tm-dots i:nth-child(2) {
+  background: color-mix(in oklab, var(--secondary) 82%, black);
+}
+.about-terminal .tm-dots i:nth-child(3) {
+  background: color-mix(in oklab, var(--accent) 82%, black);
+}
+.about-terminal .tm-bar .file {
+  color: var(--fg);
+}
+.about-terminal .tm-bar .right {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  color: color-mix(in oklab, var(--fg-mute) 70%, transparent);
+}
+
+/* scrollback body + custom indigo scrollbar */
+.about-terminal .tm-termbody {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 18px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.62;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--accent) 70%, transparent) transparent;
+}
+.about-terminal .tm-termbody::-webkit-scrollbar {
+  width: 12px;
+}
+.about-terminal .tm-termbody::-webkit-scrollbar-track {
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+  border-left: 1px solid color-mix(in oklab, var(--hairline) 45%, transparent);
+}
+.about-terminal .tm-termbody::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  background-color: color-mix(in oklab, var(--accent) 60%, var(--base));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 90%, transparent),
+    0 0 10px -2px var(--accent);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.about-terminal .tm-termbody::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 95%, white 10%),
+    0 0 16px -2px var(--accent);
+}
+.about-terminal .tm-termbody::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.about-terminal .tm-termbody .row {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 2px;
+}
+
+/* syntax colors */
+.about-terminal .tm-out {
+  color: var(--fg-mute);
+}
+.about-terminal .tm-dim {
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent);
+}
+.about-terminal .tm-ok {
+  color: var(--secondary);
+}
+.about-terminal .tm-acc {
+  color: var(--accent);
+}
+.about-terminal .tm-warnc {
+  color: var(--warn);
+}
+.about-terminal .tm-key {
+  color: var(--secondary);
+}
+.about-terminal .tm-okk {
+  color: #4ade80;
+}
+.about-terminal .tm-okk::before {
+  content: '[ ok ] ';
+  color: color-mix(in oklab, #4ade80 75%, white 10%);
+}
+.about-terminal .tm-boot {
+  color: var(--fg-mute);
+}
+
+/* prompt + block caret */
+.about-terminal .tm-ps1 {
+  white-space: pre;
+  font-size: 13px;
+}
+.about-terminal .tm-ps1 .usr {
+  color: var(--secondary);
+}
+.about-terminal .tm-ps1 .at {
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent);
+}
+.about-terminal .tm-ps1 .pth {
+  color: var(--accent);
+}
+.about-terminal .tm-ps1 .sym {
+  color: var(--warn);
+}
+.about-terminal .tm-blockcaret {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  vertical-align: -3px;
+  margin-left: 1px;
+  background: var(--accent);
+  border-radius: 1px;
+  box-shadow: 0 0 3px color-mix(in oklab, var(--accent) 50%, transparent);
+  animation: ab-caret 1.05s steps(1) infinite;
+}
+
+/* banner box + inline links */
+.about-terminal .tm-bannerbox {
+  position: relative;
+  display: inline-block;
+  margin: 8px 0 4px;
+  padding: 15px 22px 13px;
+  border: 1px solid color-mix(in oklab, var(--accent) 50%, transparent);
+  border-radius: 5px;
+  text-align: center;
+}
+.about-terminal .tm-bannerbox .ttl {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  padding: 0 10px;
+  background: color-mix(in oklab, var(--surface) 52%, var(--base));
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.about-terminal .tm-bannerbox .sub {
+  color: var(--fg-mute);
+}
+.about-terminal .tm-inline-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in oklab, var(--accent) 55%, transparent);
+  cursor: pointer;
+}
+.about-terminal .tm-inline-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* input row + ghost autocomplete */
+.about-terminal .tm-inputrow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 18px 14px;
+  border-top: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
+}
+.about-terminal .tm-inputwrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: hidden;
+}
+.about-terminal .tm-typed {
+  color: var(--fg);
+}
+.about-terminal .tm-ghost {
+  color: color-mix(in oklab, var(--fg-mute) 42%, transparent);
+}
+.about-terminal .tm-ghost .tab {
+  border: 1px solid color-mix(in oklab, var(--hairline) 90%, transparent);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--fg-mute);
+}
+.about-terminal .tm-input-ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: transparent;
+  caret-color: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 0;
+}
+
+/* command chips (idle invitation) */
+.about-terminal .tm-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 9px 18px 2px;
+  font-family: var(--font-mono);
+}
+.about-terminal .tm-chips-lead {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 50%, transparent);
+  margin-right: 1px;
+}
+.about-terminal .tm-chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 9%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 32%, transparent);
+  border-radius: 999px;
+  padding: 3px 11px;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
+}
+.about-terminal .tm-chip::before {
+  content: '$';
+  opacity: 0.5;
+  margin-right: 5px;
+}
+.about-terminal .tm-chip:hover {
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  color: var(--fg);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
+    0 0 14px -3px var(--accent);
+}
+.about-terminal .tm-chip:active {
+  transform: translateY(1px) scale(0.97);
+}
+.about-terminal .tm-chip:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+.about-terminal .tm-chips-tip {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--fg-mute) 45%, transparent);
+}
+.about-terminal .tm-chips-tip b {
+  color: color-mix(in oklab, var(--fg-mute) 80%, transparent);
+  font-weight: 500;
+}
+@media (max-width: 720px) {
+  .about-terminal .tm-chips-tip {
+    display: none;
+  }
+}
+
+/* status bar */
+.about-terminal .tm-status {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  border-top: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background: color-mix(in oklab, var(--surface) 60%, var(--base));
+}
+.about-terminal .tm-status .seg {
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg-mute);
+  border-right: 1px solid color-mix(in oklab, var(--hairline) 35%, transparent);
+}
+.about-terminal .tm-status .seg.accent {
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+  color: var(--fg);
+}
+.about-terminal .tm-status .seg.right {
+  margin-left: auto;
+  border-right: 0;
+  border-left: 1px solid color-mix(in oklab, var(--hairline) 35%, transparent);
+}
+.about-terminal .tm-status .on {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+.about-terminal .tm-status .clock {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* HUD portrait */
+.about-terminal .tm-hudtop {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  margin-bottom: 12px;
+}
+.about-terminal .tm-hudtop .live {
+  color: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.about-terminal .tm-hudtop .live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--secondary);
+  box-shadow: 0 0 8px var(--secondary);
+  animation: ab-caret 1.6s steps(1) infinite;
+}
+.about-terminal .tm-hud {
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+.about-terminal .tm-imgwrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 6px;
+  isolation: isolate;
+  border: 1px solid color-mix(in oklab, var(--hairline) 90%, transparent);
+  background: var(--surface);
+}
+.about-terminal .tm-imgwrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(0.92);
+  animation: tm-glitch 5.5s steps(1, end) infinite;
+  will-change: transform, filter;
+}
+.about-terminal .tm-imgwrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 2px, rgba(0, 0, 0, 0.16) 2px 3px);
+  mix-blend-mode: multiply;
+  animation: tm-scanroll 1.6s linear infinite;
+}
+.about-terminal .tm-imgwrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: url(/photo.jpg) center / cover no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: tm-glitch-slice 5.5s steps(1, end) infinite;
+  will-change: clip-path, transform, opacity;
+}
+.about-terminal .tm-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 80px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, color-mix(in oklab, var(--accent) 22%, transparent), transparent);
+  animation: ab-scan 4.5s linear infinite;
+}
+.about-terminal .tm-glitch2 {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 3px, rgba(0, 0, 0, 0.22) 3px 4px, transparent 4px 6px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 2px);
+  background-size: 100% 100%, 5px 5px, 4px 4px;
+  mix-blend-mode: overlay;
+  animation: tm-glitch2 4.2s steps(1, end) infinite;
+  will-change: opacity, background-position, clip-path;
+}
+.about-terminal .tm-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 4;
+}
+.about-terminal .tm-corner.tl {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.about-terminal .tm-corner.tr {
+  top: -1px;
+  right: -1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.about-terminal .tm-corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: 0;
+  border-top: 0;
+}
+.about-terminal .tm-corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+.about-terminal .tm-hudmeta {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--fg-mute);
+}
+.about-terminal .tm-hudmeta b {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* ascii portrait */
+.about-terminal .tm-ascii {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  line-height: 1.02;
+  letter-spacing: 0;
+  margin: 0;
+  white-space: pre;
+  color: var(--accent);
+}
+.about-terminal .tm-ascii.fg {
+  color: color-mix(in oklab, var(--fg) 86%, var(--accent));
+}
+.about-terminal .tm-asciibox {
+  container-type: inline-size;
+  position: relative;
+  overflow: hidden;
+}
+.about-terminal .tm-asciibox .tm-ascii {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-size: 2.26cqw;
+  line-height: 0.9;
+}
+
+/* matrix + coffee easter eggs */
+.about-terminal .tm-matrix {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.15;
+  color: #4ade80;
+  white-space: pre;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+  margin: 2px 0;
+}
+.about-terminal .tm-coffee {
+  color: var(--warn);
+  white-space: pre;
+  line-height: 1.2;
+}
+
+/* skill groups — domain label + wrapping tags */
+.about-terminal .tm-skillg {
+  display: inline-grid;
+  grid-template-columns: 11ch minmax(0, 64ch);
+  gap: 3px 16px;
+  align-items: baseline;
+  vertical-align: top;
+}
+.about-terminal .tm-skillg .sg-label {
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+.about-terminal .tm-skillg .sg-items {
+  line-height: 1.74;
+}
+
+/* journey — git-graph timeline */
+.about-terminal .tm-jrow {
+  display: inline-grid;
+  grid-template-columns: 1.8ch 5ch minmax(0, 60ch);
+  gap: 0 12px;
+  align-items: baseline;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.about-terminal .tm-jrow .jspine {
+  color: color-mix(in oklab, var(--accent) 50%, transparent);
+  text-align: center;
+}
+.about-terminal .tm-jrow .jspine.jnode {
+  color: var(--accent);
+  text-shadow: 0 0 9px color-mix(in oklab, var(--accent) 55%, transparent);
+}
+.about-terminal .tm-jrow .jyear {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.about-terminal .tm-jrow .jhead {
+  color: var(--fg);
+}
+.about-terminal .tm-jrow .jtext {
+  line-height: 1.6;
+}
+.about-terminal .tm-jrow .jmeta {
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* projects — name (link) + dim descriptor, built from the real project data */
+.about-terminal .tm-projrow {
+  display: inline-grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 54ch);
+  gap: 0 16px;
+  align-items: baseline;
+  vertical-align: top;
+  line-height: 1.6;
+}
+.about-terminal .tm-projrow .pj-name {
+  white-space: nowrap;
+}
+.about-terminal .tm-projrow .pj-desc {
+  min-width: 0;
+}
+
+/* responsive collapse */
+@media (max-width: 900px) {
+  .about-terminal .about-grid {
+    grid-template-columns: 1fr;
+  }
+  .about-terminal .about-side {
+    position: static;
+    max-width: 420px;
+  }
+  .about-terminal .tm-term {
+    height: clamp(420px, 56vh, 560px);
+  }
+}
+
+/* reduced motion — freeze the named loops + restore the photo's resting grade.
+   (The global @layer base clamp neutralizes durations; this is explicit.) */
+@media (prefers-reduced-motion: reduce) {
+  .about-terminal .tm-blockcaret,
+  .about-terminal .tm-scan,
+  .about-terminal .tm-imgwrap::after,
+  .about-terminal .tm-imgwrap::before,
+  .about-terminal .tm-glitch2,
+  .about-terminal .tm-hudtop .live::before {
+    animation: none !important;
+  }
+  .about-terminal .tm-imgwrap img {
+    animation: none !important;
+    filter: contrast(1.05) saturate(0.92);
+  }
+}
+
+/* ---- terminal keyframes (top level so Tailwind v4 always emits them) ---- */
+@keyframes ab-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes ab-scan {
+  0% {
+    transform: translateY(-90px);
+  }
+  100% {
+    transform: translateY(680px);
+  }
+}
+@keyframes tm-scanroll {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 30px;
+  }
+}
+@keyframes tm-glitch {
+  0%,
+  46%,
+  49%,
+  82%,
+  84.5%,
+  100% {
+    transform: none;
+    filter: contrast(1.05) saturate(0.92);
+  }
+  47% {
+    transform: translate3d(-3px, 0, 0);
+    filter: contrast(1.12) saturate(0.92) drop-shadow(3px 0 0 rgba(255, 0, 90, 0.75)) drop-shadow(-3px 0 0 rgba(0, 225, 255, 0.65));
+  }
+  47.6% {
+    transform: translate3d(3px, 0, 0);
+    filter: contrast(1.05) saturate(0.92) drop-shadow(-2px 0 0 rgba(255, 0, 90, 0.6)) drop-shadow(2px 0 0 rgba(0, 225, 255, 0.55));
+  }
+  48.2% {
+    transform: translate3d(-1px, 0, 0);
+    filter: contrast(1.05) saturate(0.92);
+  }
+  83% {
+    transform: translate3d(2px, 0, 0);
+    filter: contrast(1.08) saturate(0.92) drop-shadow(-3px 0 0 rgba(255, 0, 90, 0.7)) drop-shadow(3px 0 0 rgba(0, 225, 255, 0.6));
+  }
+  83.7% {
+    transform: translate3d(-2px, 0, 0);
+    filter: contrast(1.05) saturate(0.92);
+  }
+}
+@keyframes tm-glitch-slice {
+  0%,
+  46%,
+  49%,
+  82%,
+  84.5%,
+  100% {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+    transform: none;
+  }
+  47% {
+    opacity: 0.9;
+    clip-path: inset(16% 0 64% 0);
+    transform: translateX(-9px);
+  }
+  47.6% {
+    opacity: 0.85;
+    clip-path: inset(52% 0 30% 0);
+    transform: translateX(11px);
+  }
+  48.2% {
+    opacity: 0.8;
+    clip-path: inset(74% 0 10% 0);
+    transform: translateX(-6px);
+  }
+  83% {
+    opacity: 0.9;
+    clip-path: inset(32% 0 52% 0);
+    transform: translateX(9px);
+  }
+  83.7% {
+    opacity: 0.85;
+    clip-path: inset(6% 0 82% 0);
+    transform: translateX(-8px);
+  }
+}
+@keyframes tm-glitch2 {
+  0%,
+  28%,
+  32%,
+  66%,
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+    background-position: 0 0, 0 0, 0 0;
+  }
+  29% {
+    opacity: 0.55;
+    clip-path: inset(0 0 0 0);
+    background-position: 0 40%, 3px -7px, -2px 4px;
+  }
+  29.7% {
+    opacity: 0.35;
+    clip-path: inset(34% 0 0 0);
+    background-position: 0 -20%, -5px 9px, 3px -6px;
+  }
+  30.5% {
+    opacity: 0.6;
+    clip-path: inset(0 0 52% 0);
+    background-position: 0 70%, 6px 4px, -4px 7px;
+  }
+  67% {
+    opacity: 0.45;
+    clip-path: inset(0 0 0 0);
+    background-position: 0 20%, -4px 6px, 5px -3px;
+  }
+  67.7% {
+    opacity: 0.3;
+    clip-path: inset(48% 0 0 0);
+    background-position: 0 -30%, 7px -5px, -3px 8px;
+  }
+}

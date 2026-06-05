@@ -19,8 +19,8 @@ A personal portfolio for Eduardo Rebollar — Computer Science & Economics stude
 | React | 19.2 | |
 | Styling | Tailwind v4 (CSS-first) | `@theme` in `app/globals.css`; **no `tailwind.config.ts`** |
 | 3D | `@splinetool/react-spline` 4 + `@splinetool/runtime` 1 | Lazy + Suspense in `components/ui/SplineScene.tsx`; mounted full-bleed (absolute, masked) behind `components/sections/Hero.tsx`, again in the `Contact` greeting robot, and a **third** scene as the `Skills` backdrop; all gated on `hasWebGL2 && !isMobile && !reducedMotion`. Scenes are **self-hosted** under `/public/spline/*.splinecode` (`hero.splinecode`, `skills.splinecode`; served from Vercel's edge), not the old demo CDN asset. Replaced the prior R3F terrain stack |
-| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Drives Hero entrance, cursor `Spotlight`, the `timeline` scroll beam, `FloatingDock`, `AppleCardsCarousel`, the `skill-marquee`, and the animated backgrounds (`BackgroundBeams`, `meteors`, `sparkles`, `StarfieldBackground`, `orbiting-skills`, `gradient-dots`). Several Skills accents are pure-CSS keyframes in `globals.css` (`gradient-text`, `gradient-rotate`) that the global reduced-motion clamp freezes automatically |
-| State | Zustand 5 | `stores/useSceneStore.ts` — single global store; now mostly feeds the Hero's Spline gate via `DeviceDetector`. `gpuTier`/`activeSection`/`sectionProgress` fields are dead-after-R3F-removal (kept for now; safe follow-up to trim) |
+| UI motion | `motion` 12 (rebranded framer-motion) | `MotionConfig reducedMotion="user"` auto-skips on OS preference. Drives the splash-gated Hero entrance (`DiaTextReveal` name sweep + `TextEffect` per-char eyebrow/tagline + staggered CTA cascade + `ScrollHint`, all keyed off `splashDismissed`), cursor `Spotlight`, the `timeline` scroll beam, `FloatingDock`, `AppleCardsCarousel`, the `skill-marquee`, and the animated backgrounds (`BackgroundBeams`, `meteors`, `sparkles`, `StarfieldBackground`, `orbiting-skills`, `gradient-dots`). Several accents are pure-CSS keyframes in `globals.css` (`gradient-text`, `gradient-rotate`, plus `glow-pulse`/`.cta-glow` on the Hero's *Get in touch* link) that the global reduced-motion clamp freezes automatically |
+| State | Zustand 5 | `stores/useSceneStore.ts` — single global store; feeds the Hero's Spline gate via `DeviceDetector` and its intro reveal via `splashDismissed`/`dismissSplash` (set by `SpiralSplash` on Enter). `gpuTier`/`activeSection`/`sectionProgress` fields are dead-after-R3F-removal (kept for now; safe follow-up to trim) |
 | Content | TS data files + MDX case studies | `content/data/*.ts` + `content/projects/*.mdx` |
 | Case-study viz | `@nivo/*` (bar/line/heatmap), `cytoscape` + `react-cytoscapejs`, `leaflet` + `react-leaflet` | Bundled lazily into the routes that use them (BiLSTM, Interactivity, LA History) |
 | LA History AI | `ai` v6 + `@ai-sdk/react` v3 | Tutor + concept-map chat under `/work/la-history/play`; routes in `app/api/la-history/*` |
@@ -39,7 +39,7 @@ components/
                        @/components/ui/<sub>/<Name> alias):
     primitives/        Container, Card, CardShadcn, Pill, Heading, Eyebrow, Footer
     nav/               Nav (drives the dock), FloatingDock, ScrollHint
-    cta/               RippleButton, RippleLink (+ lib/useRipple)
+    cta/               RippleButton, RippleLink, ShinyButton (+ lib/useRipple)
     three/             SplineScene, Spotlight (3D / cursor)
     backgrounds/       SpiralSplash + spiral-animation, BackgroundBeams, meteors,
                        sparkles, StarfieldBackground, shooting-stars, stars-background,
@@ -47,7 +47,8 @@ components/
     (ui/ root)         Section-specific widgets kept flat: timeline (Journey),
                        AppleCardsCarousel + 3DCard (Projects), orbiting-skills +
                        skill-marquee + SkillHighlightCard + animated-gradient-border
-                       (BorderRotate) + animated-gradient-text (Skills)
+                       (BorderRotate) + animated-gradient-text (Skills),
+                       dia-text-reveal + text-effect (Hero intro reveal), Lightbox
   a11y/              DeviceDetector, SkipToContent
   mdx/               Figure, Aside, TechStack, Lessons, RepoLink, DemoLink
   viz-bilstm/        BiLSTM case-study charts (Nivo) — bundled into /work/bilstm-vs-ffnn
@@ -59,7 +60,8 @@ content/
   data/              site, projects, experience, education, skills (typed TS)
   projects/          MDX case studies — registered in lib/mdx.ts
 lib/                 cn, device, mdx, motion, seo
-stores/              useSceneStore (Zustand) — feeds Hero's Spline gate
+stores/              useSceneStore (Zustand) — feeds Hero's Spline gate + intro
+                       reveal (splashDismissed / dismissSplash)
 types/               content (Project, ExperienceItem, EducationItem,
                        MediaImage, SkillGroup, SkillCard/SkillCardGroup, …).
                        Journey cards take an optional `images?: MediaImage[]`
@@ -71,8 +73,9 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 
 ## Architecture in 30 seconds
 
-- **Intro splash**: `components/ui/backgrounds/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page.
+- **Intro splash**: `components/ui/backgrounds/SpiralSplash.tsx` (mounted first in `app/page.tsx`) overlays a full-bleed `spiral-animation` on first load, fading out to reveal the page. Dismissing it (Enter / Esc / click) fades the overlay **and** calls `dismissSplash()` (`useSceneStore`), flipping `splashDismissed` so the Hero's entrance plays *after* the intro clears, not behind it.
 - **Hero Spline scene**: `components/sections/Hero.tsx` renders the animated copy (Eyebrow / display name / tagline / CTAs) in a left column; the `<SplineScene />` is **not** in a bordered right column anymore — it's positioned `absolute`, full-bleed and edge-masked, behind the section on `md+` (the right grid cell is now an empty placeholder). `<Spotlight />` rides on the same host. `BackgroundBeams` paints behind it. The hero CTAs (`scrollToWork`/`scrollToContact`) mirror the dock's scroll targets (`#work-controls` row, page bottom) rather than jumping to anchor tops.
+- **Hero entrance choreography**: gated on `splashDismissed`, the left-column copy animates in as a sequence — the display name reveals via `DiaTextReveal` (an indigo color-band clip-sweep, `respectReducedMotion={false}` so it plays for everyone), the eyebrow + tagline fade in per-character via `TextEffect`, then the CTAs cascade up (staggered `motion` variants) with `ScrollHint` (`play` prop) as the final beat. The *See work* CTA is a `ShinyButton`; the ghost *Get in touch* link carries `.cta-glow` — a pulsing white text-shadow halo (`glow-pulse` keyframe, top-level in `globals.css`). Radii stay under the button padding so `RippleLink`'s `overflow-hidden` doesn't clip the halo.
 - **Device gating**: `components/a11y/DeviceDetector.tsx` runs on mount inside `<Providers />`, detects WebGL2 + viewport + `prefers-reduced-motion`, and writes to `useSceneStore`. Hero reads `initialized && hasWebGL2 && !isMobile && !reducedMotion` — only when true does `<SplineScene />` mount and the heavy runtime loads. The `timeline` beam and other motion surfaces read `useSceneStore.reducedMotion` directly to render static fallbacks.
 - **Skills section**: `components/sections/Skills.tsx` filters `skills` (in `content/data/skills.ts`) into two `OrbitingSkills` groups (Technical / Productivity). Coursework + "Other" live separately as `skillHighlights: SkillCardGroup[]` (name + descriptor + lucide `icon` string key) and render through `skill-marquee.tsx` → `SkillHighlightCard.tsx` — a continuously-scrolling row of cards, each a `BorderRotate` (rotating conic-gradient border) wrapping an icon + `AnimatedGradientText` title + descriptor. The backdrop is a third Spline scene (`/spline/skills.splinecode`, same gate as Hero) over a `gradient-dots` fallback. The string→component icon indirection (in `SkillHighlightCard`) keeps the data file JSX-free, mirroring `orbiting-skills.tsx`.
 - **Per-section scroll offset**: anchor jumps are tuned per section via `scroll-margin-top` in `globals.css`, driven by one `--heading-clear` knob (sections carry different top paddings, so a single global `scroll-padding-top` would land headings at uneven heights under the fixed nav). `Nav.tsx`'s `scrollToSection` drives the scroll explicitly (Next `<Link>` hash nav is a no-op when the hash already matches — the old "sometimes works" bug) and honors reduced-motion.
@@ -99,6 +102,7 @@ Personal Data/       GITIGNORED — source PDFs, papers, project code, headshot
 - **`next/dynamic({ ssr: false })` causes SSR subtree bailout in Next 16.** Use manual `lazy()` + `<Suspense>` inside a `'use client'` component instead. See `components/ui/three/SplineScene.tsx`.
 - **`tsconfig.json` is auto-modified by Next 16** on first build (`jsx: preserve` → `react-jsx`; adds `.next/dev/types/**/*.ts` to includes). Don't fight it.
 - **MDX plugins must be string references**, not function imports, in `next.config.mjs` under Turbopack. We dropped `remarkGfm` at the function-ref level; can re-add when needed via the new shape.
+- **Tailwind v4 tree-shakes `@keyframes` defined inside `@theme`** — it only emits them when it can see the keyframe name in a generated utility, which it *can't* through `animate-[var(--x)]`. Keyframes referenced indirectly (or applied via a plain class) must live at **top level** in `globals.css`, not in `@theme` (see `glow-pulse` / `.cta-glow`). Adding a new `@theme` token mid-session can also need a dev-server restart to register.
 
 ## Commands
 
@@ -124,7 +128,8 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 | Phase 5 — analytics/speed-insights, R3F v9 + React 19 upgrade, scene-actually-renders fix, embedded BiLSTM viz, InteractivityViz dashboard, native LA History port (Leaflet + Cytoscape + AI tutor), clickable supporting cards | ✓ |
 | Phase 6 — replaced R3F terrain + GSAP/Lenis stack with a Spline hero scene + cursor Spotlight; pruned 9 unused deps; simplified DeviceDetector | ✓ |
 | Phase 7 — visual overhaul: self-hosted full-bleed Spline hero + `BackgroundBeams`; `SpiralSplash` intro; `FloatingDock` nav; `AppleCardsCarousel` + `3DCard` projects (dropped FeaturedProject); `orbiting-skills` Skills; merged Education + Experience into a `Journey` timeline; `meteors`/`sparkles`/`StarfieldBackground` accents; Contact Spline greeting robot + single-row Footer | ✓ |
-| Phase 8 — Skills overhaul: third self-hosted Spline backdrop (`skills.splinecode`) over a `gradient-dots` fallback; Coursework + Other moved to `skillHighlights` (`SkillCardGroup`) rendered as a `skill-marquee` of `SkillHighlightCard`s (`BorderRotate` + `AnimatedGradientText`); per-section `scroll-margin-top` system + `Nav` `scrollToSection` fix; `BackgroundBeams` recolored to white | ◧ working tree, not yet committed |
+| Phase 8 — Skills overhaul: third self-hosted Spline backdrop (`skills.splinecode`) over a `gradient-dots` fallback; Coursework + Other moved to `skillHighlights` (`SkillCardGroup`) rendered as a `skill-marquee` of `SkillHighlightCard`s (`BorderRotate` + `AnimatedGradientText`); per-section `scroll-margin-top` system + `Nav` `scrollToSection` fix; `BackgroundBeams` recolored to white | ✓ |
+| Phase 9 — Hero intro choreography (splash-gated `DiaTextReveal` name + `TextEffect` eyebrow/tagline + staggered CTA cascade + `ScrollHint`, driven by `splashDismissed`/`dismissSplash`); `ShinyButton` for *See work* + About's résumé link; pulsing white `.cta-glow` on *Get in touch*; Journey cards gain an animated masked gradient ring (`CardGradientRing`) + per-photo `zoom`/`objectPosition` crop controls (`MediaImage`) with real Occidental photos | ◧ working tree, not yet committed |
 
 ## Known follow-ups (not blocking launch)
 
@@ -134,7 +139,7 @@ bun run scripts/optimize-images.mjs    # one-off image compression
 - **`remark-gfm`** is installed but not wired into `next.config.mjs` — either re-add via the Turbopack string-ref form or drop the dep.
 - **Bundle analyzer pass** — run `bun run analyze` to surface dep-side optimization opportunities (Cytoscape, Leaflet, and the Nivo bundle are the obvious heavy hitters; they're route-scoped, but worth a check).
 - **`backdrop-blur-md` performance** — now respects `prefers-reduced-transparency: reduce` globally. If Speed Insights flags INP/CLS regressions on low-end Android specifically, consider a lite-mode/GPU-tier gate on top.
-- **Journey timeline photos** — Education/Experience items support an optional `images?: MediaImage[]`; cards currently show a dashed placeholder until real photos are added to the entries in `content/data/{education,experience}.ts`.
+- **Journey timeline photos** — Education/Experience items support an optional `images?: MediaImage[]` (each with optional `zoom` / `objectPosition` crop controls). The Occidental College + Occidental ITS entries now carry real photos (`public/journey/*.jpg`); remaining entries still show a dashed placeholder until photos are added in `content/data/{education,experience}.ts`.
 - **Trim dead store fields** — `useSceneStore` still exposes `gpuTier`, `activeSection`, `sectionProgress`, `liteMode`, `toggleLiteMode` etc. after R3F removal; no consumer reads them. Safe to prune.
 
 ## When something feels off

@@ -287,17 +287,12 @@ export function Journey() {
       aria-labelledby="journey-heading"
       className="relative py-12 md:py-16"
     >
+      {/* Mid-chain section: the starfield is solid at both edges, handing off
+          from About above and into Skills below. The fade-in into Hero now lives
+          on About, the fade-out into the footer on Contact. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
-        // Fade stars out at both edges (top into About, bottom into Skills) so
-        // the field reads as thinning out into the sections above and below.
-        style={{
-          maskImage:
-            'linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)',
-        }}
       >
         <StarsBackground />
         {/* Each instance animates one streak at a time; several run in parallel

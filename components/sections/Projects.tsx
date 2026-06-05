@@ -7,7 +7,8 @@ import {
   Card,
   type CarouselCard,
 } from '@/components/ui/AppleCardsCarousel';
-import { SparklesCore } from '@/components/ui/backgrounds/sparkles';
+import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
+import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { projects } from '@/content/data/projects';
 import { hasMDX } from '@/lib/mdx';
 import type { Project } from '@/types/content';
@@ -83,19 +84,19 @@ export function Projects() {
       aria-labelledby="work-heading"
       className="relative overflow-hidden pt-24 pb-12 md:pt-32 md:pb-16"
     >
+      {/* Same starfield as Skills, extended down so the sky reads continuously
+          from Journey → Skills → Work. Solid at both edges — it hands off from
+          Skills above and into Contact below, which extends the same field down
+          before fading out into the footer. Same centered 1.5x-shell band the
+          section's overflow-hidden crops. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
       >
-        <SparklesCore
-          background="transparent"
-          minSize={0.4}
-          maxSize={1}
-          particleDensity={60}
-          speed={2}
-          particleColor="#ffffff"
-          className="h-full w-full"
-        />
+        <StarsBackground />
+        <ShootingStars minDelay={400} maxDelay={1800} />
+        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
+        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
       </div>
 
       <Container className="flex flex-col gap-12">

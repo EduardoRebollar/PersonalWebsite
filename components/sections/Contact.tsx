@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { StarfieldBackground } from '@/components/ui/backgrounds/StarfieldBackground';
+import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
+import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { Container } from '@/components/ui/primitives/Container';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { RippleLink } from '@/components/ui/cta/RippleLink';
@@ -25,11 +26,18 @@ export function Contact() {
       aria-labelledby="contact-heading"
       className="relative overflow-hidden pt-12 pb-8 md:pt-16 md:pb-12"
     >
+      {/* Same starfield as Work, extended down so the sky reads continuously
+          all the way from Journey → Skills → Work → Contact. Solid at the top
+          (hands off from Work); fades out at the bottom into the footer. Same
+          centered 1.5x-shell band the section's overflow-hidden crops. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]"
       >
-        <StarfieldBackground />
+        <StarsBackground />
+        <ShootingStars minDelay={400} maxDelay={1800} />
+        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
+        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
       </div>
 
       <Container className="relative z-10 grid items-center gap-12 md:grid-cols-2 md:gap-10">

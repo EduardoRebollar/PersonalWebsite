@@ -3,6 +3,10 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/primitives/Container';
 import { Pill } from '@/components/ui/primitives/Pill';
+import { SkillsBackdrop } from '@/components/ui/backgrounds/SkillsBackdrop';
+import { SparklesCore } from '@/components/ui/backgrounds/sparkles';
+import { StarfieldBackground } from '@/components/ui/backgrounds/StarfieldBackground';
+import { BackgroundBeams } from '@/components/ui/backgrounds/BackgroundBeams';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { projects } from '@/content/data/projects';
 import { listMDXSlugs, projectMDX } from '@/lib/mdx';
@@ -63,6 +67,62 @@ export default async function ProjectPage({
 
   return (
     <article className="relative z-10 pt-32 pb-24">
+      {slug === 'la-history' && (
+        // Same animated particle field as the Skills section, fixed full-bleed
+        // behind the case study. Negative-z keeps it behind the article's
+        // prose content; masked top/bottom so it fades into the page edges.
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+          style={{
+            maskImage:
+              'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+            WebkitMaskImage:
+              'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+          }}
+        >
+          <SkillsBackdrop />
+        </div>
+      )}
+      {slug === 'interactivity-and-interpretability' && (
+        // Same sparkles field as the Work section, fixed full-bleed behind the
+        // case study. Negative-z keeps it behind the article's prose; masked
+        // top/bottom so it fades into the page edges.
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
+        >
+          <SparklesCore
+            background="transparent"
+            minSize={0.4}
+            maxSize={1}
+            particleDensity={60}
+            speed={2}
+            particleColor="#ffffff"
+            className="h-full w-full"
+          />
+        </div>
+      )}
+      {slug === 'bilstm-vs-ffnn' && (
+        // Same starfield as the Contact section, fixed full-bleed behind the
+        // case study. Negative-z keeps it behind the article's prose; masked
+        // top/bottom so it fades into the page edges.
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
+        >
+          <StarfieldBackground />
+        </div>
+      )}
+      {slug === 'reddit-sentiment' && (
+        // Same animated beams as the Hero section, fixed full-bleed behind the
+        // case study with the Hero's centered max-width framing. Negative-z
+        // keeps it behind the article's prose. (BackgroundBeams self-disables
+        // under reduced-motion, matching the Hero.)
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <BackgroundBeams className="mx-auto max-w-[calc(var(--container-shell)*1.5)]" />
+        </div>
+      )}
       {project && <JsonLd data={projectArticleSchema(project)} />}
       <Container width="prose" className="flex flex-col gap-4">
         {project && (
