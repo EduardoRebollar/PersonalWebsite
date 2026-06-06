@@ -29,6 +29,10 @@ class AnimationController {
   private ctx: CanvasRenderingContext2D;
   private size: number;
   private stars: Star[] = [];
+  // Burst progress (0 → 1): on Enter, drives every dot radially outward off the
+  // viewport so the spiral loses its shape and expands to fill the screen.
+  private explodeProgress = 0;
+  private explodeTween: gsap.core.Tween | null = null;
 
   private readonly changeEventTime = 0.32;
   private readonly cameraZ = -400;
@@ -148,13 +152,26 @@ class AnimationController {
     if (position.z > newCameraZ) {
       const dotDepthFromCamera = position.z - newCameraZ;
 
-      const x = (this.viewZoom * position.x) / dotDepthFromCamera;
-      const y = (this.viewZoom * position.y) / dotDepthFromCamera;
-      const sw = (400 * sizeFactor) / dotDepthFromCamera;
+      let x = (this.viewZoom * position.x) / dotDepthFromCamera;
+      let y = (this.viewZoom * position.y) / dotDepthFromCamera;
+      let sw = (400 * sizeFactor) / dotDepthFromCamera;
+      let radius = 0.5;
+
+      // Burst: push every dot radially outward from center by an accelerating
+      // factor while it swells — the spiral loses its shape and floods past the
+      // viewport edges before the warp behind it takes over.
+      if (this.explodeProgress > 0) {
+        const e = this.explodeProgress * this.explodeProgress; // ease-in
+        const factor = 1 + e * 24;
+        x *= factor;
+        y *= factor;
+        sw *= 1 + e * 4;
+        radius = 0.5 * (1 + e * 6);
+      }
 
       this.ctx.lineWidth = sw;
       this.ctx.beginPath();
-      this.ctx.arc(x, y, 0.5, 0, Math.PI * 2);
+      this.ctx.arc(x, y, radius, 0, Math.PI * 2);
       this.ctx.fill();
     }
   }
@@ -181,6 +198,12 @@ class AnimationController {
     const t2 = this.constrain(this.map(this.time, this.changeEventTime, 1, 0, 1), 0, 1);
 
     ctx.rotate(-Math.PI * this.ease(t2, 2.7));
+
+    // Extra swirl during the burst smears the spiral's arms so it reads as
+    // dispersing, not merely scaling up uniformly.
+    if (this.explodeProgress > 0) {
+      ctx.rotate(this.explodeProgress * 1.4);
+    }
 
     this.drawTrail(t1);
 
@@ -228,7 +251,21 @@ class AnimationController {
     this.timeline.play();
   }
 
+  // Burst the swirl outward: tween explodeProgress 0 → 1 (ease-in, so it starts
+  // gentle then rushes out) so every dot flings past the viewport edges, then
+  // fire `onDone`. Idempotent — a second call while already bursting is ignored.
+  public burst(duration: number, onDone: () => void) {
+    if (this.explodeTween) return;
+    this.explodeTween = gsap.to(this, {
+      explodeProgress: 1,
+      duration,
+      ease: 'power2.in',
+      onComplete: onDone,
+    });
+  }
+
   public destroy() {
+    this.explodeTween?.kill();
     this.timeline.kill();
   }
 }
@@ -344,13 +381,26 @@ class Star {
   }
 }
 
-export function SpiralAnimation() {
+export function SpiralAnimation({
+  explode = false,
+  onExploded,
+}: {
+  /** When flipped true, the swirl bursts outward off-screen, then calls onExploded. */
+  explode?: boolean;
+  onExploded?: () => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<AnimationController | null>(null);
+  // Keep onExploded current without re-running the burst effect.
+  const onExplodedRef = useRef(onExploded);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 0,
     height: 0,
   });
+
+  useEffect(() => {
+    onExplodedRef.current = onExploded;
+  }, [onExploded]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -391,6 +441,19 @@ export function SpiralAnimation() {
       }
     };
   }, [dimensions]);
+
+  // Burst: once `explode` flips, fling the swirl outward off-screen, then notify
+  // the parent so it can start the warp. If the controller isn't ready yet (it
+  // is, by the time the Enter button shows), notify immediately so nothing hangs.
+  useEffect(() => {
+    if (!explode) return;
+    const ctrl = animationRef.current;
+    if (!ctrl) {
+      onExplodedRef.current?.();
+      return;
+    }
+    ctrl.burst(0.8, () => onExplodedRef.current?.());
+  }, [explode]);
 
   return (
     <div className="relative w-full h-full">
