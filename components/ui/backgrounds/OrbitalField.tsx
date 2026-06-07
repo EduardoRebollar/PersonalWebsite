@@ -114,17 +114,16 @@ export function OrbitalField({ className }: { className?: string }) {
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
   // Lead-in: the field fades up from the center outward, *before* the
   // name/eyebrow/CTA choreography (the name's DiaTextReveal starts at delay
-  // 1.5 — see Hero.tsx — so the planets visibly materialize first). Rather than
+  // 0.5 — see Hero.tsx — so the planets still lead the copy in). Rather than
   // fading the whole field as one block, each orbit fades on its own staggered
   // clock: ORBITS is ordered innermost→outermost (rx 430 → 600), so the array
   // index *is* the center-out order — inner planets light up first, outer ones
-  // trail. The center bloom leads at `FADE_BASE - step`.
+  // trail. The center bloom (i = -1) leads at the base delay.
   //
-  // The base delay of 0.7s exists because `splashDismissed` flips the instant
-  // Enter is pressed, while the splash overlay (bg-black) is still mid-fade for
-  // ~700ms (SpiralSplash, `duration-700`). Starting the fade before the overlay
-  // clears would run most of it behind black — invisible. So we wait for the
-  // overlay to finish, then fade in against the now-visible page.
+  // The fade starts at a small base delay (~0.2s) as the splash overlay
+  // (bg-black) finishes its ~700ms fade (SpiralSplash, `duration-700`). The
+  // outExpo ease is front-loaded but the long duration keeps the first frames
+  // faint, so the early opacity barely reads against the still-clearing overlay.
   //
   // Driven by `motion` (not a CSS transition) on purpose: the global
   // reduced-motion clamp in @layer base forces `transition-duration: 0.01ms` on
@@ -142,7 +141,7 @@ export function OrbitalField({ className }: { className?: string }) {
   const fade = (i: number, to = 1) => ({
     initial: { opacity: 0 },
     animate: { opacity: splashDismissed ? to : 0 },
-    transition: { duration: 7.5, delay: 0.25 + (i + 1) * 0.12, ease: easing.outExpo },
+    transition: { duration: 5.5, delay: 0.2 + (i + 1) * 0.1, ease: easing.outExpo },
   });
 
   const rootRef = useRef<HTMLDivElement>(null);

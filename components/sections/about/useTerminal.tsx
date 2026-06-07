@@ -36,16 +36,24 @@ const COMMANDS: readonly string[] = COMMAND_NAMES;
  * render" rule, which taints any object that bundles a ref. The hook only reads
  * `.current` inside effects/handlers, which is allowed.
  */
+// The scanline-sweep entrance (globals.css → tm-scan-reveal) takes ~1900ms once
+// the section scrolls into view. Hold the typed boot until it clears so the
+// terminal types into a freshly-revealed, empty screen.
+const SCAN_LEAD_MS = 1900;
+
 export function useTerminal({
   bodyRef,
   inputRef,
   autoRun = ['whoami'],
   asciiDefault = false,
+  start = true,
 }: {
   bodyRef: RefObject<HTMLDivElement | null>;
   inputRef: RefObject<HTMLInputElement | null>;
   autoRun?: string[];
   asciiDefault?: boolean;
+  /** Gate the boot/type sequence; flips true once the section is in view. */
+  start?: boolean;
 }) {
   const [lines, setLines] = useState<Line[]>([]);
   const [input, setInput] = useState('');
@@ -123,14 +131,14 @@ export function useTerminal({
       const isComponent = isValidElement(node) && typeof node.type === 'function';
       if (isComponent || containsPre(node) || nodeTextLen(node) === 0 || nodeTextLen(node) > 600) {
         push(node);
-        streamTimers.current.push(setTimeout(next, 70));
+        streamTimers.current.push(setTimeout(next, 42));
       } else {
-        const sp = nodeTextLen(node) > 90 ? 7 : 11;
+        const sp = nodeTextLen(node) > 90 ? 4 : 7;
         push(
           <TypeOut
             node={node}
             speed={sp}
-            onDone={() => streamTimers.current.push(setTimeout(next, 60))}
+            onDone={() => streamTimers.current.push(setTimeout(next, 36))}
           />,
         );
       }
@@ -163,12 +171,17 @@ export function useTerminal({
     else push(<span>&nbsp;</span>);
   };
 
-  // boot / system-check sequence — lines type out one char at a time
+  // boot / system-check sequence — lines type out one char at a time. Held
+  // until `start` (the section scrolls into view) so the typewriter plays after
+  // the scanline sweep reveals the empty terminal, not on page load.
   useEffect(() => {
-    if (booted.current) return;
+    if (!start || booted.current) return;
     booted.current = true;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const reduce = prefersReducedMotion();
+    // motion-OK users see the scan sweep first, so wait for it to clear before
+    // typing; reduced-motion users have no sweep, so start right away.
+    const leadIn = reduce ? 0 : SCAN_LEAD_MS;
     const bootData: { text: string; cls: string; tail?: ReactNode }[] = [
       { text: 'booting eduardo.portfolio …', cls: 'tm-boot' },
       { text: 'mounting /about', cls: 'tm-okk' },
@@ -180,26 +193,26 @@ export function useTerminal({
     const afterBoot = () => {
       push(<span>&nbsp;</span>);
       pushMany(bannerLines());
-      let acc = 360;
+      let acc = 220;
       autoRun.forEach((command) => {
         if (reduce) {
           // reduced-motion: run instantly, skip the per-char input typing.
           timers.push(setTimeout(() => run(command), acc));
-          acc += 120;
+          acc += 80;
           return;
         }
         const startAt = acc;
         command.split('').forEach((_, ci) =>
-          timers.push(setTimeout(() => setInput(command.slice(0, ci + 1)), startAt + ci * 70)),
+          timers.push(setTimeout(() => setInput(command.slice(0, ci + 1)), startAt + ci * 38)),
         );
-        acc = startAt + command.length * 70 + 320;
+        acc = startAt + command.length * 38 + 180;
         timers.push(
           setTimeout(() => {
             run(command);
             setInput('');
           }, acc),
         );
-        acc += 200;
+        acc += 140;
       });
       timers.push(
         setTimeout(() => {
@@ -225,7 +238,7 @@ export function useTerminal({
     let idx = 0;
     const typeNext = () => {
       if (idx >= bootData.length) {
-        timers.push(setTimeout(afterBoot, 240));
+        timers.push(setTimeout(afterBoot, 150));
         return;
       }
       const b = bootData[idx++];
@@ -235,15 +248,16 @@ export function useTerminal({
           text={b.text}
           className={b.cls}
           tail={b.tail}
-          onDone={() => timers.push(setTimeout(typeNext, 120))}
+          onDone={() => timers.push(setTimeout(typeNext, 70))}
         />,
       );
     };
-    timers.push(setTimeout(typeNext, 200));
+    timers.push(setTimeout(typeNext, leadIn + 120));
     return () => timers.forEach(clearTimeout);
-    // Boot must run exactly once; all referenced setters/refs are stable.
+    // Boot must run exactly once (guarded by booted.current); re-checks only when
+    // `start` flips. All other referenced setters/refs are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [start]);
 
   // auto-scroll to bottom on new output. Never set scroll-behavior:smooth on
   // the body element — it silently breaks this programmatic scroll in Chromium.

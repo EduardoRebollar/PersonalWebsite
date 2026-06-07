@@ -540,7 +540,7 @@ export function TypeLine({
   text,
   className = '',
   tail = null,
-  speed = 26,
+  speed = 14,
   onDone,
 }: {
   text: string;
@@ -583,7 +583,7 @@ export function TypeLine({
 }
 
 /* types out one rich (JSX) line char-by-char, then calls onDone */
-export function TypeOut({ node, speed = 11, onDone }: { node: ReactNode; speed?: number; onDone?: () => void }) {
+export function TypeOut({ node, speed = 6, onDone }: { node: ReactNode; speed?: number; onDone?: () => void }) {
   const total = useMemo(() => nodeTextLen(node), [node]);
   const [n, setN] = useState(0);
   const doneRef = useRef(onDone);

@@ -8,7 +8,7 @@
  */
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { ASCII_PORTRAIT } from '@/lib/asciiPortrait';
 import { Ps1 } from './terminalEngine';
 import { useTerminal, type Line } from './useTerminal';
@@ -100,79 +100,102 @@ function StatusBar({ branch = 'main' }: { branch?: string }) {
   );
 }
 
-function HudMeta() {
-  return (
-    <div className="tm-hudmeta">
-      <span>
-        SUBJECT&nbsp;&nbsp;<b>Eduardo Rebollar</b>
-      </span>
-      <span>
-        RATIO&nbsp;&nbsp;<b>3 : 4</b>
-      </span>
-      <span>
-        LOC&nbsp;&nbsp;<b>Los Angeles, CA</b>
-      </span>
-      <span>
-        FOCUS&nbsp;&nbsp;<b>ML · Data · Web</b>
-      </span>
-    </div>
-  );
-}
+const HUD_META: readonly (readonly [string, string])[] = [
+  ['SUBJECT', 'Eduardo Rebollar'],
+  ['RATIO', '3 : 4'],
+  ['LOC', 'Los Angeles, CA'],
+  ['FOCUS', 'ML · Data · Web'],
+] as const;
 
-function HudPortrait() {
+/**
+ * HudShell — the stable HUD chrome around the portrait box (top label row +
+ * corner-framed image slot + meta grid). The actual image vs. ascii art is
+ * passed as `children` so toggling the `portrait` command only swaps the inner
+ * box; the labels stay mounted, so their per-character fade-in plays once on
+ * entrance and never re-fires on the swap.
+ *
+ * Every label character is wrapped in a `.tm-char` span. Each gets an inline
+ * `transitionDelay` (a 2300ms base — just past the portrait's glitch-decode —
+ * plus a per-char stagger) so that when `.is-on` fades them from opacity 0 → 1
+ * (globals.css, motion-OK only) they resolve as one continuous top-to-bottom
+ * cascade. Spans are aria-hidden behind an aria-label on the wrapper so screen
+ * readers still read whole words.
+ */
+function HudShell({ children }: { children: ReactNode }) {
+  let ci = 0;
+  const chars = (text: string, bold = false) => {
+    const Tag = bold ? 'b' : 'span';
+    return (
+      <Tag aria-label={text}>
+        {Array.from(text).map((ch, i) => (
+          <span key={i} aria-hidden="true" className="tm-char" style={{ transitionDelay: `${2300 + ci++ * 16}ms` }}>
+            {ch === ' ' ? ' ' : ch}
+          </span>
+        ))}
+      </Tag>
+    );
+  };
+
   return (
     <div className="tm-hudcol">
       <div className="tm-hudtop">
-        <span>PORTRAIT.JPG</span>
-        <span className="live">LIVE</span>
+        {chars('PORTRAIT.JPG')}
+        <span className="live">{chars('LIVE')}</span>
       </div>
       <div className="tm-hud">
-        <div className="tm-imgwrap">
-          <Image
-            src="/photo.jpg"
-            alt="Eduardo Rebollar portrait"
-            fill
-            sizes="(max-width: 900px) 420px, 40vw"
-            priority={false}
-          />
-          <div className="tm-scan" />
-          <div className="tm-glitch2" aria-hidden="true" />
-        </div>
+        {children}
         <span className="tm-corner tl" />
         <span className="tm-corner tr" />
         <span className="tm-corner bl" />
         <span className="tm-corner br" />
       </div>
-      <HudMeta />
+      <div className="tm-hudmeta">
+        {HUD_META.map(([label, value]) => (
+          <span key={label}>
+            {chars(label)}
+            {'  '}
+            {chars(value, true)}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
 
-function AsciiPortrait() {
+function HudImage() {
   return (
-    <div className="tm-hudcol">
-      <div className="tm-hudtop">
-        <span>PORTRAIT.JPG</span>
-        <span className="live">LIVE</span>
-      </div>
-      <div className="tm-hud">
-        <div className="tm-imgwrap tm-asciibox">
-          <pre className="tm-ascii fg">{ASCII_PORTRAIT}</pre>
-        </div>
-        <span className="tm-corner tl" />
-        <span className="tm-corner tr" />
-        <span className="tm-corner bl" />
-        <span className="tm-corner br" />
-      </div>
-      <HudMeta />
+    <div className="tm-imgwrap">
+      <Image
+        src="/photo.jpg"
+        alt="Eduardo Rebollar portrait"
+        fill
+        sizes="(max-width: 900px) 420px, 40vw"
+        priority={false}
+      />
+      {/* Spider-Verse load-in: offset magenta + cyan chromatic ghosts and a
+          halftone dot print. Idle opacity 0 — only animated during the
+          .is-on decode (globals.css), then they vanish. */}
+      <div className="tm-chroma tm-chroma-r" aria-hidden="true" />
+      <div className="tm-chroma tm-chroma-c" aria-hidden="true" />
+      <div className="tm-halftone" aria-hidden="true" />
+      <div className="tm-scan" />
+      <div className="tm-glitch2" aria-hidden="true" />
     </div>
   );
 }
 
-export function AboutTerminal() {
+function AsciiImage() {
+  return (
+    <div className="tm-imgwrap tm-asciibox">
+      <pre className="tm-ascii fg">{ASCII_PORTRAIT}</pre>
+    </div>
+  );
+}
+
+export function AboutTerminal({ start = true }: { start?: boolean }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const term = useTerminal({ bodyRef, inputRef, autoRun: ['whoami'], asciiDefault: false });
+  const term = useTerminal({ bodyRef, inputRef, autoRun: ['whoami'], asciiDefault: false, start });
 
   return (
     <div className="about-grid">
@@ -226,7 +249,9 @@ export function AboutTerminal() {
         </div>
       </div>
 
-      <div className="about-side">{term.ascii ? <AsciiPortrait /> : <HudPortrait />}</div>
+      <div className="about-side">
+        <HudShell>{term.ascii ? <AsciiImage /> : <HudImage />}</HudShell>
+      </div>
     </div>
   );
 }

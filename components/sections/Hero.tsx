@@ -25,14 +25,14 @@ const NAME_BAND = ['#a5b4fc', '#818cf8', '#6366f1', '#818cf8', '#a5b4fc'];
 // reduced-motion the global MotionConfig (reducedMotion="user",
 // app/providers.tsx) strips the `y` transform, leaving a sequential
 // opacity-only cascade. Gated on `splashDismissed` (so it plays *after* the
-// intro clears, not behind the overlay) and `delayChildren` starts it at 3.6s
-// — as the eyebrow and tagline finish revealing (~3.64s, see the tagline block
+// intro clears, not behind the overlay) and `delayChildren` starts it at 3.2s
+// — as the eyebrow and tagline finish revealing (~3.24s, see the tagline block
 // below), so the buttons rise once the copy has resolved. The two items (See
-// work, Get in touch) stagger 0.12s apart and run 0.7s each, settling ~4.4s;
-// the scroll hint then follows (ScrollHint, delay 4.4s) as the final beat.
+// work, Get in touch) stagger 0.12s apart and run 0.7s each, settling ~4.0s;
+// the scroll hint then follows (ScrollHint, delay 3.8s) as the final beat.
 const ctaContainer: Variants = {
   hidden: {},
-  visible: { transition: { delayChildren: 3.6, staggerChildren: 0.12 } },
+  visible: { transition: { delayChildren: 3.2, staggerChildren: 0.12 } },
 };
 
 const ctaItem: Variants = {
@@ -114,8 +114,8 @@ export function Hero() {
         className="relative z-10 flex flex-col items-center gap-8 py-28 text-center md:gap-10"
       >
         {/* Eyebrow + tagline reveal per-character shortly after the name's
-            DiaTextReveal resolves (name: delay 0.9 + duration 1.4 = 2.3s), with
-            the eyebrow starting at 1.9s. The `fade` preset is opacity-only, so
+            DiaTextReveal resolves (name: delay 0.5 + duration 1.4 = 1.9s), with
+            the eyebrow starting at 1.5s. The `fade` preset is opacity-only, so
             it still plays under OS reduced-motion. The accent dot is rendered
             locally (not via Eyebrow's `dot`) so it can fade in on the same
             cue. */}
@@ -125,10 +125,10 @@ export function Hero() {
               aria-hidden="true"
               initial={{ opacity: 0 }}
               animate={splashDismissed ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.4, delay: 1.9, ease: easing.outExpo }}
+              transition={{ duration: 0.4, delay: 1.5, ease: easing.outExpo }}
               className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]"
             />
-            <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={1.9}>
+            <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={1.5}>
               {site.role}
             </TextEffect>
           </span>
@@ -142,7 +142,7 @@ export function Hero() {
             text={firstName}
             colors={NAME_BAND}
             duration={1.4}
-            delay={0.9}
+            delay={0.5}
             play={splashDismissed}
             respectReducedMotion={false}
           />
@@ -164,23 +164,23 @@ export function Hero() {
             up by ~its cumulative char count × 0.03s (the char stagger) so the
             whole line reads as one continuous left-to-right sweep across the
             four inline segments rather than four separate reveals. The base
-            delay (2.44) is tuned so the line's final char lands at ~3.64s — the
+            delay (2.04) is tuned so the line's final char lands at ~3.24s — the
             same instant the longer eyebrow line ("Computer Science & Economics @
-            Occidental College", 49 chars from delay 1.9) finishes, so the two
+            Occidental College", 49 chars from delay 1.5) finishes, so the two
             reveals complete together. The negative `-my` pulls the tagline
             tighter to the name above and CTAs below than the column's uniform
             `gap` (flex item margins add to the gap). */}
         <p className="mx-auto -my-4 max-w-prose text-center font-sans text-lg leading-relaxed text-fg-mute md:-my-5 md:text-xl">
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.44} className="text-accent">
+          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.04} className="text-accent">
             {'Four '}
           </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.59}>
+          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.19}>
             {'Fields — '}
           </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.86} className="text-accent">
+          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.46} className="text-accent">
             {'One '}
           </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.98}>
+          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.58}>
             Intersection.
           </TextEffect>
         </p>

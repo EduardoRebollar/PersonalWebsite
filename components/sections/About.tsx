@@ -1,10 +1,11 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import { useInView } from 'motion/react';
 import { Container } from '@/components/ui/primitives/Container';
 import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
 import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
-import { easing } from '@/lib/motion';
+import { cn } from '@/lib/cn';
 import { AboutTerminal } from './about/AboutTerminal';
 
 /**
@@ -16,6 +17,16 @@ import { AboutTerminal } from './about/AboutTerminal';
  */
 
 export function About() {
+  // In-view toggle drives the scanline-sweep entrance. `useInView` is a plain
+  // IntersectionObserver wrapper (unaffected by MotionConfig); the actual motion
+  // lives in CSS, gated by prefers-reduced-motion in globals.css.
+  //
+  // The `-30%` bottom root-margin pulls the trigger line up to 70% of viewport
+  // height, so the sweep only fires once the section is genuinely scrolled into
+  // view — never on page load while it's still peeking at the bottom edge.
+  const revealRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(revealRef, { once: true, margin: '0px 0px -30% 0px' });
+
   return (
     <section
       id="about"
@@ -42,19 +53,19 @@ export function About() {
       </h2>
 
       <Container>
-        <div className="tm-comment">
-          {'// '}
-          <b>about</b> — <span style={{ color: 'var(--fg)' }}>$ run a command to get to know me</span>
-        </div>
+        {/* `.is-on` (added once the section scrolls into view) drives the
+            scanline sweep: a bright accent bar sweeps down the terminal and the
+            content develops in its wake, then the comment + HUD portrait fade
+            in. All choreography is in CSS (globals.css), scoped under
+            .about-terminal and gated on prefers-reduced-motion: no-preference. */}
+        <div ref={revealRef} className={cn('about-reveal', inView && 'is-on')}>
+          <div className="tm-comment">
+            {'// '}
+            <b>about</b> — <span style={{ color: 'var(--fg)' }}>$ run a command to get to know me</span>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-15%' }}
-          transition={{ duration: 0.8, ease: easing.outExpo }}
-        >
-          <AboutTerminal />
-        </motion.div>
+          <AboutTerminal start={inView} />
+        </div>
       </Container>
     </section>
   );
