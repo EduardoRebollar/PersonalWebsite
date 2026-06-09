@@ -1,0 +1,37 @@
+/* ctbase.css — shared contact primitives layered on top of hero.css.
+   Each artboard root is .hero (1440×860, tokens + nav + starfield + reveals
+   already defined in hero.css). Contact-specific shared bits live here. */
+
+/* shared intro blurb */
+.ct-blurb {
+  font-family: var(--font-sans); font-weight: 300;
+  color: var(--fg-mute); text-wrap: pretty;
+}
+
+/* eyebrow index counter sits at the right end of an eyebrow row */
+.ct-eyerow { display: flex; align-items: center; gap: 22px; }
+.ct-eyerow .rule { flex: 1; height: 1px; background: color-mix(in oklab, var(--hairline) 70%, transparent);
+  transform-origin: left; animation: h-rule 1s cubic-bezier(0.16,1,0.3,1) .1s both; }
+.ct-idx { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em;
+  color: color-mix(in oklab, var(--fg-mute) 60%, transparent); white-space: nowrap; }
+.ct-idx b { color: var(--accent); font-weight: 500; }
+@keyframes h-rule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* live status dot (teal, breathing) */
+.ct-live { width: 8px; height: 8px; border-radius: 999px; background: var(--secondary);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--secondary) 70%, transparent);
+  animation: ct-pulse 2.4s ease-out infinite; flex: 0 0 auto; }
+@keyframes ct-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--secondary) 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 9px transparent; }
+}
+
+/* "copied" toast pill used across directions */
+.ct-copied { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--secondary);
+  display: inline-flex; align-items: center; gap: 5px; }
+.ct-copied svg { width: 12px; height: 12px; }
+
+/* staggered reveal helper (re-aliases hero rise) */
+.ct-rise { animation: h-rise .9s cubic-bezier(0.16,1,0.3,1) both; }
+.ct-fade { animation: h-fade 1s ease both; }

@@ -1,0 +1,173 @@
+/* ctcombo.css — shared modules (status card · channel list · message form)
+   reused across the combined directions (#1 panel + list + #3 form), plus the
+   three layout shells (.cc5 / .cc6 / .cc7). Built on hero.css tokens. */
+
+/* ============================ STATUS CARD ============================ */
+.cc-status { position: relative; overflow: hidden; border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background:
+    radial-gradient(120% 85% at 100% 0%, color-mix(in oklab, var(--accent) 13%, transparent) 0%, transparent 55%),
+    color-mix(in oklab, var(--surface) 70%, transparent);
+  padding: 26px 28px 22px; box-shadow: 0 30px 80px -45px rgba(0,0,0,.9); }
+.cc-status::after { content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 9%, transparent); }
+.cc-status.bare { border: none; background: none; box-shadow: none; padding: 0; }
+.cc-status.bare::after { display: none; }
+
+.cc-status-top { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
+.cc-status-top .lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--secondary); }
+.cc-status-top .meta { margin-left: auto; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: color-mix(in oklab, var(--fg-mute) 50%, transparent); }
+
+.cc-status-h { font-family: var(--font-display); font-weight: 400; font-size: 33px; line-height: 1.04;
+  letter-spacing: -0.01em; color: var(--fg); margin: 0 0 5px; }
+.cc-status.compact .cc-status-h { font-size: 27px; }
+.cc-status-sub { font-size: 14px; font-weight: 300; color: var(--fg-mute); margin: 0 0 22px; }
+
+.cc-stats { border-top: 1px solid color-mix(in oklab, var(--hairline) 30%, transparent); }
+.cc-stat { display: flex; align-items: center; gap: 13px; padding: 13px 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 22%, transparent); }
+.cc-stat:last-child { border-bottom: none; }
+.cc-status.compact .cc-stat { padding: 10px 0; }
+.cc-stat .ic { width: 17px; height: 17px; color: var(--accent); flex: 0 0 auto; }
+.cc-stat .ic svg { width: 100%; height: 100%; }
+.cc-stat .k { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: color-mix(in oklab, var(--fg-mute) 65%, transparent); }
+.cc-stat .v { margin-left: auto; font-family: var(--font-sans); font-size: 15px; color: var(--fg); font-weight: 400; }
+.cc-stat .v.mono { font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums; color: var(--accent); }
+
+/* ============================ CHANNEL LIST ============================ */
+.cc-list { border-top: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent); }
+.cc-list.noborder { border-top: none; }
+.cc-row { display: grid; grid-template-columns: 128px 1fr auto; align-items: center; gap: 18px;
+  padding: 15px 12px 15px 6px; text-decoration: none; color: inherit; cursor: pointer; position: relative;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 26%, transparent);
+  transition: background-color .25s, padding-left .25s; }
+.cc-row:last-child { border-bottom: none; }
+.cc-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent); transform: scaleY(0); transition: transform .28s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 0 14px var(--accent); }
+.cc-row:hover { background: color-mix(in oklab, var(--surface) 55%, transparent); padding-left: 16px; }
+.cc-row:hover::before { transform: scaleY(1); }
+
+.cc-rlabel { display: flex; align-items: center; gap: 12px; min-width: 0;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--fg-mute); }
+.cc-rlabel .ic { width: 16px; height: 16px; flex: 0 0 auto;
+  color: color-mix(in oklab, var(--fg-mute) 80%, transparent); display: grid; place-items: center; }
+.cc-rlabel .ic svg { width: 100%; height: 100%; }
+.cc-row:hover .cc-rlabel { color: var(--fg); }
+.cc-row:hover .cc-rlabel .ic { color: var(--accent); }
+.cc-rval { font-family: var(--font-sans); font-size: 16px; color: var(--fg); letter-spacing: -0.01em;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-raction { justify-self: end; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent); transition: color .2s; }
+.cc-raction svg { width: 13px; height: 13px; }
+.cc-row:hover .cc-raction { color: var(--fg); }
+
+/* ============================ MESSAGE FORM ============================ */
+.cc-form { position: relative; overflow: hidden; border-radius: 18px; display: flex; flex-direction: column;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background:
+    radial-gradient(140% 100% at 50% -20%, color-mix(in oklab, var(--accent) 9%, transparent) 0%, transparent 50%),
+    color-mix(in oklab, var(--surface) 62%, transparent);
+  padding: 28px 28px 24px; box-shadow: 0 40px 110px -55px rgba(0,0,0,.95); }
+.cc-form.bare { border: none; background: none; box-shadow: none; padding: 0; border-radius: 0; }
+
+.cc-form-head { margin-bottom: 20px; }
+.cc-form-head .t { font-family: var(--font-display); font-size: 26px; color: var(--fg); margin: 0; line-height: 1.1; }
+.cc-form-head .s { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent); margin-top: 8px; }
+
+.cc-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; align-content: start; }
+.cc-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cc-field.full { grid-column: 1 / -1; }
+.cc-field.msg { flex: 1; }
+.cc-field label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 65%, transparent); }
+.cc-input { width: 100%; background: color-mix(in oklab, #06080c 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent); border-radius: 11px;
+  padding: 13px 15px; font-family: var(--font-sans); font-size: 15px; color: var(--fg); outline: none;
+  transition: border-color .2s, box-shadow .25s, background-color .2s; }
+.cc-input::placeholder { color: color-mix(in oklab, var(--fg-mute) 40%, transparent); }
+.cc-input:focus { border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent);
+  background: color-mix(in oklab, var(--accent) 5%, #06080c); }
+textarea.cc-input { resize: none; line-height: 1.55; min-height: 104px; height: 100%; }
+
+.cc-submit { display: flex; align-items: center; gap: 18px; margin-top: 18px; }
+.cc-btn { display: inline-flex; align-items: center; gap: 11px; cursor: pointer; border: none;
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--base); background: var(--fg); padding: 14px 26px; border-radius: 999px; font-weight: 500;
+  transition: box-shadow .25s, transform .15s; white-space: nowrap; }
+.cc-btn svg { width: 16px; height: 16px; transition: transform .25s; }
+.cc-btn:hover { box-shadow: 0 0 32px -6px var(--accent); transform: translateY(-2px); }
+.cc-btn:hover svg { transform: translateX(3px); }
+.cc-btn.sent { background: var(--secondary); color: #052017; }
+.cc-formnote { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--fg-mute) 60%, transparent); line-height: 1.45; }
+.cc-formnote a { color: var(--fg-mute); text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 60%, transparent); }
+.cc-formnote a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* shared eyebrow/heading helpers for the combined shells */
+.cc-h { font-family: var(--font-display); font-weight: 400; color: var(--fg); letter-spacing: -0.02em; margin: 0; }
+.cc-h i { font-style: italic; color: var(--accent); }
+.cc-blurb { font-family: var(--font-sans); font-weight: 300; color: var(--fg-mute); text-wrap: pretty; }
+
+/* ============================ SHELL · CC5 (rail + form) ============================ */
+.cc5 { padding: 116px 64px 52px; }
+.cc5-grid { display: grid; grid-template-columns: 424px 1fr; gap: 56px; height: 692px; }
+.cc5-rail { display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+.cc5-rail > * { flex: 0 0 auto; }
+.cc5-rail .cc-list { margin-top: 2px; }
+.cc5-main { display: flex; flex-direction: column; min-width: 0; }
+.cc5-head { margin-bottom: 22px; }
+.cc5-eyebrow { margin-bottom: 18px; }
+.cc5 .cc-h { font-size: 58px; line-height: 0.98; }
+.cc5-blurb { font-size: 17px; line-height: 1.58; max-width: 46ch; margin: 14px 0 0; }
+.cc5-main .cc-form { flex: 1; }
+
+/* ============================ SHELL · CC6 (form hero + sidebar) ============================ */
+.cc6 { padding: 112px 64px 50px; display: flex; flex-direction: column; }
+.cc6-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px;
+  margin-bottom: 34px; padding-bottom: 28px;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 45%, transparent); }
+.cc6-eyebrow { margin-bottom: 20px; }
+.cc6 .cc-h { font-size: 66px; line-height: 0.96; }
+.cc6-blurb { font-size: 16px; line-height: 1.58; max-width: 40ch; padding-bottom: 6px; }
+.cc6-grid { display: grid; grid-template-columns: 1fr 376px; gap: 44px; flex: 1; min-height: 0; }
+.cc6-grid .cc-form { min-height: 0; }
+.cc6-side { display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+.cc6-side > * { flex: 0 0 auto; }
+
+/* ============================ SHELL · CC7 (unified console) ============================ */
+.cc7 { padding: 108px 64px 50px; display: flex; flex-direction: column; }
+.cc7-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 28px; }
+.cc7-eyebrow { margin-bottom: 18px; }
+.cc7 .cc-h { font-size: 60px; line-height: 0.98; }
+.cc7-avail { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-mono);
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--secondary); padding-bottom: 8px; }
+
+.cc7-panel { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1px 0.86fr;
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background:
+    radial-gradient(90% 120% at 0% 0%, color-mix(in oklab, var(--accent) 9%, transparent) 0%, transparent 48%),
+    color-mix(in oklab, var(--surface) 60%, transparent);
+  box-shadow: 0 50px 130px -60px rgba(0,0,0,.95), inset 0 1px 0 color-mix(in oklab, var(--fg) 8%, transparent); }
+.cc7-left { padding: 30px 32px; display: flex; flex-direction: column; }
+.cc7-divider { background: color-mix(in oklab, var(--hairline) 40%, transparent); }
+.cc7-right { padding: 28px 30px; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  background: color-mix(in oklab, #06080c 22%, transparent); }
+.cc7-left .cc-form-head .t { font-size: 24px; }
+.cc7-right .cc-status { margin-bottom: 18px; }
+.cc7-right .cc-stat { padding: 11px 0; }
+.cc7-right .cc-row { padding-top: 12px; padding-bottom: 12px; }
+.cc7-right .cc-listhead { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: color-mix(in oklab, var(--fg-mute) 55%, transparent);
+  margin-bottom: 4px; padding-top: 20px; border-top: 1px solid color-mix(in oklab, var(--hairline) 30%, transparent); }
+.cc7-left .cc-fields { flex: 1; }

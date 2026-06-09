@@ -1792,3 +1792,898 @@
     background-size: 4px 4px, 4px 4px;
   }
 }
+
+/* -----------------------------------------------------------------------------
+ * Contact — Unified Console (design_handoff_contact_console). Port of the
+ * prototype's `.cc8-*` / status / channel-list styles, scoped under
+ * `.contact-console`.
+ *
+ * Local token block: the prototype CSS uses short names (--accent = indigo,
+ * --secondary = teal). In this repo raw --accent is amber and the indigo lives
+ * in --primary, so the short names are re-mapped locally here (same pattern as
+ * .about-terminal). The override only affects raw var(--accent) etc. inside this
+ * subtree; Tailwind utilities use the --color-* names (unaffected).
+ *
+ * Keyframes live at top level (NOT inside @theme) so Tailwind v4 doesn't
+ * tree-shake them — same precedent as glow-pulse / .about-terminal.
+ * --------------------------------------------------------------------------- */
+
+.contact-console {
+  --base: var(--background); /* #000 */
+  --fg: var(--foreground); /* #fff */
+  --fg-mute: var(--muted-foreground); /* #ccc */
+  --surface: #11151c; /* darker console fill than the repo's --card */
+  --hairline: var(--border); /* #545454 */
+  --accent: var(--primary); /* indigo #818cf8 — repo's raw --accent is amber */
+  --warn: var(--chart-3); /* amber #fcd34d (unused on this screen) */
+  /* --secondary (teal #2dd4bf) inherits from :root — do NOT redefine it. */
+}
+
+/* ---- header row ---- */
+.contact-console .cc8-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 22px;
+}
+.contact-console .cc8-headl {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.contact-console .cc8-eyebrow {
+  margin-bottom: 16px;
+}
+.contact-console .cc8-h {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--fg);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  letter-spacing: var(--text-h2--letter-spacing);
+  margin: 0;
+  white-space: nowrap;
+}
+.contact-console .cc8-h i {
+  font-style: italic;
+  color: var(--fg);
+}
+.contact-console .cc8-headr {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+.contact-console .cc8-avail {
+  position: relative;
+  top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  text-align: right;
+  white-space: nowrap;
+}
+/* nudge the live dot up so it optically centers on the uppercase cap-height */
+.contact-console .cc8-avail .ct-live {
+  transform: translateY(-1px);
+}
+
+/* live status dot (teal, breathing) */
+.contact-console .ct-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--secondary);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--secondary) 70%, transparent);
+  animation: cc-pulse 2.4s ease-out infinite;
+  flex: 0 0 auto;
+}
+@keyframes cc-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--secondary) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}
+
+/* ---- panel shell ---- */
+.contact-console .cc8-panel {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background:
+    radial-gradient(85% 120% at 0% 0%, color-mix(in oklab, var(--accent) 9%, transparent) 0%, transparent 46%),
+    color-mix(in oklab, var(--surface) 85%, transparent);
+  box-shadow:
+    0 50px 130px -60px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 color-mix(in oklab, var(--fg) 8%, transparent);
+}
+
+/* console top bar */
+.contact-console .cc8-bar {
+  flex: 0 0 auto;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 38%, transparent);
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+}
+.contact-console .cc8-bar .sq {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 12px -1px var(--accent);
+  flex: 0 0 auto;
+}
+.contact-console .cc8-bar .path {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--fg-mute) 78%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.contact-console .cc8-bar .path b {
+  color: var(--fg);
+  font-weight: 500;
+}
+.contact-console .cc8-bar .clock {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--fg-mute) 50%, transparent);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.contact-console .cc8-bar .clock .ic {
+  width: 14px;
+  height: 14px;
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent);
+}
+
+/* body split */
+.contact-console .cc8-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1px 0.78fr;
+}
+.contact-console .cc8-left {
+  padding: 18px 34px 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.contact-console .cc8-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.contact-console .cc8-divider {
+  background: color-mix(in oklab, var(--hairline) 38%, transparent);
+}
+.contact-console .cc8-right {
+  padding: 18px 32px 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: color-mix(in oklab, #06080c 24%, transparent);
+}
+
+/* ---- form head ---- */
+.contact-console .cc8-fhead {
+  margin-bottom: 20px;
+}
+.contact-console .cc8-fhead .t {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.05;
+  color: var(--fg);
+  margin: 0;
+}
+
+/* ---- fields ---- */
+.contact-console .cc8-fields {
+  display: grid;
+  grid-template-columns: 0.8fr 0.9fr 1.1fr;
+  gap: 15px;
+  flex: 1;
+  align-content: start;
+}
+.contact-console .cc8-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.contact-console .cc8-field.full {
+  grid-column: 1 / -1;
+}
+.contact-console .cc8-field.msg {
+  flex: 1;
+  min-height: 0;
+}
+.contact-console .cc8-field label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 62%, transparent);
+}
+.contact-console .cc8-input {
+  width: 100%;
+  background: color-mix(in oklab, #06080c 72%, transparent);
+  border: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
+  border-radius: 11px;
+  padding: 13px 15px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--fg);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.25s, background-color 0.2s;
+}
+.contact-console input.cc8-input {
+  padding-block: 9px;
+}
+.contact-console .cc8-input::placeholder {
+  color: color-mix(in oklab, var(--fg-mute) 38%, transparent);
+}
+.contact-console .cc8-input:focus {
+  border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent);
+  background: color-mix(in oklab, var(--accent) 5%, #06080c);
+}
+.contact-console textarea.cc8-input {
+  resize: none;
+  line-height: 1.55;
+  min-height: 120px;
+  height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--accent) 70%, transparent) transparent;
+}
+/* custom indigo scrollbar — mirrors the About terminal scrollback */
+.contact-console textarea.cc8-input::-webkit-scrollbar {
+  width: 12px;
+}
+.contact-console textarea.cc8-input::-webkit-scrollbar-track {
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+  border-radius: 999px;
+}
+.contact-console textarea.cc8-input::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  background-color: color-mix(in oklab, var(--accent) 60%, var(--base));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 90%, transparent),
+    0 0 10px -2px var(--accent);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.contact-console textarea.cc8-input::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 95%, white 10%),
+    0 0 16px -2px var(--accent);
+}
+.contact-console textarea.cc8-input::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.contact-console .cc8-submit {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.contact-console .cc8-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent);
+}
+.contact-console .cc8-hint kbd {
+  color: var(--fg-mute);
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  margin: 0 1px;
+}
+
+/* ---- success state ---- */
+.contact-console .cc8-success {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+.contact-console .cc8-success .ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--secondary);
+  border: 1px solid color-mix(in oklab, var(--secondary) 55%, transparent);
+  background: color-mix(in oklab, var(--secondary) 12%, transparent);
+  box-shadow: 0 0 30px -6px var(--secondary);
+  margin-bottom: 22px;
+}
+.contact-console .cc8-success .ring svg {
+  width: 28px;
+  height: 28px;
+}
+.contact-console .cc8-success .t {
+  font-family: var(--font-display);
+  font-size: 23px;
+  line-height: 1.05;
+  color: var(--fg);
+  margin: 0 0 10px;
+}
+.contact-console .cc8-success .s {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--fg-mute);
+  margin: 0 0 24px;
+  max-width: 38ch;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.contact-console .cc8-again {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.25s;
+}
+.contact-console .cc8-again svg {
+  width: 14px;
+  height: 14px;
+}
+.contact-console .cc8-again:hover {
+  color: var(--fg);
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 20px -8px var(--accent);
+}
+
+/* ---- right rail · channel label + list ---- */
+.contact-console .cc8-rlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.05;
+  color: var(--fg);
+  margin: 0 0 2px;
+}
+/* Fill the right column so the channel rows distribute evenly instead of
+   packing at the top and leaving a gap above the footer note. */
+.contact-console .cc8-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.contact-console .cc8-row {
+  display: grid;
+  grid-template-columns: 116px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  padding: 11px 12px 11px 6px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 26%, transparent);
+  transition: background-color 0.25s, padding-left 0.25s;
+}
+.contact-console .cc8-row:last-child {
+  border-bottom: none;
+}
+.contact-console .cc8-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 14px var(--accent);
+}
+/* Sheen that sweeps left→right across the row on hover. */
+.contact-console .cc8-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in oklab, var(--accent) 16%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  background-position: 130% 0;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.contact-console .cc8-row:hover {
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  padding-left: 16px;
+}
+.contact-console .cc8-row:hover::before {
+  transform: scaleY(1);
+}
+.contact-console .cc8-row:hover::after {
+  opacity: 1;
+  animation: cc8-sheen 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cc8-sheen {
+  from {
+    background-position: -30% 0;
+  }
+  to {
+    background-position: 130% 0;
+  }
+}
+.contact-console .cc8-rlbl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.contact-console .cc8-rlbl .ic {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: color-mix(in oklab, var(--fg-mute) 80%, transparent);
+}
+.contact-console .cc8-row:hover .cc8-rlbl {
+  color: var(--fg);
+}
+.contact-console .cc8-row:hover .cc8-rlbl .ic {
+  color: var(--accent);
+}
+.contact-console .cc8-rval {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.contact-console .cc8-raction {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent);
+  transition: color 0.2s;
+}
+.contact-console .cc8-raction svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.contact-console .cc8-row:hover .cc8-raction {
+  color: var(--accent);
+}
+/* Action icon nudges in its own natural direction on hover. */
+.contact-console .cc8-row[data-kind='ext']:hover .cc8-raction svg {
+  transform: translate(2px, -2px);
+}
+.contact-console .cc8-row[data-kind='download']:hover .cc8-raction svg {
+  transform: translateY(2px);
+}
+.contact-console .cc8-row[data-kind='copy']:hover .cc8-raction svg {
+  transform: scale(1.12);
+}
+.contact-console .ct-copied {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.contact-console .ct-copied svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---- right rail · footer note ---- */
+.contact-console .cc8-foot {
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent);
+}
+.contact-console .cc8-foot svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+.contact-console .cc8-foot b {
+  color: var(--fg-mute);
+  font-weight: 500;
+}
+
+/* ===========================================================================
+   Boot-sequence entrance. `.is-on` is toggled by Contact.tsx once the console
+   scrolls into view. The terminal "powers on": head + panel rise, the panel
+   border flares with accent, the prompt types itself in with a blinking caret,
+   then the channel rows print one-by-one like boot-log lines. The whole block
+   lives inside prefers-reduced-motion: no-preference, so reduced-motion users
+   get fully-visible content with no overlays. Keyframes are referenced by real
+   class selectors (not a CSS var), so Tailwind v4 won't tree-shake them.
+   =========================================================================== */
+.contact-console .cc8-panel {
+  position: relative;
+}
+/* content sits below the ignition flare's stacking context */
+.contact-console .cc8-panel .cc8-bar,
+.contact-console .cc8-panel .cc8-body {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* hidden pre-states — motion-OK users only */
+  .contact-console .cc8-reveal .cc8-head,
+  .contact-console .cc8-reveal .cc8-panel,
+  .contact-console .cc8-reveal .cc8-fhead,
+  .contact-console .cc8-reveal .cc8-fields .cc8-field,
+  .contact-console .cc8-reveal .cc8-submit,
+  .contact-console .cc8-reveal .cc8-rlabel,
+  .contact-console .cc8-reveal .cc8-foot {
+    opacity: 0;
+  }
+  /* clock fades in word-by-word, so hide its pieces (icons, separator, words)
+     individually rather than the whole container */
+  .contact-console .cc8-reveal .cc8-bar .clock .ic,
+  .contact-console .cc8-reveal .cc8-bar .clock .sep,
+  .contact-console .cc8-reveal .cc8-bar .clock .cc8-w {
+    opacity: 0;
+  }
+  .contact-console .cc8-reveal .cc8-bar .sq {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  /* prompt is clipped from the right, ready to "type" in */
+  .contact-console .cc8-reveal .cc8-bar .path {
+    clip-path: inset(0 100% 0 0);
+  }
+  .contact-console .cc8-reveal .cc8-divider {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  .contact-console .cc8-reveal .cc8-list .cc8-row {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  /* accent ignition flare riding over the panel as it powers on */
+  .contact-console .cc8-reveal .cc8-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 70%, transparent),
+      inset 0 0 44px -8px color-mix(in oklab, var(--accent) 60%, transparent);
+  }
+
+  /* ---- the cascade, once the console is in view ---- */
+  .contact-console .cc8-reveal.is-on .cc8-head {
+    animation: cc8-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-panel {
+    animation: cc8-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-panel::before {
+    animation: cc8-ignite 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .sq {
+    animation: cc8-sq-on 600ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both;
+  }
+  /* Prompt starts typing in early (600ms), while the ignition glow is still up;
+     it finishes at 600 + 850 = 1450ms. Everything downstream chains off it. */
+  .contact-console .cc8-reveal.is-on .cc8-bar .path {
+    animation: cc8-type 850ms steps(29, end) 600ms both;
+  }
+  /* Los Angeles + local time fade in WORD-BY-WORD, left to right, only after the
+     prompt has finished typing. Pin icon → "Los" → "Angeles," → "CA" → · →
+     clock icon → time → AM/PM. */
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .ic,
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .sep,
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .cc8-w {
+    animation: cc8-fade 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock svg.ic:first-of-type {
+    animation-delay: 1480ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .loc .cc8-w:nth-child(1) {
+    animation-delay: 1550ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .loc .cc8-w:nth-child(2) {
+    animation-delay: 1610ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .loc .cc8-w:nth-child(3) {
+    animation-delay: 1670ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .sep {
+    animation-delay: 1730ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock svg.ic:last-of-type {
+    animation-delay: 1790ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .time .cc8-w:nth-child(1) {
+    animation-delay: 1850ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-bar .clock .time .cc8-w:nth-child(2) {
+    animation-delay: 1910ms;
+  }
+  /* -- Send a message: starts only after the clock has finished fading in word
+        by word (last word at 1910ms + 380ms = ~2290ms) -- */
+  .contact-console .cc8-reveal.is-on .cc8-fhead {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2320ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-fields .cc8-field:nth-child(1) {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2390ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-fields .cc8-field:nth-child(2) {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2455ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-fields .cc8-field:nth-child(3) {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2520ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-fields .cc8-field:nth-child(4) {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2585ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-submit {
+    animation: cc8-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 2660ms both;
+  }
+  /* Divider draws in early and slowly — a long, gentle draw that frames both
+     columns while the prompt is still typing. */
+  .contact-console .cc8-reveal.is-on .cc8-divider {
+    animation: cc8-draw 1300ms cubic-bezier(0.16, 1, 0.3, 1) 2750ms both;
+  }
+  /* -- Reach me directly: starts only after the form has finished (~3060ms) -- */
+  .contact-console .cc8-reveal.is-on .cc8-rlabel {
+    animation: cc8-rise 450ms cubic-bezier(0.16, 1, 0.3, 1) 3140ms both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-foot {
+    animation: cc8-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 3870ms both;
+  }
+
+  /* channel rows print one-by-one; each accent left-bar flashes as it lands.
+     The ::before flash uses default fill (NOT forwards/both) so the bar returns
+     to its base scaleY(0) afterward and the existing :hover::before still wins. */
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row {
+    animation: cc8-row-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row::before {
+    animation: cc8-bar-flash 560ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(1),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(1)::before {
+    animation-delay: 3250ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(2),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(2)::before {
+    animation-delay: 3330ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(3),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(3)::before {
+    animation-delay: 3410ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(4),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(4)::before {
+    animation-delay: 3490ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(5),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(5)::before {
+    animation-delay: 3570ms;
+  }
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(6),
+  .contact-console .cc8-reveal.is-on .cc8-list .cc8-row:nth-child(6)::before {
+    animation-delay: 3650ms;
+  }
+}
+
+/* ---- boot-sequence keyframes (top level so Tailwind v4 always emits them) ---- */
+@keyframes cc8-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cc8-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cc8-ignite {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes cc8-sq-on {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes cc8-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes cc8-draw {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+@keyframes cc8-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cc8-bar-flash {
+  0% {
+    transform: scaleY(0);
+  }
+  45% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0);
+  }
+}
+
+/* ---- responsive: stack the panel body under ~900px ---- */
+@media (max-width: 56rem) {
+  .contact-console .cc8-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .contact-console .cc8-headr {
+    align-items: flex-start;
+    padding-bottom: 0;
+  }
+  .contact-console .cc8-avail {
+    text-align: left;
+  }
+  .contact-console .cc8-h {
+    white-space: normal;
+  }
+  .contact-console .cc8-body {
+    grid-template-columns: 1fr;
+  }
+  .contact-console .cc8-divider {
+    height: 1px;
+    width: auto;
+  }
+  .contact-console .cc8-left,
+  .contact-console .cc8-right {
+    padding: 26px 24px;
+  }
+}
+
+@media (max-width: 30rem) {
+  /* keep the console bar from overflowing on narrow phones — drop the
+     location, leave the live clock */
+  .contact-console .cc8-bar .clock .loc,
+  .contact-console .cc8-bar .clock .sep {
+    display: none;
+  }
+  .contact-console .cc8-fields {
+    grid-template-columns: 1fr;
+  }
+  .contact-console .cc8-row {
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+  }
+  .contact-console .cc8-rval {
+    grid-column: 1 / -1;
+    font-size: 11.5px;
+  }
+}

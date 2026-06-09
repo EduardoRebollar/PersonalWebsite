@@ -1,0 +1,128 @@
+/* ct8.css — Unified Console (expanded) — the selected #7 direction, built out.
+   Console top-bar + reason chips + success state + refined status/channel rail.
+   Reuses hero.css tokens + StatusCard/ChannelList from ctcombo.jsx. */
+
+.cc8 { padding: 100px 60px 46px; display: flex; flex-direction: column; }
+
+/* ---- header row ---- */
+.cc8-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 22px; }
+.cc8-head > .cc8-headl { flex: 1 1 auto; min-width: 0; }
+.cc8-eyebrow { margin-bottom: 16px; }
+.cc8-h { font-family: var(--font-display); font-weight: 400; color: var(--fg);
+  font-size: 56px; line-height: 0.98; letter-spacing: -0.02em; margin: 0; white-space: nowrap; }
+.cc8-h i { font-style: italic; color: var(--accent); }
+.cc8-headr { flex: 0 0 auto; max-width: 366px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; padding-bottom: 8px; }
+.cc8-avail { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-mono);
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--secondary); }
+.cc8-headr .sub { font-family: var(--font-sans); font-weight: 300; font-size: 14px;
+  color: color-mix(in oklab, var(--fg-mute) 75%, transparent); max-width: 34ch; text-align: right; text-wrap: pretty; }
+
+/* ---- panel shell ---- */
+.cc8-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  background:
+    radial-gradient(85% 120% at 0% 0%, color-mix(in oklab, var(--accent) 9%, transparent) 0%, transparent 46%),
+    color-mix(in oklab, var(--surface) 60%, transparent);
+  box-shadow: 0 50px 130px -60px rgba(0,0,0,.95), inset 0 1px 0 color-mix(in oklab, var(--fg) 8%, transparent); }
+
+/* console top bar */
+.cc8-bar { flex: 0 0 auto; height: 50px; display: flex; align-items: center; gap: 14px; padding: 0 22px;
+  border-bottom: 1px solid color-mix(in oklab, var(--hairline) 38%, transparent);
+  background: color-mix(in oklab, var(--surface) 55%, transparent); }
+.cc8-bar .sq { width: 11px; height: 11px; border-radius: 3px; background: var(--accent);
+  box-shadow: 0 0 12px -1px var(--accent); flex: 0 0 auto; }
+.cc8-bar .path { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--fg-mute) 78%, transparent); }
+.cc8-bar .path b { color: var(--fg); font-weight: 500; }
+.cc8-bar .clock { margin-left: auto; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--fg-mute) 50%, transparent); font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; gap: 8px; }
+.cc8-bar .clock .ic { width: 14px; height: 14px; color: color-mix(in oklab, var(--fg-mute) 55%, transparent); }
+
+/* body split */
+.cc8-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1px 0.78fr; }
+.cc8-left { padding: 30px 34px; display: flex; flex-direction: column; min-width: 0; }
+.cc8-divider { background: color-mix(in oklab, var(--hairline) 38%, transparent); }
+.cc8-right { padding: 30px 32px; display: flex; flex-direction: column; min-width: 0;
+  background: color-mix(in oklab, #06080c 24%, transparent); }
+
+/* ---- form head ---- */
+.cc8-fhead { margin-bottom: 20px; }
+.cc8-fhead .t { font-family: var(--font-display); font-size: 27px; line-height: 1.05; color: var(--fg); margin: 0; }
+.cc8-fhead .s { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent); margin: 8px 0 0; }
+
+/* ---- reason chips ---- */
+.cc8-reason { margin-bottom: 18px; }
+.cc8-reason .lab { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 60%, transparent); margin-bottom: 11px; }
+.cc8-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cc8-chip { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em; color: var(--fg-mute);
+  border: 1px solid color-mix(in oklab, var(--hairline) 48%, transparent); border-radius: 999px;
+  padding: 8px 14px; cursor: pointer; background: color-mix(in oklab, var(--surface) 30%, transparent);
+  transition: color .2s, border-color .2s, background-color .2s, box-shadow .25s, transform .12s; }
+.cc8-chip:hover { color: var(--fg); border-color: color-mix(in oklab, var(--accent) 45%, transparent); transform: translateY(-1px); }
+.cc8-chip.on { color: var(--fg); border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  background: color-mix(in oklab, var(--accent) 16%, transparent); box-shadow: 0 0 20px -8px var(--accent); }
+
+/* ---- fields ---- */
+.cc8-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; align-content: start; }
+.cc8-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cc8-field.full { grid-column: 1 / -1; }
+.cc8-field.msg { flex: 1; min-height: 0; }
+.cc8-field label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 62%, transparent); }
+.cc8-input { width: 100%; background: color-mix(in oklab, #06080c 72%, transparent);
+  border: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent); border-radius: 11px;
+  padding: 13px 15px; font-family: var(--font-sans); font-size: 15px; color: var(--fg); outline: none;
+  transition: border-color .2s, box-shadow .25s, background-color .2s; }
+.cc8-input::placeholder { color: color-mix(in oklab, var(--fg-mute) 38%, transparent); }
+.cc8-input:focus { border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent);
+  background: color-mix(in oklab, var(--accent) 5%, #06080c); }
+textarea.cc8-input { resize: none; line-height: 1.55; min-height: 96px; height: 100%; }
+
+.cc8-submit { display: flex; align-items: center; gap: 18px; margin-top: 18px; }
+.cc8-btn { display: inline-flex; align-items: center; gap: 11px; cursor: pointer; border: none;
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--base); background: var(--fg); padding: 14px 26px; border-radius: 999px; font-weight: 500;
+  transition: box-shadow .25s, transform .15s; white-space: nowrap; }
+.cc8-btn svg { width: 16px; height: 16px; transition: transform .25s; }
+.cc8-btn:hover { box-shadow: 0 0 32px -6px var(--accent); transform: translateY(-2px); }
+.cc8-btn:hover svg { transform: translateX(3px); }
+.cc8-hint { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--fg-mute) 52%, transparent); }
+.cc8-hint kbd { color: var(--fg-mute); border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent);
+  border-radius: 5px; padding: 2px 7px; font-family: inherit; font-size: 10.5px; margin: 0 1px; }
+
+/* ---- success state ---- */
+.cc8-success { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }
+.cc8-success .ring { width: 60px; height: 60px; border-radius: 999px; display: grid; place-items: center;
+  color: var(--secondary); border: 1px solid color-mix(in oklab, var(--secondary) 55%, transparent);
+  background: color-mix(in oklab, var(--secondary) 12%, transparent);
+  box-shadow: 0 0 30px -6px var(--secondary); margin-bottom: 22px; }
+.cc8-success .ring svg { width: 28px; height: 28px; }
+.cc8-success .t { font-family: var(--font-display); font-size: 32px; line-height: 1.05; color: var(--fg); margin: 0 0 10px; }
+.cc8-success .s { font-family: var(--font-sans); font-weight: 300; font-size: 15px; color: var(--fg-mute);
+  margin: 0 0 24px; max-width: 38ch; line-height: 1.55; text-wrap: pretty; }
+.cc8-again { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; background: none;
+  border: 1px solid color-mix(in oklab, var(--hairline) 55%, transparent); border-radius: 999px;
+  padding: 11px 20px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--fg-mute); transition: color .2s, border-color .2s, box-shadow .25s; }
+.cc8-again svg { width: 14px; height: 14px; }
+.cc8-again:hover { color: var(--fg); border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 20px -8px var(--accent); }
+
+/* ---- right rail ---- */
+.cc8-statusbare .cc-status-h { font-size: 28px; }
+.cc8-right .cc-stat { padding: 11px 0; }
+.cc8-rlabel { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent); margin: 0 0 2px; padding-top: 18px;
+  border-top: 1px solid color-mix(in oklab, var(--hairline) 30%, transparent); }
+.cc8-right .cc-status { margin-bottom: 18px; }
+.cc8-right .cc-row { padding-top: 11px; padding-bottom: 11px; }
+.cc8-foot { margin-top: auto; padding-top: 16px; display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; line-height: 1.5;
+  color: color-mix(in oklab, var(--fg-mute) 55%, transparent); }
+.cc8-foot svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--accent); }
+.cc8-foot b { color: var(--fg-mute); font-weight: 500; }
