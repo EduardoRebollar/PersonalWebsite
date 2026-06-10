@@ -15,6 +15,18 @@ const withMDX = createMDX({
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
+  // Barrel-import tree-shaking: only pull the icons/charts/motion helpers each
+  // module actually uses, instead of the package's full index. No behavior
+  // change — purely a smaller-bundle hint.
+  experimental: {
+    optimizePackageImports: [
+      'motion',
+      'lucide-react',
+      '@nivo/bar',
+      '@nivo/line',
+      '@nivo/heatmap',
+    ],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     // Next 16 only honors `quality` values listed here (default is [75]).

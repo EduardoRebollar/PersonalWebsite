@@ -189,9 +189,14 @@ export function SpiralSplash() {
             : undefined
         }
       >
-        <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
-          <SpiralAnimation explode={exploding} onExploded={startWarp} />
-        </Suspense>
+        {/* Reduced-motion users get a static black intro — GSAP drives the
+            spiral via a canvas rAF loop, which the global CSS reduced-motion
+            clamp can't freeze, so we skip mounting (and lazy-loading) it. */}
+        {reducedMotion ? null : (
+          <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
+            <SpiralAnimation explode={exploding} onExploded={startWarp} />
+          </Suspense>
+        )}
       </div>
 
       {/* Three nested wrappers, each with a single job:

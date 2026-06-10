@@ -22,7 +22,6 @@ export function DeviceDetector() {
 
     initialize({
       hasWebGL2: detectWebGL2(),
-      gpuTier: 3,
       reducedMotion: motionMQ?.matches ?? false,
       isMobile: mobileMQ?.matches ?? false,
     });

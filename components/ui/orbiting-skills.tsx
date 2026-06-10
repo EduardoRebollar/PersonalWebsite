@@ -1,10 +1,27 @@
 'use client';
 
-import React, { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/cn';
-import { skills as defaultSkills } from '@/content/data/skills';
+import { skills as defaultSkills, getSkillBlurb } from '@/content/data/skills';
 import { useSceneStore } from '@/stores/useSceneStore';
+import { useInViewport } from '@/lib/useInViewport';
+import { SkillPopover } from '@/components/ui/SkillPopover';
 import type { SkillGroup } from '@/types/content';
+
+// useLayoutEffect on the server warns; fall back to useEffect there. Used to
+// position the orbit nodes before first paint (so reduced-motion / first frame
+// don't flash at the center).
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const ORBIT_CATEGORIES = ['Languages', 'ML / Data', 'Frameworks', 'Dev Tools'] as const;
 
@@ -537,6 +554,8 @@ function getFallbackText(label: string): string {
 type NodeDescriptor = {
   id: string;
   label: string;
+  /** Source group label (e.g. 'Languages') — shown as the popover eyebrow. */
+  category: string;
   ringIndex: number;
   phase: number;
 };
@@ -558,51 +577,68 @@ type OrbitingSkillsProps = {
 
 const SkillNode = memo(function SkillNode({
   node,
-  orbit,
-  time,
-  scale,
-  staticMode,
+  index,
+  registerNode,
   opacity,
+  selected,
+  onSelect,
 }: {
   node: NodeDescriptor;
-  orbit: OrbitDescriptor;
-  time: number;
-  scale: number;
-  staticMode: boolean;
+  /** This node's slot in the parent's element registry, passed back through
+   *  `registerNode` so the orbit loop can write its transform imperatively. */
+  index: number;
+  registerNode: (index: number, el: HTMLDivElement | null) => void;
   /** Per-layer reveal opacity (undefined = fully visible / no reveal). */
   opacity?: number;
+  /** Whether this node currently owns the open popover. */
+  selected: boolean;
+  /** Open the popover for this node (the parent computes its frozen x/y). */
+  onSelect: (node: NodeDescriptor) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const angle = staticMode ? node.phase : time * orbit.speed + node.phase;
-  const r = orbit.radius * scale;
-  const x = Math.cos(angle) * r;
-  const y = Math.sin(angle) * r;
 
   const iconRenderer = getIcon(node.label);
   const iconNode = iconRenderer ? iconRenderer() : null;
   const fallback = iconNode ? null : getFallbackText(node.label);
 
+  const active = hovered || selected;
+
+  // Stable ref-setter so hover/select re-renders don't churn the ref slot.
+  const setRef = useCallback(
+    (el: HTMLDivElement | null) => registerNode(index, el),
+    [registerNode, index],
+  );
+
   return (
     <div
+      ref={setRef}
       data-ring={node.ringIndex}
       className="absolute top-1/2 left-1/2 transition-transform duration-300 ease-out"
       style={{
         width: `${NODE_SIZE}px`,
         height: `${NODE_SIZE}px`,
-        transform: `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px) translate(-50%, -50%)`,
-        zIndex: hovered ? 30 : 10,
+        // `transform` is written imperatively by the parent's orbit loop — it is
+        // deliberately omitted here so hover/select re-renders don't clobber it.
+        zIndex: active ? 30 : 10,
         opacity,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div
+      <button
+        type="button"
+        aria-label={`${node.label} — ${node.category}`}
+        aria-pressed={selected}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(node);
+        }}
         className={cn(
-          'relative flex h-full w-full cursor-pointer items-center justify-center rounded-full border border-border bg-card p-2 shadow-lg backdrop-blur-sm transition-all duration-300',
-          hovered && 'scale-125',
+          'relative flex h-full w-full cursor-pointer items-center justify-center rounded-full border border-border bg-card p-2 shadow-lg backdrop-blur-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          active && 'scale-125',
         )}
         style={{
-          boxShadow: hovered
+          boxShadow: active
             ? '0 0 24px rgba(129, 140, 248, 0.45), 0 0 48px rgba(129, 140, 248, 0.25)'
             : undefined,
         }}
@@ -612,12 +648,12 @@ const SkillNode = memo(function SkillNode({
             {fallback}
           </span>
         )}
-        {hovered && (
+        {hovered && !selected && (
           <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 rounded border border-border bg-popover px-2 py-1 font-mono text-[10px] tracking-[0.1em] whitespace-nowrap text-popover-foreground uppercase">
             {node.label}
           </div>
         )}
-      </div>
+      </button>
     </div>
   );
 });
@@ -694,6 +730,7 @@ export function OrbitingSkills({
       group.items.map((label, i) => ({
         id: `${group.label}-${label}`,
         label,
+        category: group.label,
         ringIndex,
         phase: (2 * Math.PI * i) / group.items.length + ringIndex * 0.3,
       })),
@@ -704,33 +741,93 @@ export function OrbitingSkills({
     return { nodes: nodeList, orbits: orbitDescriptors, maxRadius: max };
   }, [sourceGroups]);
 
-  const [time, setTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [coreHovered, setCoreHovered] = useState(false);
   const [containerSize, setContainerSize] = useState(720);
+  // The node whose click-to-reveal popover is open (frozen at its click-time
+  // offset), or null when none. The orbit pauses on hover, so the captured
+  // (x, y) stays valid while the card is open.
+  const [selected, setSelected] = useState<{ node: NodeDescriptor; x: number; y: number } | null>(
+    null,
+  );
   // Reveal clock, in seconds since the section scrolled into view. -1 means the
   // reveal hasn't begun (layers stay hidden for motion users until then).
   const [revealT, setRevealT] = useState(-1);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Orbit angle accumulator + per-node element registry. The orbit is driven
+  // imperatively (writing each node's transform every frame) rather than through
+  // React state, so the steady-state animation triggers no re-renders.
+  const timeRef = useRef(0);
+  const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Each node registers its outer element here; mutation lives in the parent so
+  // children never write to a passed-in ref (react-hooks/immutability).
+  const registerNode = useCallback((index: number, el: HTMLDivElement | null) => {
+    nodeRefs.current[index] = el;
+  }, []);
+
+  // Pause the orbit loop while the constellation is scrolled offscreen.
+  const inView = useInViewport(containerRef);
 
   const staticMode = !initialized || reducedMotion;
   // Only run the staggered reveal for motion users; reduced-motion / pre-init
   // render the constellation fully visible with no entrance.
   const animateReveal = reveal && !staticMode;
 
+  // Scale so that the outermost orbit + node radius fits inside container
+  // with a small breathing margin.
+  const scale = Math.min(1, (containerSize / 2 - NODE_SIZE) / maxRadius);
+
+  // Write every node's current orbital position straight to the DOM. Shared by
+  // the rAF loop and the pre-paint layout pass below.
+  const writeFrame = useCallback(() => {
+    const t = timeRef.current;
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      const el = nodeRefs.current[i];
+      if (!node || !el) continue;
+      const orbit = orbits[node.ringIndex];
+      if (!orbit) continue;
+      const angle = t * orbit.speed + node.phase;
+      const r = orbit.radius * scale;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      el.style.transform = `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px) translate(-50%, -50%)`;
+    }
+  }, [nodes, orbits, scale]);
+
+  // Position nodes before first paint and whenever scale/layout changes, so the
+  // constellation never flashes at the center (matters most for reduced-motion,
+  // which has no rAF loop to correct it a frame later).
+  useIsoLayoutEffect(() => {
+    writeFrame();
+  }, [writeFrame]);
+
+  // Open the popover for a node, capturing its frozen position from the current
+  // angle (the orbit is paused on hover, so this matches what's on screen).
+  const handleSelect = useCallback(
+    (node: NodeDescriptor) => {
+      const orbit = orbits[node.ringIndex];
+      if (!orbit) return;
+      const angle = timeRef.current * orbit.speed + node.phase;
+      const r = orbit.radius * scale;
+      setSelected({ node, x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+    },
+    [orbits, scale],
+  );
+
   useEffect(() => {
-    if (staticMode || isPaused) return;
+    if (staticMode || isPaused || !inView) return;
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
-      const dt = (now - last) / 1000;
+      timeRef.current += (now - last) / 1000;
       last = now;
-      setTime((t) => t + dt);
+      writeFrame();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [staticMode, isPaused]);
+  }, [staticMode, isPaused, inView, writeFrame]);
 
   // Drive the per-layer reveal once the section is in view. A dedicated clock
   // (independent of the orbit loop, so hover-pause doesn't freeze it) ticks from
@@ -758,10 +855,6 @@ export function OrbitingSkills({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  // Scale so that the outermost orbit + node radius fits inside container
-  // with a small breathing margin.
-  const scale = Math.min(1, (containerSize / 2 - NODE_SIZE) / maxRadius);
 
   // Per-layer reveal opacity for a layer whose fade starts at `delay` seconds.
   // Returns undefined (fully visible) under reduced-motion / pre-init; 0 before
@@ -828,21 +921,43 @@ export function OrbitingSkills({
         />
       ))}
 
-      {nodes.map((node) => {
+      {nodes.map((node, index) => {
         const orbit = orbits[node.ringIndex];
         if (!orbit) return null;
         return (
           <SkillNode
             key={node.id}
             node={node}
-            orbit={orbit}
-            time={time}
-            scale={scale}
-            staticMode={staticMode}
+            index={index}
+            registerNode={registerNode}
             opacity={revealOpacity(REVEAL_RING_BASE + node.ringIndex * REVEAL_RING_STAGGER)}
+            selected={selected?.node.id === node.id}
+            onSelect={handleSelect}
           />
         );
       })}
+
+      <AnimatePresence>
+        {selected && (
+          <SkillPopover
+            key={selected.node.id}
+            label={selected.node.label}
+            category={selected.node.category}
+            blurb={getSkillBlurb(selected.node.label)}
+            icon={
+              getIcon(selected.node.label)?.() ?? (
+                <span className="font-mono text-[11px] tracking-[0.05em] text-foreground/90 uppercase">
+                  {getFallbackText(selected.node.label)}
+                </span>
+              )
+            }
+            x={selected.x}
+            y={selected.y}
+            containerSize={containerSize}
+            onClose={() => setSelected(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

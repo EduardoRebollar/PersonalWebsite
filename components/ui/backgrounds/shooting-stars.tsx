@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { useSceneStore } from '@/stores/useSceneStore';
+import { useInViewport } from '@/lib/useInViewport';
 
 /**
  * ShootingStars — a single SVG streak that periodically launches from a random
@@ -14,8 +15,8 @@ import { useSceneStore } from '@/stores/useSceneStore';
  * documented prop API — diff against the official copy-paste if you re-pull it.
  * Adapted for this repo:
  * - `cn` imported from `@/lib/cn` (this project has no `@/lib/utils`).
- * - Gated on `useSceneStore.reducedMotion` (mirrors StarfieldBackground / Meteors).
- *   Eduardo runs OS-level reduced-motion, so this renders nothing for him locally.
+ * - Gated on `useSceneStore.reducedMotion` (mirrors StarsBackground) and paused
+ *   offscreen via `useInViewport`.
  * - Star colors default to the site's indigo/teal accents instead of the
  *   original purple/blue.
  * - Positions use viewport coords; the parent wrapper clips with overflow-hidden,
@@ -76,11 +77,14 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
   const [star, setStar] = useState<ShootingStar | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  // Pause spawning + travel while this section is offscreen — Skills layers
+  // three of these, and they're also stacked into Hero/About/Contact.
+  const inView = useInViewport(svgRef);
   // Unique per instance so multiple <ShootingStars> don't share one gradient id.
   const gradientId = React.useId();
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || !inView) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
 
@@ -103,10 +107,10 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
     createStar();
 
     return () => clearTimeout(timeoutId);
-  }, [minSpeed, maxSpeed, minDelay, maxDelay, reducedMotion]);
+  }, [minSpeed, maxSpeed, minDelay, maxDelay, reducedMotion, inView]);
 
   useEffect(() => {
-    if (reducedMotion || !star) return;
+    if (reducedMotion || !inView || !star) return;
 
     const moveStar = () => {
       setStar((prev) => {
@@ -134,7 +138,7 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
 
     const animationFrame = requestAnimationFrame(moveStar);
     return () => cancelAnimationFrame(animationFrame);
-  }, [star, reducedMotion]);
+  }, [star, reducedMotion, inView]);
 
   if (reducedMotion) return null;
 

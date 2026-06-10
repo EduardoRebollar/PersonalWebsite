@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { cn } from '@/lib/cn';
 import { useSceneStore } from '@/stores/useSceneStore';
+import { useInViewport } from '@/lib/useInViewport';
 
 /**
  * StarsBackground — a canvas of static, softly twinkling stars. Density scales
@@ -53,6 +54,10 @@ export const StarsBackground: React.FC<StarsBackgroundProps> = ({
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
   const [stars, setStars] = useState<StarProps[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Pause the twinkle render loop while this section is scrolled offscreen —
+  // StarsBackground is mounted in every homepage section, so without this every
+  // section's canvas would animate at once regardless of what's visible.
+  const inView = useInViewport(canvasRef);
 
   const generateStars = useCallback(
     (width: number, height: number): StarProps[] => {
@@ -97,7 +102,7 @@ export const StarsBackground: React.FC<StarsBackgroundProps> = ({
   }, [generateStars, reducedMotion]);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || !inView) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -126,7 +131,7 @@ export const StarsBackground: React.FC<StarsBackgroundProps> = ({
     render();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [stars, reducedMotion]);
+  }, [stars, reducedMotion, inView]);
 
   if (reducedMotion) return null;
 

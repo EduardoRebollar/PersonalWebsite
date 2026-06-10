@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/cn';
 import { useSceneStore } from '@/stores/useSceneStore';
+import { useInViewport } from '@/lib/useInViewport';
 
 /**
  * Aceternity Background Beams — animated SVG paths that draw light beams
@@ -17,6 +18,9 @@ import { useSceneStore } from '@/stores/useSceneStore';
  */
 export const BackgroundBeams = React.memo(({ className }: { className?: string }) => {
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Freeze the 48 infinite beam animations once the hero scrolls out of view.
+  const inView = useInViewport(rootRef);
   if (reducedMotion) return null;
 
   const paths = [
@@ -74,6 +78,7 @@ export const BackgroundBeams = React.memo(({ className }: { className?: string }
 
   return (
     <div
+      ref={rootRef}
       className={cn(
         'absolute inset-0 flex h-full w-full items-center justify-center [mask-repeat:no-repeat] [mask-size:40px]',
         className,
@@ -114,18 +119,26 @@ export const BackgroundBeams = React.memo(({ className }: { className?: string }
                 y1: '0%',
                 y2: '0%',
               }}
-              animate={{
-                x1: ['0%', '100%'],
-                x2: ['0%', '95%'],
-                y1: ['0%', '100%'],
-                y2: ['0%', `${93 + Math.random() * 8}%`],
-              }}
-              transition={{
-                duration: Math.random() * 10 + 10,
-                ease: 'easeInOut',
-                repeat: Infinity,
-                delay: Math.random() * 10 - 3,
-              }}
+              animate={
+                inView
+                  ? {
+                      x1: ['0%', '100%'],
+                      x2: ['0%', '95%'],
+                      y1: ['0%', '100%'],
+                      y2: ['0%', `${93 + Math.random() * 8}%`],
+                    }
+                  : { x1: '0%', x2: '0%', y1: '0%', y2: '0%' }
+              }
+              transition={
+                inView
+                  ? {
+                      duration: Math.random() * 10 + 10,
+                      ease: 'easeInOut',
+                      repeat: Infinity,
+                      delay: Math.random() * 10 - 3,
+                    }
+                  : { duration: 0 }
+              }
             >
               <stop stopColor="#FFFFFF" stopOpacity="0" />
               <stop stopColor="#FFFFFF" />
