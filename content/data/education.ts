@@ -12,7 +12,7 @@ export const education: EducationItem[] = [
     images: [
       {
         src: '/journey/occidental-college.jpg',
-        alt: 'Eduardo presenting his data-visualization interactivity research at a podium in an Occidental College lecture hall.',
+        alt: "Eduardo presenting his data-visualization interactivity research at Occidental College's Choi Auditorium.",
         objectPosition: 'center 25%',
       },
     ],
@@ -37,7 +37,7 @@ export const education: EducationItem[] = [
     images: [
       {
         src: '/journey/BHS.jpg',
-        alt: 'Eduardo at his Bell Senior High School graduation in cap and gown with honor cords and a BHS sash.',
+        alt: 'Eduardo and his Calculus/Computer Science teacher at his Bell Senior High School graduation.',
       },
     ],
   },

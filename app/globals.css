@@ -223,6 +223,42 @@
   animation: glow-pulse 2.2s ease-in-out infinite;
 }
 
+/* Infinite left→right wave for the section titles (components/ui/wave-text.tsx):
+   each character lifts up briefly and tints indigo as an invisible crest passes
+   over it, so a glinting wave travels across the words on a loop, then rests.
+   Every .wave-char runs this one keyframe with a staggered animation-delay
+   (left→right). Keyframe lives top-level (not in @theme) so Tailwind v4 always
+   emits it — it's referenced from a plain class, not an animate-[…] utility. The
+   global reduced-motion clamp freezes it to the resting frame: no lift, white
+   text. */
+@keyframes char-wave {
+  0% {
+    transform: translateY(0);
+    color: var(--foreground);
+  }
+  11% {
+    transform: translateY(-0.16em);
+    color: var(--primary);
+  }
+  22% {
+    transform: translateY(0);
+    color: var(--foreground);
+  }
+  100% {
+    transform: translateY(0);
+    color: var(--foreground);
+  }
+}
+.wave-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.wave-char {
+  display: inline-block;
+  color: var(--foreground);
+  animation: char-wave 2.5s ease-in-out infinite;
+}
+
 /* Hero orbital field (components/ui/backgrounds/OrbitalField.tsx). The breathing
    halo + label styling for the four field-nodes. Kept top-level (not in @theme)
    so Tailwind v4 always emits the `orb-breathe` keyframe — it's referenced via a
@@ -1279,9 +1315,12 @@
       color-mix(in oklab, var(--base) 84%, transparent)
     );
   }
-  /* bright accent scan-bar riding the reveal edge, with a soft downward trail */
+  /* bright accent scan-bar riding the reveal edge, with a soft downward trail.
+     Kept invisible in the idle pre-state so it doesn't sit parked at the top of
+     the panel before the sweep — it only lights up once `.is-on` fires (below). */
   .about-terminal .about-reveal .tm-panel::before {
     z-index: 7;
+    opacity: 0;
     background: linear-gradient(
       to bottom,
       #fff 0,
@@ -1292,9 +1331,12 @@
     );
   }
 
-  /* sweep both overlays top→bottom; content "develops" above the bar in its wake */
+  /* sweep both overlays top→bottom; content "develops" above the bar in its wake.
+     opacity:1 lights the scan-bar up the instant the sweep starts (it was held at
+     0 in the idle pre-state above). */
   .about-terminal .about-reveal.is-on .tm-panel::before,
   .about-terminal .about-reveal.is-on .tm-panel::after {
+    opacity: 1;
     animation: tm-scan-reveal 1900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
     will-change: transform;
   }
@@ -1371,6 +1413,307 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Orbital-ignition entrance (Skills). `.is-on` is toggled by Skills.tsx once the
+   section scrolls into view. Heading slides up, each constellation column scales
+   in from its core with a brief radial glow flare (Technical, then Productivity),
+   and the coursework marquee fades up last. The whole block lives inside
+   prefers-reduced-motion: no-preference, so reduced-motion (and no-JS) users get
+   fully-visible content with no overlays. The flare keyframe is referenced by a
+   real selector (not a CSS var), so Tailwind v4 won't tree-shake it. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Hidden pre-state for the CSS-driven layers: the section heading, the
+     constellation labels, and the marquee. The constellation itself (core, rings,
+     nodes) is hidden + revealed from inside OrbitingSkills (React-driven inline
+     opacity) because its core/nodes re-render every frame, which stalls stylesheet
+     keyframes. We deliberately do NOT hide the .sk-orbit column — an opacity:0
+     parent would hide the React-driven constellation regardless of its own fade. */
+  .skills-reveal .sk-head,
+  .skills-reveal .sk-marquee,
+  .skills-reveal .sk-orbit > h3 {
+    opacity: 0;
+  }
+  .skills-reveal .sk-head {
+    transform: translateY(16px);
+  }
+  .skills-reveal .sk-marquee {
+    transform: translateY(16px);
+  }
+
+  /* radial ignition flare behind each constellation core — indigo (--primary),
+     not the amber raw --accent. */
+  .skills-reveal .sk-orbit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--primary) 55%, transparent) 0%,
+      transparent 60%
+    );
+    opacity: 0;
+  }
+
+  /* Revealed state — keyframe ANIMATIONS (not transitions): they play on
+     class-add regardless of whether scroll-restore mounted Skills already in
+     view, where a transition would have no opacity:0 off-frame to animate from.
+     The CSS layers frame the React-driven constellation build: heading rises,
+     each constellation's label fades in and its core ignition flare flashes,
+     then (handled in OrbitingSkills) the rings fade in one at a time innermost →
+     outermost, and finally the marquee rises. Keep these in step with the
+     REVEAL_* timings in components/ui/orbiting-skills.tsx — heading 200ms · label
+     + core flare 600ms · rings fade in sequentially 1000–3550ms · marquee 3700ms. */
+  .skills-reveal.is-on .sk-head {
+    animation: sk-rise 680ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
+  }
+  .skills-reveal.is-on .sk-orbit > h3 {
+    animation: sk-fade 760ms ease 600ms both;
+  }
+  .skills-reveal.is-on .sk-orbit::before {
+    animation: sk-ignite-flare 1200ms ease-out 600ms forwards;
+  }
+  .skills-reveal.is-on .sk-marquee {
+    animation: sk-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) 3700ms both;
+  }
+}
+
+@keyframes sk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sk-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sk-ignite-flare {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  35% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+/* Waypoint-ignition entrance (Journey). Each timeline row toggles `.is-on` once
+   it scrolls into view (TimelineRow in components/ui/timeline.tsx). The dot
+   flares like an igniting star, a light band sweeps across the card from the
+   spine side, the card content cascades (header → title → bullets → pills), the
+   photo develops into focus, and the gradient ring fades up into its idle
+   rotation. The whole block lives inside prefers-reduced-motion: no-preference,
+   so reduced-motion (and no-JS) users get fully-visible rows — never trapped
+   hidden. Keyframes are referenced by real class selectors (not a CSS var), so
+   Tailwind v4 won't tree-shake them. Keep the animation delays in step with the
+   inline bullet/pill transition delays in Journey.tsx (bullets 420ms+ · i·80;
+   pills 820ms+ · i·60). */
+@media (prefers-reduced-motion: no-preference) {
+  /* Hidden pre-state — motion-OK users only. */
+  .jr-row .jr-card,
+  .jr-row .jr-media,
+  .jr-row .jr-head,
+  .jr-row .jr-title,
+  .jr-row .jr-sub,
+  .jr-row .jr-year {
+    opacity: 0;
+  }
+  .jr-row .jr-dot {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  /* Ring fades in via a TRANSITION (not an animation): the gradient-border-auto
+     idle rotation already owns `animation` on this element, so a keyframe here
+     would clobber it and freeze the ring. */
+  .jr-row .jr-ring {
+    opacity: 0;
+    transition: opacity 800ms ease 320ms;
+  }
+  /* Bullets + pills cascade via a transition with a per-item inline delay set in
+     Journey.tsx — no var()-in-calc() animation-delay needed (matches About). */
+  .jr-row .jr-bullet,
+  .jr-row .jr-pill {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 460ms ease,
+      transform 460ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Radial ignition flare around the dot — indigo (--color-accent), a ring with
+     a transparent centre so it bursts AROUND the dot without painting over it
+     (the .jr-node wrapper has an opaque bg-base, so the z-index:-1 trick Skills
+     uses would hide the flare behind it). Hidden at rest; flashes once. */
+  .jr-row .jr-node::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3.25rem;
+    height: 3.25rem;
+    transform: translate(-50%, -50%) scale(0.5);
+    border-radius: 9999px;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      transparent 28%,
+      color-mix(in oklab, var(--color-accent) 60%, transparent) 46%,
+      transparent 72%
+    );
+    opacity: 0;
+  }
+
+  /* Revealed state — keyframe ANIMATIONS so they play on class-add even when a
+     row mounts already in view (a transition would lack an opacity:0 off-frame
+     to start from). Delays form the cascade. */
+  .jr-row.is-on .jr-dot {
+    animation: jr-dot-ignite 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .jr-row.is-on .jr-node::after {
+    animation: jr-flare 820ms ease-out both;
+  }
+  .jr-row.is-on .jr-year {
+    animation: jr-rise 620ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+  }
+  .jr-row.is-on .jr-card {
+    animation: jr-fade 560ms ease 100ms both;
+  }
+  .jr-row.is-on .jr-sweep {
+    animation: jr-sweep 780ms ease 140ms both;
+  }
+  .jr-row.is-on .jr-head {
+    animation: jr-rise 560ms cubic-bezier(0.16, 1, 0.3, 1) 220ms both;
+  }
+  .jr-row.is-on .jr-title {
+    animation: jr-rise 640ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both;
+  }
+  .jr-row.is-on .jr-sub {
+    animation: jr-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+  }
+  .jr-row.is-on .jr-media {
+    animation: jr-develop 900ms ease 880ms both;
+  }
+  .jr-row.is-on .jr-ring {
+    opacity: 1;
+  }
+  .jr-row.is-on .jr-bullet,
+  .jr-row.is-on .jr-pill {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Journey keyframes + sweep base (top level so Tailwind v4 always emits
+   them; the sweep base also keeps the band invisible for reduced-motion, whose
+   pre-state rules above never match). ---- */
+.jr-sweep {
+  opacity: 0;
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 38%,
+    color-mix(in oklab, var(--color-accent) 38%, transparent) 50%,
+    color-mix(in oklab, var(--color-secondary) 24%, transparent) 58%,
+    transparent 70%,
+    transparent 100%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+}
+@keyframes jr-dot-ignite {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.35);
+    box-shadow: 0 0 18px 4px var(--color-accent);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 10px var(--color-accent);
+  }
+}
+@keyframes jr-flare {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  40% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+@keyframes jr-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes jr-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Bright band wiping left→right across the card via background-position only (no
+   transform), so it stays in-bounds and never clips the hover shadow. */
+@keyframes jr-sweep {
+  0% {
+    opacity: 0;
+    background-position: -40% 0;
+  }
+  35% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    background-position: 160% 0;
+  }
+}
+/* Photo (or placeholder) comes into focus: blur + desaturate → sharp + colour. */
+@keyframes jr-develop {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+    filter: blur(10px) saturate(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0) saturate(1);
   }
 }
 
@@ -1831,9 +2174,6 @@
   flex: 1 1 auto;
   min-width: 0;
 }
-.contact-console .cc8-eyebrow {
-  margin-bottom: 16px;
-}
 .contact-console .cc8-h {
   font-family: var(--font-display);
   font-weight: 400;
@@ -1843,10 +2183,6 @@
   letter-spacing: var(--text-h2--letter-spacing);
   margin: 0;
   white-space: nowrap;
-}
-.contact-console .cc8-h i {
-  font-style: italic;
-  color: var(--fg);
 }
 .contact-console .cc8-headr {
   flex: 0 0 auto;

@@ -24,7 +24,7 @@ export const experience: ExperienceItem[] = [
     images: [
       {
         src: '/journey/occidental-its.jpg',
-        alt: 'Eduardo at the Occidental College ITS help desk wearing a headset, Dell monitor in front and a repair bench behind.',
+        alt: "Eduardo at Occidental College's ITS Help Desk helping a faculty member log into their account.",
         zoom: 1.15,
       },
     ],
@@ -54,7 +54,7 @@ export const experience: ExperienceItem[] = [
     images: [
       {
         src: '/journey/collegematch.jpg',
-        alt: 'Eduardo with fellow College Match LA scholars at a CMLA program event.',
+        alt: 'Eduardo with fellow College Match LA interns on their first day of the Software Development Internship.',
       },
     ],
   },

@@ -12,6 +12,21 @@ const ORBIT_BASE_RADII: readonly number[] = [120, 190, 260, 320];
 const ORBIT_SPEEDS: readonly number[] = [0.45, -0.35, 0.28, -0.22];
 const ORBIT_GLOW_ALPHAS: readonly number[] = [0.85, 0.7, 0.56, 0.42];
 
+// Per-layer entrance reveal, in seconds. Driven by the section's in-view signal
+// (the `reveal` prop): the core ignites first, then each ring + its nodes fade in
+// one at a time, innermost → outermost. Computed inline (not via CSS keyframes)
+// because the core/nodes re-render every frame, which stalls stylesheet
+// animations. Tune these to speed up / slow down the build.
+const REVEAL_CORE_DELAY = 0.6;
+const REVEAL_RING_BASE = 1.0;
+// Stagger ≥ fade duration, so each ring (+ its nodes) finishes fading in before
+// the next one starts — a strictly sequential, one-layer-at-a-time build rather
+// than overlapping fades. Keep STAGGER >= DUR to preserve that ordering.
+const REVEAL_RING_STAGGER = 0.65;
+const REVEAL_DUR = 0.6;
+// Upper bound used to stop the reveal clock once every layer has finished.
+const REVEAL_TOTAL = REVEAL_RING_BASE + 4 * REVEAL_RING_STAGGER + REVEAL_DUR;
+
 function pickFromRing<T>(arr: readonly T[], i: number): T {
   return arr[Math.min(i, arr.length - 1)] as T;
 }
@@ -537,6 +552,8 @@ type OrbitingSkillsProps = {
   groups?: SkillGroup[];
   className?: string;
   maxSize?: number;
+  /** When true, plays the per-layer entrance reveal (core → rings, staggered). */
+  reveal?: boolean;
 };
 
 const SkillNode = memo(function SkillNode({
@@ -545,12 +562,15 @@ const SkillNode = memo(function SkillNode({
   time,
   scale,
   staticMode,
+  opacity,
 }: {
   node: NodeDescriptor;
   orbit: OrbitDescriptor;
   time: number;
   scale: number;
   staticMode: boolean;
+  /** Per-layer reveal opacity (undefined = fully visible / no reveal). */
+  opacity?: number;
 }) {
   const [hovered, setHovered] = useState(false);
   const angle = staticMode ? node.phase : time * orbit.speed + node.phase;
@@ -564,12 +584,14 @@ const SkillNode = memo(function SkillNode({
 
   return (
     <div
+      data-ring={node.ringIndex}
       className="absolute top-1/2 left-1/2 transition-transform duration-300 ease-out"
       style={{
         width: `${NODE_SIZE}px`,
         height: `${NODE_SIZE}px`,
         transform: `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px) translate(-50%, -50%)`,
         zIndex: hovered ? 30 : 10,
+        opacity,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -603,9 +625,12 @@ const SkillNode = memo(function SkillNode({
 const OrbitPath = memo(function OrbitPath({
   orbit,
   scale,
+  opacity,
 }: {
   orbit: OrbitDescriptor;
   scale: number;
+  /** Per-layer reveal opacity (undefined = fully visible / no reveal). */
+  opacity?: number;
 }) {
   const diameter = orbit.radius * 2 * scale;
   const alpha = orbit.glowAlpha;
@@ -613,10 +638,12 @@ const OrbitPath = memo(function OrbitPath({
   return (
     <div
       aria-hidden="true"
+      data-ring={orbit.ringIndex}
       className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
       style={{
         width: `${diameter}px`,
         height: `${diameter}px`,
+        opacity,
       }}
     >
       {/* Diffuse halo — radial gradient + outer/inner bloom */}
@@ -639,7 +666,12 @@ const OrbitPath = memo(function OrbitPath({
   );
 });
 
-export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSkillsProps) {
+export function OrbitingSkills({
+  groups,
+  className,
+  maxSize = 720,
+  reveal = false,
+}: OrbitingSkillsProps) {
   const reducedMotion = useSceneStore((s) => s.reducedMotion);
   const initialized = useSceneStore((s) => s.initialized);
 
@@ -676,9 +708,15 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
   const [isPaused, setIsPaused] = useState(false);
   const [coreHovered, setCoreHovered] = useState(false);
   const [containerSize, setContainerSize] = useState(720);
+  // Reveal clock, in seconds since the section scrolled into view. -1 means the
+  // reveal hasn't begun (layers stay hidden for motion users until then).
+  const [revealT, setRevealT] = useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const staticMode = !initialized || reducedMotion;
+  // Only run the staggered reveal for motion users; reduced-motion / pre-init
+  // render the constellation fully visible with no entrance.
+  const animateReveal = reveal && !staticMode;
 
   useEffect(() => {
     if (staticMode || isPaused) return;
@@ -694,6 +732,23 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
     return () => cancelAnimationFrame(raf);
   }, [staticMode, isPaused]);
 
+  // Drive the per-layer reveal once the section is in view. A dedicated clock
+  // (independent of the orbit loop, so hover-pause doesn't freeze it) ticks from
+  // 0 and stops once every layer has finished, holding the final value so the
+  // constellation stays fully revealed.
+  useEffect(() => {
+    if (!animateReveal) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = (now - start) / 1000;
+      setRevealT(t);
+      if (t < REVEAL_TOTAL) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [animateReveal]);
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -707,6 +762,15 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
   // Scale so that the outermost orbit + node radius fits inside container
   // with a small breathing margin.
   const scale = Math.min(1, (containerSize / 2 - NODE_SIZE) / maxRadius);
+
+  // Per-layer reveal opacity for a layer whose fade starts at `delay` seconds.
+  // Returns undefined (fully visible) under reduced-motion / pre-init; 0 before
+  // the in-view clock starts; otherwise a 0→1 ramp over REVEAL_DUR.
+  const revealOpacity = (delay: number): number | undefined => {
+    if (staticMode) return undefined;
+    if (!reveal || revealT < 0) return 0;
+    return Math.max(0, Math.min(1, (revealT - delay) / REVEAL_DUR));
+  };
 
   return (
     <div
@@ -723,8 +787,11 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
     >
       {/* Central core */}
       <div
-        className="relative z-20 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300"
-        style={{ transform: coreHovered ? 'scale(1.1)' : undefined }}
+        className="os-core relative z-20 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300"
+        style={{
+          transform: coreHovered ? 'scale(1.1)' : undefined,
+          opacity: revealOpacity(REVEAL_CORE_DELAY),
+        }}
         onMouseEnter={() => setCoreHovered(true)}
         onMouseLeave={() => setCoreHovered(false)}
       >
@@ -753,7 +820,12 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
       </div>
 
       {orbits.map((orbit) => (
-        <OrbitPath key={`path-${orbit.ringIndex}`} orbit={orbit} scale={scale} />
+        <OrbitPath
+          key={`path-${orbit.ringIndex}`}
+          orbit={orbit}
+          scale={scale}
+          opacity={revealOpacity(REVEAL_RING_BASE + orbit.ringIndex * REVEAL_RING_STAGGER)}
+        />
       ))}
 
       {nodes.map((node) => {
@@ -767,6 +839,7 @@ export function OrbitingSkills({ groups, className, maxSize = 720 }: OrbitingSki
             time={time}
             scale={scale}
             staticMode={staticMode}
+            opacity={revealOpacity(REVEAL_RING_BASE + node.ringIndex * REVEAL_RING_STAGGER)}
           />
         );
       })}

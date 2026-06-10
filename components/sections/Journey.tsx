@@ -2,18 +2,17 @@
 
 import { useState, type CSSProperties } from 'react';
 import Image from 'next/image';
-import { motion } from 'motion/react';
 import { Briefcase, GraduationCap, ImagePlus } from 'lucide-react';
 import { Container } from '@/components/ui/primitives/Container';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { Pill } from '@/components/ui/primitives/Pill';
+import { WaveText } from '@/components/ui/wave-text';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { Timeline, type TimelineEntry } from '@/components/ui/timeline';
 import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
 import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { education } from '@/content/data/education';
 import { experience } from '@/content/data/experience';
-import { easing } from '@/lib/motion';
 import type { EducationItem, ExperienceItem, MediaImage } from '@/types/content';
 
 /**
@@ -70,7 +69,11 @@ function BulletList({ items, className }: { items: string[]; className?: string 
       {items.map((item, i) => (
         <li
           key={i}
-          className="relative pl-5 before:absolute before:top-2.5 before:left-0 before:h-px before:w-3 before:bg-fg-mute/40"
+          // Cascade each bullet in sequence once the row's `.is-on` flips. Full
+          // computed delay set inline (not a var() in a CSS calc) — the reliable
+          // stagger pattern used by the About terminal's per-char reveal.
+          style={{ transitionDelay: `${420 + i * 80}ms` }}
+          className="jr-bullet relative pl-5 before:absolute before:top-2.5 before:left-0 before:h-px before:w-3 before:bg-fg-mute/40"
         >
           {item}
         </li>
@@ -82,8 +85,8 @@ function BulletList({ items, className }: { items: string[]; className?: string 
 function PillRow({ items, className }: { items: string[]; className?: string }) {
   return (
     <ul className={`flex flex-wrap justify-center gap-2${className ? ` ${className}` : ''}`}>
-      {items.map((item) => (
-        <li key={item}>
+      {items.map((item, i) => (
+        <li key={item} className="jr-pill" style={{ transitionDelay: `${820 + i * 60}ms` }}>
           <Pill subtle>{item}</Pill>
         </li>
       ))}
@@ -97,8 +100,8 @@ function EducationBody({ item }: { item: EducationItem }) {
   const lines = [...(item.honors ?? []), ...(item.activities ?? [])];
   return (
     <div className="mt-4 flex flex-col gap-2">
-      <h3 className="font-display text-h3 leading-tight text-fg">{item.institution}</h3>
-      <p className="text-fg-mute">{item.credential}</p>
+      <h3 className="jr-title font-display text-h3 leading-tight text-fg">{item.institution}</h3>
+      <p className="jr-sub text-fg-mute">{item.credential}</p>
       {lines.length > 0 && <BulletList items={lines} className="mt-2" />}
       {/* Skill pills render last, mirroring the `tech` row on Experience cards. */}
       {item.focus && item.focus.length > 0 && <PillRow items={item.focus} className="mt-5" />}
@@ -110,13 +113,13 @@ function ExperienceBody({ item }: { item: ExperienceItem }) {
   return (
     <>
       <div className="mt-4 flex flex-col gap-0.5">
-        <h3 className="font-display text-h3 leading-tight text-fg">{item.role}</h3>
-        <p className="text-fg-mute">
+        <h3 className="jr-title font-display text-h3 leading-tight text-fg">{item.role}</h3>
+        <p className="jr-sub text-fg-mute">
           {item.org}
           {item.location && <span className="text-fg-mute"> · {item.location}</span>}
         </p>
       </div>
-      <p className="mt-4 text-fg">{item.impact}</p>
+      <p className="jr-sub mt-4 text-fg">{item.impact}</p>
       <BulletList items={item.bullets} className="mt-4" />
       {item.tech && item.tech.length > 0 && <PillRow items={item.tech} className="mt-5" />}
     </>
@@ -211,7 +214,7 @@ function CardGradientRing() {
   return (
     <span
       aria-hidden="true"
-      className="gradient-border-auto pointer-events-none absolute inset-0 rounded-[inherit]"
+      className="jr-ring gradient-border-auto pointer-events-none absolute inset-0 rounded-[inherit]"
       style={RING_STYLE}
     />
   );
@@ -225,17 +228,16 @@ function JourneyCard({ item }: { item: JourneyItem }) {
     : formatMonthRange(item.start, item.end);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-10%' }}
-      transition={{ duration: 0.7, ease: easing.outExpo }}
-      className="rounded-2xl transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_var(--color-accent)]"
-    >
+    // Entrance is CSS-driven: the timeline row toggles `.is-on`, and the `.jr-*`
+    // choreography in globals.css fades + cascades the card in (waypoint
+    // ignition). The card layer animates opacity only — never transform/clip —
+    // so the hover lift + shadow below stay intact and the one-time `.jr-sweep`
+    // light band can pass across without an animation-fill-mode locking it.
+    <div className="jr-card rounded-2xl transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_var(--color-accent)]">
       {/* Translucent surface (starfield shows through) with a subtle animated
           gradient border drawn by CardGradientRing as a masked overlay. */}
       <div className="relative rounded-2xl bg-surface/60 p-6 backdrop-blur-md md:p-8">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="jr-head flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline px-2.5 py-1 font-mono text-[10px] tracking-[0.12em] text-fg-mute uppercase">
             <Icon className="h-3 w-3" strokeWidth={1.8} aria-hidden="true" />
             {isEdu ? 'Education' : 'Experience'}
@@ -251,9 +253,13 @@ function JourneyCard({ item }: { item: JourneyItem }) {
           <ExperienceBody item={item} />
         )}
 
+        {/* One-time light band that glints across the card as it reveals — the
+            dot's light "spilling" into the card. Pure background-position (no
+            transform), so it stays in-bounds and never clips the hover shadow. */}
+        <span aria-hidden="true" className="jr-sweep pointer-events-none absolute inset-0 rounded-[inherit]" />
         <CardGradientRing />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -262,7 +268,7 @@ function buildTimelineData(onExpand: (img: MediaImage) => void): TimelineEntry[]
     title: item.start.slice(0, 4),
     content: (
       <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-        <div className="w-full max-w-[14rem] shrink-0 md:flex md:w-56 md:max-w-none md:flex-col lg:w-64">
+        <div className="jr-media w-full max-w-[14rem] shrink-0 md:flex md:w-56 md:max-w-none md:flex-col lg:w-64">
           <JourneyMedia
             title={item.kind === 'education' ? item.institution : item.role}
             images={item.images}
@@ -302,8 +308,8 @@ export function Journey() {
         <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
       </div>
       <Container className="flex flex-col gap-6">
-        <Heading as="h2" id="journey-heading" eyebrow="Journey">
-          The path so far
+        <Heading as="h2" id="journey-heading">
+          <WaveText text="The journey so far" />
         </Heading>
         <Timeline data={timelineData} />
       </Container>

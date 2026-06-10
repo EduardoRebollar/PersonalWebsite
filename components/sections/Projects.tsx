@@ -1,6 +1,7 @@
 import { Container } from '@/components/ui/primitives/Container';
 import { Heading } from '@/components/ui/primitives/Heading';
 import { Pill } from '@/components/ui/primitives/Pill';
+import { WaveText } from '@/components/ui/wave-text';
 import { RippleLink } from '@/components/ui/cta/RippleLink';
 import {
   Carousel,
@@ -100,8 +101,8 @@ export function Projects() {
       </div>
 
       <Container className="flex flex-col gap-12">
-        <Heading as="h2" id="work-heading" eyebrow="Work" gapClassName="gap-2">
-          Selected projects
+        <Heading as="h2" id="work-heading" gapClassName="gap-2">
+          <WaveText text="Selected projects" />
         </Heading>
       </Container>
 

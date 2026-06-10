@@ -21,11 +21,13 @@ export function About() {
   // IntersectionObserver wrapper (unaffected by MotionConfig); the actual motion
   // lives in CSS, gated by prefers-reduced-motion in globals.css.
   //
-  // The `-30%` bottom root-margin pulls the trigger line up to 70% of viewport
-  // height, so the sweep only fires once the section is genuinely scrolled into
-  // view — never on page load while it's still peeking at the bottom edge.
-  const revealRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(revealRef, { once: true, margin: '0px 0px -30% 0px' });
+  // The trigger watches a sentinel pinned at 40% down the section (not the
+  // content top), so the sweep — and the bright scan-bar that rides it — stays
+  // hidden until you've scrolled ~40% into the section, rather than igniting the
+  // moment About peeks in at the bottom edge. The scan-bar's idle visibility is
+  // separately suppressed in globals.css (opacity 0 until `.is-on`).
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(sentinelRef, { once: true });
 
   return (
     <section
@@ -47,6 +49,15 @@ export function About() {
         <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
       </div>
 
+      {/* Trigger sentinel pinned at 40% down the section: the scanline sweep
+          only ignites once this point scrolls up past the viewport's bottom edge
+          — i.e. once you're ~40% into the section. */}
+      <span
+        ref={sentinelRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-[40%] h-px"
+      />
+
       {/* Visible "heading" is the mono comment below; this names the region. */}
       <h2 id="about-heading" className="sr-only">
         About
@@ -58,7 +69,7 @@ export function About() {
             content develops in its wake, then the comment + HUD portrait fade
             in. All choreography is in CSS (globals.css), scoped under
             .about-terminal and gated on prefers-reduced-motion: no-preference. */}
-        <div ref={revealRef} className={cn('about-reveal', inView && 'is-on')}>
+        <div className={cn('about-reveal', inView && 'is-on')}>
           <div className="tm-comment">
             {'// '}
             <b>about</b> — <span style={{ color: 'var(--fg)' }}>$ run a command to get to know me</span>

@@ -38,7 +38,7 @@ import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
 import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { ShinyButton } from '@/components/ui/cta/ShinyButton';
 import { Container } from '@/components/ui/primitives/Container';
-import { Eyebrow } from '@/components/ui/primitives/Eyebrow';
+import { WaveText } from '@/components/ui/wave-text';
 import { site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
 
@@ -242,11 +242,8 @@ export function Contact() {
         <div ref={revealRef} className={cn('cc8-reveal', inView && 'is-on')}>
         <div className="cc8-head">
           <div className="cc8-headl">
-            <Eyebrow dot className="cc8-eyebrow">
-              Contact
-            </Eyebrow>
             <h2 id="contact-heading" className="cc8-h">
-              Start a <i>conversation.</i>
+              <WaveText text="Start a conversation." />
             </h2>
           </div>
           <div className="cc8-headr">

@@ -80,7 +80,11 @@ export function Lightbox({
           const [w, h] = aspect.split('/').map((n) => Number(n.trim()));
           return w && h && Number.isFinite(w) && Number.isFinite(h) ? w / h : 3 / 4;
         })();
-  const frameHeight = `min(82vh, calc(88vw / ${ratio}))`;
+  // The image height is budgeted so the whole dialog (image + caption + the
+  // overlay's padding/gaps) fits within the viewport — the overlay never
+  // scrolls. ~11rem is reserved for the padding, the gap, and the (2-line max)
+  // caption; the width follows from the height so the aspect ratio is preserved.
+  const frameHeight = `min(calc(100vh - 11rem), calc(88vw / ${ratio}))`;
 
   return createPortal(
     <AnimatePresence>
@@ -94,7 +98,7 @@ export function Lightbox({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25, ease: easing.outExpo }}
           onClick={onClose}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 overflow-y-auto bg-black/80 p-6 backdrop-blur-md md:p-10"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 overflow-hidden bg-black/80 p-6 backdrop-blur-md md:p-10"
         >
           <button
             ref={closeRef}
@@ -135,12 +139,26 @@ export function Lightbox({
                 className="object-cover"
               />
             </div>
-            {/* Backdrop is always dark, so the caption sits in a translucent chip
-                with an explicit light color — independent of theme tokens and
-                guaranteed to read against both the dark backdrop and the photo. */}
+            {/* Caption sits in a fully-opaque dark chip with explicit, high-contrast
+                white text — independent of theme tokens and guaranteed to read
+                against both the dark backdrop and the photo. A subtle border +
+                drop shadow lift the box off the backdrop. */}
             <figcaption
-              className="max-w-prose rounded-full bg-white/10 px-4 py-2 text-center text-sm leading-relaxed backdrop-blur-sm md:text-base"
-              style={{ color: '#f5f5f5' }}
+              className="rounded-2xl border border-white/15 px-5 py-2.5 text-center text-sm font-medium leading-relaxed shadow-[0_10px_34px_-12px_rgba(0,0,0,0.9)] md:text-base"
+              // Fixed, readable width so these descriptions sit on ~2 lines (a
+              // narrow portrait photo would otherwise squeeze the box and force
+              // the text to wrap to 3+ lines). The 2-line clamp is set inline —
+              // display:-webkit-box + line-clamp + overflow:hidden — so it's not
+              // dependent on the Tailwind utility being generated.
+              style={{
+                maxWidth: 'min(88vw, 34rem)',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                backgroundColor: '#15151a',
+                color: '#ffffff',
+              }}
             >
               {image.caption ?? image.alt}
             </figcaption>
