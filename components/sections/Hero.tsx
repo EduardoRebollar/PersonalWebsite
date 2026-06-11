@@ -9,15 +9,12 @@ import { Container } from '@/components/ui/primitives/Container';
 import { Eyebrow } from '@/components/ui/primitives/Eyebrow';
 import { RippleLink } from '@/components/ui/cta/RippleLink';
 import { ShinyButton } from '@/components/ui/cta/ShinyButton';
-import { DiaTextReveal } from '@/components/ui/dia-text-reveal';
+import { FloatingText } from '@/components/ui/floating-text';
 import { TextEffect } from '@/components/ui/text-effect';
 import { ScrollHint } from '@/components/ui/nav/ScrollHint';
 import { site } from '@/content/data/site';
 import { easing } from '@/lib/motion';
 import { useSceneStore } from '@/stores/useSceneStore';
-
-// Indigo (#818cf8 = --primary) ramp for the name's reveal band.
-const NAME_BAND = ['#a5b4fc', '#818cf8', '#6366f1', '#818cf8', '#a5b4fc'];
 
 // Staggered "rise" entrance shared by the hero CTAs (and echoed by the scroll
 // hint): each item fades up in sequence — a cascade, distinct from the rest of
@@ -40,6 +37,25 @@ const ctaItem: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: easing.outExpo } },
 };
 
+// Tagline reveal — the four segments ("Four", "Fields —", "One",
+// "Intersection.") fade in left-to-right as one staggered word cascade. The
+// previous build composed this from four inline `TextEffect` instances, each
+// wrapping its content in `AnimatePresence mode="popLayout"`; popLayout's layout
+// projection is unreliable across inline siblings, leaving the non-accent
+// segments stuck at opacity 0. Driving the segments from a single container
+// (text always in the DOM, opacity 0 → 1) keeps the staggered reveal but
+// guarantees they resolve visible. Gated on `splashDismissed`; the base
+// `delayChildren` lines the line's start up with the eyebrow reveal.
+const taglineContainer: Variants = {
+  hidden: {},
+  visible: { transition: { delayChildren: 2.04, staggerChildren: 0.18 } },
+};
+
+const taglineWord: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 1.4, ease: easing.outExpo } },
+};
+
 /**
  * Hero section. A centered name anchors an orbital field — four "field" nodes
  * (Economics, ML, Data, The Web) orbit on elliptical paths behind the copy
@@ -55,6 +71,7 @@ export function Hero() {
   const lastName = restName.join(' ');
 
   const splashDismissed = useSceneStore((s) => s.splashDismissed);
+  const reducedMotion = useSceneStore((s) => s.reducedMotion);
 
   // Mirror Nav's contact link: scroll to the very bottom of the page (where the
   // contact section's content sits) rather than the top of the #contact anchor,
@@ -119,7 +136,7 @@ export function Hero() {
             it still plays under OS reduced-motion. The accent dot is rendered
             locally (not via Eyebrow's `dot`) so it can fade in on the same
             cue. */}
-        <Eyebrow>
+        <Eyebrow className="text-[9px]">
           <span className="inline-flex items-center gap-2">
             <motion.span
               aria-hidden="true"
@@ -138,22 +155,24 @@ export function Hero() {
           id="hero-heading"
           className="flex flex-col items-center font-display text-display text-fg"
         >
-          <DiaTextReveal
+          <FloatingText
             text={firstName}
-            colors={NAME_BAND}
-            duration={1.4}
             delay={0.5}
+            bobStart={2.5}
             play={splashDismissed}
-            respectReducedMotion={false}
+            float={!reducedMotion}
+            scramble={!reducedMotion}
+            scrambleStart={5.5}
           />
           {lastName ? (
-            <DiaTextReveal
+            <FloatingText
               text={lastName}
-              colors={NAME_BAND}
-              duration={1.4}
               delay={0.9}
+              bobStart={2.5}
               play={splashDismissed}
-              respectReducedMotion={false}
+              float={!reducedMotion}
+              scramble={!reducedMotion}
+              scrambleStart={6.0}
             />
           ) : null}
         </h1>
@@ -170,20 +189,17 @@ export function Hero() {
             reveals complete together. The negative `-my` pulls the tagline
             tighter to the name above and CTAs below than the column's uniform
             `gap` (flex item margins add to the gap). */}
-        <p className="mx-auto -my-4 max-w-prose text-center font-sans text-lg leading-relaxed text-fg-mute md:-my-5 md:text-xl">
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.04} className="text-accent">
-            {'Four '}
-          </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.19}>
-            {'Fields — '}
-          </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.46} className="text-accent">
-            {'One '}
-          </TextEffect>
-          <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={2.58}>
-            Intersection.
-          </TextEffect>
-        </p>
+        <motion.p
+          variants={taglineContainer}
+          initial="hidden"
+          animate={splashDismissed ? 'visible' : 'hidden'}
+          className="mx-auto -my-4 max-w-prose text-center font-sans text-[0.9rem] leading-relaxed text-fg-mute md:-my-5 md:text-base"
+        >
+          <motion.span variants={taglineWord} className="accent-glow text-accent">{'Four '}</motion.span>
+          <motion.span variants={taglineWord} className="text-white">{'Fields — '}</motion.span>
+          <motion.span variants={taglineWord} className="accent-glow text-accent">{'One '}</motion.span>
+          <motion.span variants={taglineWord} className="text-white">Intersection.</motion.span>
+        </motion.p>
 
         <motion.div
           variants={ctaContainer}
@@ -195,7 +211,7 @@ export function Hero() {
             <ShinyButton
               href="#work"
               onClick={scrollToWork}
-              className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/50 px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg uppercase backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:bg-surface hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+              className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/50 px-5 py-3 font-mono text-[9px] tracking-[0.18em] text-fg uppercase backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:bg-surface hover:text-accent focus-visible:border-accent focus-visible:text-accent"
             >
               See work
               <span
@@ -211,7 +227,7 @@ export function Hero() {
               href="#contact"
               internal
               onClick={scrollToContact}
-              className="cta-glow inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
+              className="cta-glow inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[9px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
             >
               Get in touch
             </RippleLink>

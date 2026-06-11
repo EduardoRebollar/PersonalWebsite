@@ -233,7 +233,20 @@ export function OrbitalField({ className }: { className?: string }) {
         }}
       />
 
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1440 860" preserveAspectRatio="xMidYMid slice">
+      {/* Cap the SVG box at its design size (1920×1146 = the ~1.33× scale a
+          1080p screen already shows) and center it. `slice` ties content scale
+          to the element's CSS-px size, so a full-bleed `w-full h-full` box makes
+          the planet scale grow with the CSS viewport — and since browser zoom
+          enlarges the CSS viewport, zooming out kept the planets a constant
+          *physical* size while the rem-based copy shrank around them. Capping at
+          the design size makes the planet scale a fixed number of CSS px once the
+          viewport meets it, so it now scales with zoom exactly like the text;
+          below the cap it stays responsive (`min(100%, …)`). */}
+      <svg
+        className="absolute top-1/2 left-1/2 h-[min(100%,1146px)] w-[min(100%,1920px)] -translate-x-1/2 -translate-y-1/2"
+        viewBox="0 0 1440 860"
+        preserveAspectRatio="xMidYMid slice"
+      >
         <defs>
           {ORBITS.map((o, i) => {
             const { px, py } = orbitPos(o, 0);

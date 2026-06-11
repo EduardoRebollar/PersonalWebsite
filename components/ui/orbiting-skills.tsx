@@ -702,6 +702,29 @@ const OrbitPath = memo(function OrbitPath({
   );
 });
 
+// Central "core" popover content — the click-to-reveal card for the hub node,
+// reusing SkillPopover (anchored at the center, x/y = 0). Mirrors a skill node's
+// category / label / blurb / icon shape.
+const CORE_CATEGORY = 'Overview';
+const CORE_LABEL = 'My stack';
+const CORE_BLURB =
+  'My day-to-day toolkit across data, ML, and the web. Click any orbiting node to see how I use each one.';
+const CORE_ICON = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-full w-full text-primary"
+    aria-hidden="true"
+  >
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </svg>
+);
+
 export function OrbitingSkills({
   groups,
   className,
@@ -750,6 +773,9 @@ export function OrbitingSkills({
   const [selected, setSelected] = useState<{ node: NodeDescriptor; x: number; y: number } | null>(
     null,
   );
+  // Whether the central "My stack" hub popover is open. Mutually exclusive with
+  // `selected` so only one card shows at a time.
+  const [coreOpen, setCoreOpen] = useState(false);
   // Reveal clock, in seconds since the section scrolled into view. -1 means the
   // reveal hasn't begun (layers stay hidden for motion users until then).
   const [revealT, setRevealT] = useState(-1);
@@ -810,6 +836,7 @@ export function OrbitingSkills({
       if (!orbit) return;
       const angle = timeRef.current * orbit.speed + node.phase;
       const r = orbit.radius * scale;
+      setCoreOpen(false);
       setSelected({ node, x: Math.cos(angle) * r, y: Math.sin(angle) * r });
     },
     [orbits, scale],
@@ -876,11 +903,26 @@ export function OrbitingSkills({
         height: `min(90vw, ${maxSize}px)`,
       }}
       onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseLeave={() => {
+        // Resuming the orbit invalidates the popover's frozen (x, y) — the node
+        // it points at drifts away — so close it the moment the spin restarts.
+        // The core card closes too, keeping dismissal consistent.
+        setIsPaused(false);
+        setSelected(null);
+        setCoreOpen(false);
+      }}
     >
-      {/* Central core */}
-      <div
-        className="os-core relative z-20 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300"
+      {/* Central core — click to reveal the "My stack" overview popover. */}
+      <button
+        type="button"
+        aria-label={`${CORE_LABEL} — ${CORE_CATEGORY}`}
+        aria-pressed={coreOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelected(null);
+          setCoreOpen(true);
+        }}
+        className="os-core relative z-20 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary"
         style={{
           transform: coreHovered ? 'scale(1.1)' : undefined,
           opacity: revealOpacity(REVEAL_CORE_DELAY),
@@ -905,12 +947,12 @@ export function OrbitingSkills({
           <polyline points="16 18 22 12 16 6" />
           <polyline points="8 6 2 12 8 18" />
         </svg>
-        {coreHovered && (
+        {coreHovered && !coreOpen && (
           <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 rounded border border-border bg-popover px-2.5 py-1 font-mono text-[10px] tracking-[0.12em] whitespace-nowrap text-popover-foreground uppercase">
             My stack
           </div>
         )}
-      </div>
+      </button>
 
       {orbits.map((orbit) => (
         <OrbitPath
@@ -955,6 +997,23 @@ export function OrbitingSkills({
             y={selected.y}
             containerSize={containerSize}
             onClose={() => setSelected(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Central hub popover — anchored at the constellation center (x/y = 0). */}
+      <AnimatePresence>
+        {coreOpen && (
+          <SkillPopover
+            key="core"
+            label={CORE_LABEL}
+            category={CORE_CATEGORY}
+            blurb={CORE_BLURB}
+            icon={CORE_ICON}
+            x={0}
+            y={0}
+            containerSize={containerSize}
+            onClose={() => setCoreOpen(false)}
           />
         )}
       </AnimatePresence>

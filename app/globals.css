@@ -115,7 +115,9 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Type scale — fluid clamps for headings, fixed for body */
-  --text-display: clamp(2.75rem, 8vw, 7rem);
+  /* Scaled to 0.8× (was clamp(2.75rem, 8vw, 7rem)) so the default 100% render
+     matches the tighter 80%-zoom framing of the hero name. Hero-only token. */
+  --text-display: clamp(2.2rem, 6.4vw, 5.6rem);
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.02em;
 
@@ -194,14 +196,20 @@
   }
 }
 
-/* Subtle pulsing accent glow for the hero "Get in touch" ghost CTA
-   (components/sections/Hero.tsx, applied via the .cta-glow class). Breathes a
-   soft white halo on the link text in and out. Plain CSS, so the global
-   reduced-motion clamp in @layer base freezes it to its resting (no-glow) frame
-   — it deliberately does NOT play for reduced-motion users. Keyframes live at
-   top level (not in @theme): Tailwind can't detect a keyframe reference through
-   animate-[var(...)], so an @theme-scoped @keyframes would be tree-shaken out
-   and never emitted. */
+/* Subtle pulsing glow for the hero "Get in touch" ghost CTA (.cta-glow) and the
+   tagline keyword words "Four"/"One" (.accent-glow) — components/sections/Hero.tsx.
+   Breathes a soft halo on the text in and out. The halo color is driven by
+   `--glow-color` (defaults to white) so both consumers share ONE keyframe; only
+   the variable differs. Sharing the keyframe also keeps the two in phase: both
+   run `glow-pulse 2.2s` from first paint, so their cycles line up.
+
+   Plain CSS, so the global reduced-motion clamp in @layer base freezes it to its
+   resting (no-glow) frame — it deliberately does NOT play for reduced-motion
+   users. Keyframes live at top level (not in @theme): Tailwind can't detect a
+   keyframe reference through animate-[var(...)], so an @theme-scoped @keyframes
+   would be tree-shaken out and never emitted. (Driving this via `motion` instead
+   fails — framer-motion can't reliably interpolate multi-layer text-shadow, so
+   the animation runs but renders nothing.) */
 @keyframes glow-pulse {
   0%,
   100% {
@@ -209,17 +217,30 @@
   }
   50% {
     /* Blur radii sized to the text's vertical room before the ripple host's
-       overflow-hidden starts clipping the halo. White glow: an opaque bright core
-       plus layered halos that fade via reduced opacity so it stays soft. */
+       overflow-hidden starts clipping the halo. An opaque bright core plus
+       layered halos that fade via reduced opacity so it stays soft. */
     text-shadow:
-      0 0 3px #ffffff,
-      0 0 6px color-mix(in oklab, #ffffff 55%, transparent),
-      0 0 10px color-mix(in oklab, #ffffff 92%, transparent),
-      0 0 16px color-mix(in oklab, #ffffff 68%, transparent);
+      0 0 calc(2px * var(--glow-mult, 1)) color-mix(in oklab, var(--glow-color, #ffffff) calc(60% * var(--glow-mult, 1)), transparent),
+      0 0 calc(5px * var(--glow-mult, 1)) color-mix(in oklab, var(--glow-color, #ffffff) calc(30% * var(--glow-mult, 1)), transparent),
+      0 0 calc(9px * var(--glow-mult, 1)) color-mix(in oklab, var(--glow-color, #ffffff) calc(45% * var(--glow-mult, 1)), transparent),
+      0 0 calc(14px * var(--glow-mult, 1)) color-mix(in oklab, var(--glow-color, #ffffff) calc(28% * var(--glow-mult, 1)), transparent);
   }
 }
 
 .cta-glow {
+  animation: glow-pulse 2.2s ease-in-out infinite;
+}
+
+/* Indigo sibling — same keyframe, recolored via --glow-color to match the accent
+   text. Reuses glow-pulse (already emitted for .cta-glow) so there's no new
+   keyframe for Tailwind to tree-shake. */
+.accent-glow {
+  /* A brighter indigo — lifted toward light indigo (#c7d2fe), not white, so the
+     halo stays vividly indigo. `--glow-mult` scales the shared keyframe's halo
+     opacity + blur up (the lever that actually controls brightness) without
+     touching the soft white .cta-glow (which keeps the default mult of 1). */
+  --glow-color: color-mix(in oklab, var(--color-accent) 60%, #c7d2fe);
+  --glow-mult: 1.7;
   animation: glow-pulse 2.2s ease-in-out infinite;
 }
 
@@ -1018,6 +1039,14 @@
   overflow: hidden;
   border-radius: 6px;
   isolation: isolate;
+  /* `contain: paint` forces a compositor-level clip on this box. The glitch
+     overlays inside (tm-glitch2 / tm-halftone / tm-scan) use mix-blend-mode +
+     will-change while animating background-position/clip-path on repeating
+     gradients — the classic Chrome pattern where a blended GPU layer smears
+     past a plain `overflow: hidden` ancestor at fractional browser-zoom (the
+     filter appears to "stretch horizontally forever"). Paint containment makes
+     the clip hold on the compositor path too. */
+  contain: paint;
   border: 1px solid color-mix(in oklab, var(--hairline) 90%, transparent);
   background: var(--surface);
 }
