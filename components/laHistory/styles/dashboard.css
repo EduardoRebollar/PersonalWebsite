@@ -1,0 +1,778 @@
+/* =========================================
+   LA History — Dashboard (1:1 replica)
+   Auto-scoped from templates/dashboard/index.html <style> under `.lah-root`.
+   ========================================= */
+
+/* ---- Dashboard Page ---- */
+.lah-root .dashboard-page {
+  padding: calc(var(--nav-height) + 32px) 28px 56px;
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+/* ---- Hero ---- */
+.lah-root .dashboard-hero {
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 36px 40px 34px;
+  color: #fff;
+  margin-bottom: 36px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: visible;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(212,168,67,0.15);
+}
+
+/* Art deco diagonal weave on hero */
+.lah-root .dashboard-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0px, transparent 28px,
+      rgba(212,168,67,0.035) 28px, rgba(212,168,67,0.035) 29px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px, transparent 28px,
+      rgba(212,168,67,0.02) 28px, rgba(212,168,67,0.02) 29px
+    );
+  pointer-events: none;
+}
+
+/* Subtle glow accent behind greeting */
+.lah-root .dashboard-hero::after {
+  content: '';
+  position: absolute;
+  left: -60px;
+  top: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(184,115,26,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lah-root .hero-greeting {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.lah-root .hero-greeting-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.lah-root .hero-greeting h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #f0ece4;
+  line-height: 1.15;
+}
+
+.lah-root .hero-greeting p {
+  color: #6e6458;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+}
+
+.lah-root .hero-rule {
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(to right, var(--accent), transparent);
+  margin: 12px 0;
+}
+
+.lah-root .hero-stats {
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+  position: relative;
+  margin-left: auto;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.lah-root .hero-stat {
+  text-align: center;
+  padding: 10px 18px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  min-width: 78px;
+}
+.lah-root .hero-stat:last-child { border-right: none; }
+
+.lah-root .hero-stat-value {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--accent-gold);
+  display: block;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.lah-root .hero-stat-label {
+  font-size: 0.68rem;
+  color: #6e6458;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+/* ---- Section title ---- */
+.lah-root .section-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.lah-root .section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
+}
+
+/* ---- Era cards ---- */
+.lah-root .era-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.lah-root .era-card {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: visible;
+}
+
+/* ---- Era card tooltip ---- */
+.lah-root .era-card-tip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-dark);
+  border: 1px solid rgba(212,168,67,0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  white-space: nowrap;
+  z-index: 20;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  pointer-events: none;
+  min-width: 190px;
+}
+.lah-root .era-card-tip span {
+  font-size: 0.78rem;
+  color: #c8baa8;
+  letter-spacing: 0.02em;
+}
+.lah-root .era-card-tip span strong {
+  color: #f0ece4;
+  font-weight: 600;
+}
+.lah-root .era-card-tip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: rgba(212,168,67,0.25);
+}
+.lah-root .era-card:hover .era-card-tip {
+  display: flex;
+}
+.lah-root .era-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Subtle era color accent on card top */
+.lah-root .era-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 10px 10px 0 0;
+}
+.lah-root .era-card.native::before { background: var(--era-native); }
+.lah-root .era-card.spanish::before { background: var(--era-spanish); }
+.lah-root .era-card.rancho::before { background: var(--era-rancho); }
+.lah-root .era-card.modern::before { background: var(--era-modern); }
+
+.lah-root .era-card-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+  color: var(--text);
+}
+.lah-root .era-card-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.02em;
+}
+
+.lah-root .era-ring-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.lah-root .era-ring {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+
+.lah-root .era-ring svg { transform: rotate(-90deg); }
+
+.lah-root .era-ring-bg { fill: none; stroke: var(--border-light); stroke-width: 7; }
+.lah-root .era-ring-fill { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset 1.1s cubic-bezier(0.22,1,0.36,1); }
+
+.lah-root .era-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.lah-root .era-ring-pct { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; }
+.lah-root .era-ring-sub { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.lah-root .era-card-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+.lah-root .era-card-stats span strong { color: var(--text); font-weight: 600; }
+
+.lah-root .era-card-status {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ---- Badge showcase ---- */
+.lah-root .badge-showcase {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.lah-root .badge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: var(--shadow);
+  min-width: 200px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.lah-root .badge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.lah-root .badge-card-icon {
+  font-size: 1.9rem;
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(135deg, #f8f4ec, #ece4d4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(184,115,26,0.35);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(184,115,26,0.18);
+}
+
+.lah-root .badge-card-info h4 {
+  font-size: 0.88rem;
+  margin-bottom: 3px;
+  font-weight: 600;
+  color: var(--text);
+}
+.lah-root .badge-card-info p {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  line-height: 1.45;
+}
+.lah-root .badge-card-date {
+  font-size: 0.68rem;
+  color: #bdb0a0;
+  letter-spacing: 0.03em;
+}
+.lah-root .badge-card-locked {
+  opacity: 0.45;
+  filter: grayscale(60%);
+}
+
+.lah-root .no-badges {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+  padding: 18px 0;
+  opacity: 0.8;
+}
+
+/* ---- Location table ---- */
+.lah-root .location-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 36px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.lah-root .location-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 11px 14px;
+  background: #f0ebe0;
+  border-bottom: 1.5px solid var(--border);
+  font-weight: 600;
+}
+
+.lah-root .location-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.lah-root .location-table tr:last-child td { border-bottom: none; }
+.lah-root .location-table tr:hover td { background: #fdf8f0; }
+.lah-root .location-table tbody tr { transition: background 0.15s; }
+
+.lah-root .status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+.lah-root .status-dot.visited { background: var(--success); box-shadow: 0 0 0 2px rgba(42,110,48,0.2); }
+.lah-root .status-dot.unvisited { background: var(--border); }
+
+/* ---- CTA footer ---- */
+.lah-root .dashboard-footer {
+  text-align: center;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+/* ---- Stat tooltips ---- */
+.lah-root .hero-stat-points,
+.lah-root .hero-stat-has-tip {
+  position: relative;
+  cursor: default;
+}
+
+.lah-root .points-breakdown-tip,
+.lah-root .hero-stat-tip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-dark);
+  border: 1px solid rgba(212,168,67,0.25);
+  border-radius: 8px;
+  padding: 9px 14px;
+  white-space: nowrap;
+  z-index: 10;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+
+.lah-root .points-breakdown-tip span,
+.lah-root .hero-stat-tip span {
+  font-size: 0.78rem;
+  color: #c8baa8;
+  letter-spacing: 0.02em;
+}
+
+.lah-root .points-breakdown-tip::after,
+.lah-root .hero-stat-tip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: rgba(212,168,67,0.25);
+}
+
+.lah-root .hero-stat-points:hover .points-breakdown-tip,
+.lah-root .hero-stat-has-tip:hover .hero-stat-tip {
+  display: flex;
+}
+
+/* ---- Location map link button ---- */
+.lah-root .loc-map-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 7px;
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-family: var(--font-body);
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.lah-root .loc-map-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ---- Concept map dashboard cards ---- */
+.lah-root .cm-dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.lah-root .cm-dash-card {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.lah-root .cm-dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 10px 10px 0 0;
+}
+.lah-root .cm-dash-card.native::before { background: var(--era-native); }
+.lah-root .cm-dash-card.spanish::before { background: var(--era-spanish); }
+.lah-root .cm-dash-card.rancho::before { background: var(--era-rancho); }
+.lah-root .cm-dash-card.modern::before { background: var(--era-modern); }
+
+.lah-root .cm-dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.lah-root .cm-dash-card-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.lah-root .cm-dash-status {
+  font-size: 0.67rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.lah-root .cm-dash-status.submitted { background: rgba(42,110,48,0.12);  color: var(--success); }
+.lah-root .cm-dash-status.in-progress { background: rgba(212,168,67,0.15); color: var(--accent); }
+.lah-root .cm-dash-status.not-started { background: var(--border-light);   color: var(--text-muted); }
+.lah-root .cm-dash-status.locked { background: var(--border-light);   color: var(--text-muted); }
+
+.lah-root .cm-dash-stats {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+}
+
+.lah-root .cm-dash-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lah-root .cm-score-bar-bg {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-light);
+  overflow: hidden;
+}
+.lah-root .cm-score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--accent), var(--accent-gold));
+}
+.lah-root .cm-score-val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  white-space: nowrap;
+}
+
+.lah-root .cm-dash-concepts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.lah-root .cm-concept-tag {
+  font-size: 0.67rem;
+  padding: 2px 7px;
+  background: #f0ebe0;
+  border-radius: 4px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+
+.lah-root .cm-dash-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-light);
+}
+.lah-root .cm-dash-pts {
+  font-size: 0.74rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.lah-root .cm-dash-open-btn {
+  font-size: 0.74rem;
+  font-family: var(--font-body);
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--bg-dark);
+  color: var(--accent-gold);
+  border: 1px solid rgba(212,168,67,0.3);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lah-root .cm-dash-open-btn:hover { background: rgba(212,168,67,0.1); }
+.lah-root .cm-dash-open-btn-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.lah-root .cm-dash-card-locked {
+  opacity: 0.65;
+  filter: grayscale(30%);
+}
+.lah-root .cm-dash-locked-hint {
+  font-style: italic;
+  font-size: 0.73rem;
+}
+
+/* ---- Sort bar ---- */
+.lah-root .sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -10px;
+  margin-bottom: 18px;
+}
+.lah-root .sort-label {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lah-root .sort-select {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 4px 28px 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b87316'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.lah-root .sort-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(184,115,26,0.15);
+}
+
+/* ---- Hero completion ring ---- */
+.lah-root .hero-stat-completion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.lah-root .hero-completion-ring {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 6px;
+}
+
+.lah-root .hero-completion-ring svg {
+  transform: rotate(-90deg);
+}
+
+.lah-root .hero-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.07);
+  stroke-width: 4.5;
+}
+
+.lah-root .hero-ring-fill {
+  fill: none;
+  stroke: var(--accent-gold);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.lah-root .hero-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
+/* ---- Dashboard dark mode overrides ---- */
+.lah-root[data-theme="dark"] .badge-card-icon { background: linear-gradient(135deg, #2e2820, #3a3028); }
+.lah-root[data-theme="dark"] .location-table th { background: #1e1a14; }
+.lah-root[data-theme="dark"] .location-table tr:hover td { background: #2a231c; }
+.lah-root[data-theme="dark"] .cm-concept-tag { background: #2a231c; }
+.lah-root[data-theme="dark"] .cm-dash-open-btn { background: #1e1a14; }
+.lah-root[data-theme="dark"] .sort-select { background-color: #1e1a14; }
+
+/* ---- Location image hover preview ---- */
+.lah-root #loc-img-preview {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  border: 2px solid rgba(212,168,67,0.4);
+  background: var(--bg-dark);
+  width: 160px;
+}
+.lah-root #loc-img-preview img {
+  display: block;
+  width: 160px;
+  height: 110px;
+  object-fit: cover;
+}
+.lah-root #loc-img-preview-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f0ece4;
+  padding: 5px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(0,0,0,0.5);
+  letter-spacing: 0.02em;
+}
+
+/* ---- Concept map mini-preview ---- */
+.lah-root .cm-mini-preview {
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f8f4ec;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+}
+.lah-root .cm-mini-preview svg {
+  display: block;
+}
+.lah-root .cm-mini-preview-empty {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-style: italic;
+  padding: 16px;
+  text-align: center;
+}
+.lah-root[data-theme="dark"] .cm-mini-preview {
+  background: #1e1a14;
+}

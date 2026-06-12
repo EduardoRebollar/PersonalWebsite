@@ -49,7 +49,14 @@ export function LaHistoryApp() {
           />
         ) : (
           <div style={{ paddingTop: 'var(--nav-height)' }}>
-            <Dashboard />
+            <Dashboard
+              onOpenConceptMap={(eraOrder) => setConceptMapEra(eraOrder)}
+              onGoToMap={() => setView('map')}
+              onOpenLocation={(id) => {
+                setSelectedLocationId(id);
+                setView('map');
+              }}
+            />
           </div>
         )}
 
