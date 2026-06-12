@@ -25,7 +25,7 @@ const SpiralAnimation = lazy(() =>
 // planet/text/button cascade (gated on `splashDismissed`) is held back this
 // long so it begins only once the warp has largely dissolved, instead of
 // fading in behind it. Tuned to sit just under the overlay fade window below.
-const HERO_CASCADE_DELAY = 1200;
+const HERO_CASCADE_DELAY = 900;
 
 export function SpiralSplash() {
   const [hydrated, setHydrated] = useState(false);

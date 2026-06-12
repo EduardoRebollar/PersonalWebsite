@@ -20,14 +20,14 @@ import { useSceneStore } from '@/stores/useSceneStore';
 // reduced-motion the global MotionConfig (reducedMotion="user",
 // app/providers.tsx) strips the `y` transform, leaving a sequential
 // opacity-only cascade. Gated on `splashDismissed` (so it plays *after* the
-// intro clears, not behind the overlay) and `delayChildren` starts it at 3.2s
-// — as the eyebrow and tagline finish revealing (~3.24s, see the tagline block
+// intro clears, not behind the overlay) and `delayChildren` starts it at 2.6s
+// — as the eyebrow and tagline finish revealing (~3.5s, see the tagline block
 // below), so the buttons rise once the copy has resolved. The two items (See
-// work, Get in touch) stagger 0.12s apart and run 0.7s each, settling ~4.0s;
-// the scroll hint then follows (ScrollHint, delay 3.8s) as the final beat.
+// work, Get in touch) stagger 0.12s apart and run 0.7s each, settling ~3.4s;
+// the scroll hint then follows (ScrollHint, delay 3.1s) as the final beat.
 const ctaContainer: Variants = {
   hidden: {},
-  visible: { transition: { delayChildren: 3.2, staggerChildren: 0.12 } },
+  visible: { transition: { delayChildren: 2.6, staggerChildren: 0.12 } },
 };
 
 const ctaItem: Variants = {
@@ -46,7 +46,7 @@ const ctaItem: Variants = {
 // `delayChildren` lines the line's start up with the eyebrow reveal.
 const taglineContainer: Variants = {
   hidden: {},
-  visible: { transition: { delayChildren: 2.04, staggerChildren: 0.18 } },
+  visible: { transition: { delayChildren: 1.6, staggerChildren: 0.18 } },
 };
 
 const taglineWord: Variants = {
@@ -118,8 +118,8 @@ export function Hero() {
         className="relative z-10 flex flex-col items-center gap-8 py-28 text-center md:gap-10"
       >
         {/* Eyebrow + tagline reveal per-character shortly after the name's
-            DiaTextReveal resolves (name: delay 0.5 + duration 1.4 = 1.9s), with
-            the eyebrow starting at 1.5s. The `fade` preset is opacity-only, so
+            letters rise (FloatingText entrance: delay 0.5 + 0.8s), with the
+            eyebrow starting at 1.3s. The `fade` preset is opacity-only, so
             it still plays under OS reduced-motion. The accent dot is rendered
             locally (not via Eyebrow's `dot`) so it can fade in on the same
             cue. */}
@@ -129,10 +129,10 @@ export function Hero() {
               aria-hidden="true"
               initial={{ opacity: 0 }}
               animate={splashDismissed ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.4, delay: 1.5, ease: easing.outExpo }}
+              transition={{ duration: 0.4, delay: 1.3, ease: easing.outExpo }}
               className="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]"
             />
-            <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={1.5}>
+            <TextEffect as="span" per="char" preset="fade" trigger={splashDismissed} delay={1.3}>
               {site.role}
             </TextEffect>
           </span>
@@ -145,21 +145,21 @@ export function Hero() {
           <FloatingText
             text={firstName}
             delay={0.5}
-            bobStart={2.5}
+            bobStart={2.2}
             play={splashDismissed}
             float={!reducedMotion}
             scramble={!reducedMotion}
-            scrambleStart={5.5}
+            scrambleStart={5.2}
           />
           {lastName ? (
             <FloatingText
               text={lastName}
               delay={0.9}
-              bobStart={2.5}
+              bobStart={2.2}
               play={splashDismissed}
               float={!reducedMotion}
               scramble={!reducedMotion}
-              scrambleStart={6.0}
+              scrambleStart={5.6}
             />
           ) : null}
         </h1>
@@ -170,10 +170,10 @@ export function Hero() {
             up by ~its cumulative char count × 0.03s (the char stagger) so the
             whole line reads as one continuous left-to-right sweep across the
             four inline segments rather than four separate reveals. The base
-            delay (2.04) is tuned so the line's final char lands at ~3.24s — the
-            same instant the longer eyebrow line ("Computer Science & Economics @
-            Occidental College", 49 chars from delay 1.5) finishes, so the two
-            reveals complete together. The negative `-my` pulls the tagline
+            delay (1.6) is tuned so the line's final word lands at ~3.5s — close
+            to when the longer eyebrow line ("Computer Science & Economics @
+            Occidental College", 49 chars from delay 1.3) finishes, so the two
+            reveals resolve together. The negative `-my` pulls the tagline
             tighter to the name above and CTAs below than the column's uniform
             `gap` (flex item margins add to the gap). */}
         <motion.p

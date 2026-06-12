@@ -154,32 +154,34 @@ const brandIcons: Record<string, IconRenderer> = {
         alt=""
         className="relative h-[78%] w-[78%] object-contain"
         aria-hidden="true"
+        loading="lazy"
+        decoding="async"
       />
     </div>
   ),
   numpy: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/numpy.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/numpy.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   matplotlib: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/matplotlib.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/matplotlib.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   seaborn: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/seaborn.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/seaborn.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   jupyter: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/jupyter.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/jupyter.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   snowflake: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/snowflake.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/snowflake.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   nextjs: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/nextjs.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/nextjs.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   react: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -237,7 +239,7 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   windows: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/windows.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/windows.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   softr: () => (
     <svg viewBox="0 0 256 256" className="h-full w-full" aria-hidden="true">
@@ -282,19 +284,19 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   nodejs: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/nodejs.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/nodejs.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   scikit: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/scikit.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/scikit.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   vercel: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/vercel.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/vercel.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   stata: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/stata.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/stata.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   latex: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -313,11 +315,11 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   spacy: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/spacy.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/spacy.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   nltk: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/nltk.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/nltk.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   vscode: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -329,7 +331,7 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   tableau: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/tableau.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/tableau.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   gdocs: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -354,27 +356,27 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   word: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/word.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/word.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   excel: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/excel.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/excel.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   powerpoint: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/powerpoint.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/powerpoint.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   canva: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/canva.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/canva.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   notion: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/notion.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/notion.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   zotero: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/zotero.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/zotero.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   zoom: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -385,11 +387,11 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   outlook: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/outlook.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/outlook.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   onedrive: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/onedrive.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/onedrive.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   gforms: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -423,19 +425,19 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   gmail: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/gmail.svg" alt="" className="h-full w-full" aria-hidden="true" />
+    <img src="/brand/gmail.svg" alt="" className="h-full w-full" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   gcal: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/gcal.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/gcal.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   gmeet: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/gmeet.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/gmeet.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   gchat: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/gchat.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/gchat.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   whatsapp: () => (
     <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
@@ -459,15 +461,15 @@ const brandIcons: Record<string, IconRenderer> = {
   ),
   handshake: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/handshake.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/handshake.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   groupme: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/groupme.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/groupme.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
   remind: () => (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img src="/brand/remind.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+    <img src="/brand/remind.svg" alt="" className="h-full w-full object-contain" aria-hidden="true" loading="lazy" decoding="async" />
   ),
 };
 
