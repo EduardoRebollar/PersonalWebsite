@@ -607,21 +607,6 @@
      (a self-referential var(--secondary) would be invalid). */
 }
 
-/* faint 32px grid + radial vignette, masked top/bottom so it blends into the
-   black sections above/below. */
-.about-terminal::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -10;
-  pointer-events: none;
-  background:
-    linear-gradient(transparent 31px, color-mix(in oklab, var(--hairline) 12%, transparent) 32px) 0 0 / 100% 32px,
-    linear-gradient(90deg, transparent 31px, color-mix(in oklab, var(--hairline) 12%, transparent) 32px) 0 0 / 32px 100%,
-    radial-gradient(120% 70% at 80% -10%, #0a0c14 0%, #000 60%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-}
 
 /* eyebrow code-comment */
 .about-terminal .tm-comment {

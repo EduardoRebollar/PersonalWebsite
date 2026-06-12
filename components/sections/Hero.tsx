@@ -2,8 +2,6 @@
 
 import { motion, type Variants } from 'motion/react';
 import { useCallback } from 'react';
-import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
-import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { OrbitalField } from '@/components/ui/backgrounds/OrbitalField';
 import { Container } from '@/components/ui/primitives/Container';
 import { Eyebrow } from '@/components/ui/primitives/Eyebrow';
@@ -109,19 +107,8 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className="relative flex min-h-svh items-center justify-center overflow-hidden"
     >
-      {/* Top of the continuous starfield that runs Hero → About → Journey →
-          Skills → Work → Contact. Fades in at the very top (under the nav);
-          solid at the bottom so it hands off into About. Same centered
-          1.5x-shell band the section's overflow-hidden crops. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_100%)]"
-      >
-        <StarsBackground />
-        <ShootingStars minDelay={400} maxDelay={1800} />
-        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
-        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
-      </div>
+      {/* The page-wide starfield sky lives in <PageStarfield> (app/page.tsx),
+          a single shared field behind all sections — not mounted per-section. */}
 
       {/* Orbital field — the four field-nodes orbiting the centered name. */}
       <OrbitalField className="absolute inset-0 z-0" />

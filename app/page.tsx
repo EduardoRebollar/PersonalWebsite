@@ -6,12 +6,14 @@ import { Projects } from '@/components/sections/Projects';
 import { Contact } from '@/components/sections/Contact';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { SpiralSplash } from '@/components/ui/backgrounds/SpiralSplash';
+import { PageStarfield } from '@/components/ui/backgrounds/PageStarfield';
 import { personSchema } from '@/lib/seo';
 
 export default function HomePage() {
   return (
     <>
       <SpiralSplash />
+      <PageStarfield />
       <JsonLd data={personSchema()} />
       <Hero />
       <About />

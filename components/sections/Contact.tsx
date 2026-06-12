@@ -34,8 +34,6 @@ function LinkedinIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
-import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { ShinyButton } from '@/components/ui/cta/ShinyButton';
 import { Container } from '@/components/ui/primitives/Container';
 import { WaveText } from '@/components/ui/wave-text';
@@ -226,18 +224,9 @@ export function Contact() {
       aria-labelledby="contact-heading"
       className="contact-console relative overflow-hidden pt-16 pb-4 md:pt-24 md:pb-6"
     >
-      {/* Shared starfield sky — continues unbroken from Work above, fading into
-          the footer below. Same centered 1.5x band the overflow-hidden crops. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]"
-      >
-        <StarsBackground />
-        <ShootingStars minDelay={400} maxDelay={1800} />
-        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
-        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
-      </div>
-
+      {/* Starfield sky is the shared <PageStarfield> (app/page.tsx); the
+          fade-out at the page bottom is handled by the footer's own translucent,
+          backdrop-blurred bar. */}
       <Container className="relative z-10">
         {/* `.is-on` (added once the console scrolls into view) drives the boot
             sequence: head fades up → panel powers on → the prompt types in → the

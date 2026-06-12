@@ -3,8 +3,6 @@
 import { useRef } from 'react';
 import { useInView } from 'motion/react';
 import { Container } from '@/components/ui/primitives/Container';
-import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
-import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { cn } from '@/lib/cn';
 import { AboutTerminal } from './about/AboutTerminal';
 
@@ -35,19 +33,7 @@ export function About() {
       aria-labelledby="about-heading"
       className="about-terminal relative pt-24 pb-12 md:pt-32 md:pb-16"
     >
-      {/* Mid-chain section of the continuous starfield (Hero → About → Journey
-          → …): solid at both edges, handing off from Hero above and into Journey
-          below. The fade-in into the nav now lives on Hero. Same centered
-          1.5x-shell band the band's overflow-hidden crops. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
-      >
-        <StarsBackground />
-        <ShootingStars minDelay={400} maxDelay={1800} />
-        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
-        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
-      </div>
+      {/* Starfield sky is the shared <PageStarfield> (app/page.tsx). */}
 
       {/* Trigger sentinel pinned at 40% down the section: the scanline sweep
           only ignites once this point scrolls up past the viewport's bottom edge

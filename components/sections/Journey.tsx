@@ -9,8 +9,6 @@ import { Pill } from '@/components/ui/primitives/Pill';
 import { WaveText } from '@/components/ui/wave-text';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { Timeline, type TimelineEntry } from '@/components/ui/timeline';
-import { ShootingStars } from '@/components/ui/backgrounds/shooting-stars';
-import { StarsBackground } from '@/components/ui/backgrounds/stars-background';
 import { education } from '@/content/data/education';
 import { experience } from '@/content/data/experience';
 import type { EducationItem, ExperienceItem, MediaImage } from '@/types/content';
@@ -293,20 +291,7 @@ export function Journey() {
       aria-labelledby="journey-heading"
       className="relative pt-16 pb-12 md:pt-24 md:pb-16"
     >
-      {/* Mid-chain section: the starfield is solid at both edges, handing off
-          from About above and into Skills below. The fade-in into Hero now lives
-          on About, the fade-out into the footer on Contact. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-[calc(var(--container-shell)*1.5)] overflow-hidden"
-      >
-        <StarsBackground />
-        {/* Each instance animates one streak at a time; several run in parallel
-            (staggered delays) to keep multiple shooting stars on screen. */}
-        <ShootingStars minDelay={400} maxDelay={1800} />
-        <ShootingStars minDelay={800} maxDelay={2600} starColor="#2dd4bf" trailColor="#818cf8" />
-        <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
-      </div>
+      {/* Starfield sky is the shared <PageStarfield> (app/page.tsx). */}
       <Container className="flex flex-col gap-6">
         <Heading as="h2" id="journey-heading">
           <WaveText text="The journey so far" />
