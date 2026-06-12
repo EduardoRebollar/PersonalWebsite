@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { HydrationGate } from './HydrationGate';
 import { Navbar } from './Navbar';
 import { MapScreen } from './MapScreen';
-import { TutorChat } from './TutorChat';
 import { QuizView } from './QuizView';
 import { ConceptMapView } from './ConceptMapView';
 import { Dashboard } from './Dashboard';
@@ -20,7 +19,6 @@ export function LaHistoryApp() {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );
-  const [tutorLocationId, setTutorLocationId] = useState<number | null>(null);
   const [quizLocationId, setQuizLocationId] = useState<number | null>(null);
 
   return (
@@ -51,13 +49,6 @@ export function LaHistoryApp() {
             {view === 'dashboard' && <Dashboard />}
           </div>
         )}
-
-        {/* Tutor chat becomes a docked, context-driven panel in Step 3; for
-            now it stays mounted but closed (tutorLocationId is dormant). */}
-        <TutorChat
-          locationId={tutorLocationId}
-          onClose={() => setTutorLocationId(null)}
-        />
 
         {quizLocationId != null ? (
           <QuizView

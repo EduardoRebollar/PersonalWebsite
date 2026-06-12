@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 
@@ -14,10 +9,19 @@ import { locationForId } from '@/lib/laHistory/gamification';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type { TutorMessage, TutorRole } from '@/types/laHistory';
 
+// Docked Socratic tutor — 1:1 port of the original `.chat-panel`
+// (static/js/chat.js): a collapsible bottom-right panel that peeks when
+// closed, contextual to the currently-open map location. Voice mic is wired
+// in Step 7; TTS read-aloud per message is added there too.
+
 type Props = {
+  /** The currently-selected map location (chat context), or null. */
   locationId: number | null;
-  onClose: () => void;
 };
+
+function chatKeyForLocation(locationId: number): string {
+  return `location:${locationId}`;
+}
 
 function uiToTutor(m: UIMessage): TutorMessage {
   const text = m.parts
@@ -39,23 +43,21 @@ function tutorToUi(m: TutorMessage, idx: number): UIMessage {
   } as UIMessage;
 }
 
-function chatKeyForLocation(locationId: number): string {
-  return `location:${locationId}`;
-}
+export function TutorChat({ locationId }: Props) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState('');
 
-export function TutorChat({ locationId, onClose }: Props) {
-  const open = locationId != null;
   const location = locationId != null ? locationForId(locationId) : undefined;
 
   const restoredMessages = useLaHistoryStore((s) =>
     locationId != null ? s.chatHistory[chatKeyForLocation(locationId)] : undefined,
   );
   const setChatHistory = useLaHistoryStore((s) => s.setChatHistory);
+  const clearChatHistory = useLaHistoryStore((s) => s.clearChatHistory);
 
   const initialMessages = useMemo<UIMessage[]>(
     () => (restoredMessages ? restoredMessages.map(tutorToUi) : []),
-    // Only re-seed when the location changes. Subsequent store updates
-    // come back to us through useChat itself.
+    // Only re-seed when the location changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [locationId],
   );
@@ -74,159 +76,129 @@ export function TutorChat({ locationId, onClose }: Props) {
     transport,
   });
 
-  // Seed messages on open / location change.
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages, setMessages]);
 
-  // Persist on every quiet moment (status === 'ready').
   useEffect(() => {
-    if (locationId == null) return;
-    if (status !== 'ready') return;
-    if (messages.length === 0) return;
-    const tutored = messages.map(uiToTutor);
-    setChatHistory(chatKeyForLocation(locationId), tutored);
+    if (locationId == null || status !== 'ready' || messages.length === 0) return;
+    setChatHistory(chatKeyForLocation(locationId), messages.map(uiToTutor));
   }, [messages, status, locationId, setChatHistory]);
 
-  const [draft, setDraft] = useState('');
-  const listRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
-  }, [messages, status]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    if (open) {
-      window.addEventListener('keydown', onKey);
-      return () => window.removeEventListener('keydown', onKey);
-    }
-  }, [open, onClose]);
+  const busy = status === 'streaming' || status === 'submitted';
 
   function submit() {
     const trimmed = draft.trim();
-    if (!trimmed) return;
-    if (status === 'streaming' || status === 'submitted') return;
+    if (!trimmed || locationId == null || busy) return;
     sendMessage({ text: trimmed });
     setDraft('');
   }
 
+  function clear() {
+    if (locationId != null) clearChatHistory(chatKeyForLocation(locationId));
+    setMessages([]);
+  }
+
   return (
-    <>
-      <button
-        type="button"
-        aria-hidden={!open}
-        tabIndex={-1}
-        onClick={onClose}
-        className={cn(
-          'fixed inset-0 z-40 cursor-pointer bg-base/50 backdrop-blur-[2px] transition-opacity duration-300',
-          open ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-      />
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label="Socratic tutor chat"
-        className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[80vh] min-h-[55vh] flex-col rounded-t-2xl border-t border-hairline bg-surface shadow-2xl transition-transform duration-300 ease-out',
-          'sm:right-4 sm:bottom-4 sm:left-auto sm:w-[26rem] sm:rounded-2xl sm:border',
-          open ? 'translate-y-0' : 'translate-y-full',
-        )}
-      >
-        <header className="flex items-center justify-between border-b border-hairline px-4 py-3">
-          <div>
-            <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-              Socratic tutor
-            </p>
-            <p className="mt-0.5 font-display text-base text-fg">
-              {location?.name ?? '—'}
-            </p>
-          </div>
+    <div className={cn('chat-panel', open && 'open')}>
+      <div className="chat-panel-header">
+        <button
+          type="button"
+          className="chat-panel-header-toggle"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+        >
+          <span className="chat-panel-icon" aria-hidden>
+            🎓
+          </span>
+          <span className="chat-panel-title">Socratic Tutor</span>
+          <span className="chat-panel-context">{location?.name ?? ''}</span>
+        </button>
+        <div className="chat-panel-actions">
           <button
             type="button"
-            onClick={onClose}
-            aria-label="Close tutor"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-hairline text-fg-mute transition-colors hover:border-accent hover:text-accent"
+            className="chat-action-btn"
+            id="chat-clear-btn"
+            title="Clear conversation"
+            aria-label="Clear conversation"
+            onClick={clear}
           >
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              className="h-4 w-4"
-            >
-              <path d="M6 6 L18 18 M18 6 L6 18" strokeLinecap="round" />
+            <svg width="12" height="12" viewBox="0 0 13 13" fill="none" aria-hidden>
+              <path
+                d="M2 3h9M5 3V2h3v1M4 3l.5 7h4L9 3"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
-        </header>
-
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto px-4 py-3"
-          aria-live="polite"
-        >
-          {messages.length === 0 ? (
-            <p className="mx-auto max-w-[20rem] text-center text-sm text-fg-mute">
-              Ask anything about <span className="text-fg">{location?.name}</span>.
-              The tutor will guide you with questions instead of answers.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {messages.map((m) => {
-                const text = m.parts
-                  .filter(
-                    (p): p is { type: 'text'; text: string } =>
-                      p.type === 'text',
-                  )
-                  .map((p) => p.text)
-                  .join('');
-                const isUser = m.role === 'user';
-                return (
-                  <li
-                    key={m.id}
-                    className={cn(
-                      'max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed',
-                      isUser
-                        ? 'ml-auto bg-elev text-fg'
-                        : 'mr-auto bg-base/60 text-fg',
-                    )}
-                  >
-                    {text || (
-                      <span className="text-fg-mute">…</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {status === 'submitted' || status === 'streaming' ? (
-            <p className="mt-3 font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-              Tutor is thinking…
-            </p>
-          ) : null}
-          {error ? (
-            <p className="mt-3 text-sm text-warn">
-              The tutor couldn&apos;t respond. Try again in a moment.
-            </p>
-          ) : null}
+          <button
+            type="button"
+            className="chat-action-btn"
+            id="chat-toggle-btn"
+            title={open ? 'Collapse' : 'Expand'}
+            aria-label={open ? 'Collapse tutor' : 'Expand tutor'}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? '▼' : '▲'}
+          </button>
         </div>
+      </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-          className="flex items-end gap-2 border-t border-hairline px-3 py-3"
-        >
+      <div className="chat-messages">
+        {messages.length === 0 ? (
+          <div className="chat-intro">
+            <div className="chat-intro-icon" aria-hidden>
+              🎓
+            </div>
+            <strong>Socratic Tutor</strong>
+            {locationId == null
+              ? 'Open a location on the map, then ask the tutor about it — I’ll guide you with questions rather than answers.'
+              : 'Ask a question about this location — I’ll guide you with questions rather than answers.'}
+          </div>
+        ) : (
+          messages.map((m) => {
+            const text = m.parts
+              .filter(
+                (p): p is { type: 'text'; text: string } => p.type === 'text',
+              )
+              .map((p) => p.text)
+              .join('');
+            return (
+              <div key={m.id} className={cn('chat-msg', m.role)}>
+                <div className="chat-bubble">{text || '…'}</div>
+              </div>
+            );
+          })
+        )}
+
+        {status === 'submitted' ? (
+          <div className="chat-typing" aria-label="Tutor is thinking">
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="chat-error">
+            The tutor couldn’t respond. Try again in a moment.
+          </div>
+        ) : null}
+      </div>
+
+      <div className="chat-input-area">
+        <div className="chat-input-wrap">
           <textarea
+            id="chat-input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = 'auto';
+              el.style.height = `${Math.min(el.scrollHeight, 100)}px`;
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -234,21 +206,40 @@ export function TutorChat({ locationId, onClose }: Props) {
               }
             }}
             rows={1}
-            placeholder="Ask the tutor a question…"
-            className="max-h-32 min-h-[2.25rem] flex-1 resize-none rounded-xl border border-hairline bg-base px-3 py-2 text-sm text-fg placeholder-fg-mute outline-none focus-visible:border-accent"
+            placeholder={
+              locationId == null ? 'Open a location first…' : 'Ask the tutor…'
+            }
+            disabled={locationId == null}
             aria-label="Your message"
           />
+          {/* Mic button stays hidden until Step 7 wires voice input. */}
           <button
-            type="submit"
-            disabled={
-              !draft.trim() || status === 'streaming' || status === 'submitted'
-            }
-            className="inline-flex h-9 items-center rounded-full border border-hairline bg-base px-4 font-mono text-[11px] tracking-[0.14em] text-fg uppercase transition-colors enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
+            type="button"
+            className="chat-mic-btn"
+            title="Voice input"
+            aria-label="Start voice input"
+            tabIndex={-1}
           >
-            Send
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+              <rect x="4" y="1" width="5" height="7" rx="2.5" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M2 7a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1="6.5" y1="11.5" x2="6.5" y2="12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
           </button>
-        </form>
-      </section>
-    </>
+        </div>
+        <button
+          type="button"
+          className="chat-send-btn"
+          title="Send"
+          aria-label="Send message"
+          onClick={submit}
+          disabled={!draft.trim() || locationId == null || busy}
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden>
+            <path d="M13 7.5L2 2l2.5 5.5L2 13l11-5.5z" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }
