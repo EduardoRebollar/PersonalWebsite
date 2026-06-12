@@ -26,11 +26,11 @@ export function MapView(props: InnerProps) {
   }, []);
 
   if (!Inner) {
+    // Parchment loader, mirrors the original #map-loading overlay.
     return (
-      <div className="grid h-full place-items-center bg-base">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase">
-          Loading map…
-        </p>
+      <div id="map-loading">
+        <div className="map-loader-ring" />
+        <span className="map-loader-text">Loading map…</span>
       </div>
     );
   }

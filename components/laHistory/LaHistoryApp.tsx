@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { HydrationGate } from './HydrationGate';
 import { Navbar } from './Navbar';
-import { MapView } from './MapView';
-import { LocationDetail } from './LocationDetail';
+import { MapScreen } from './MapScreen';
 import { TutorChat } from './TutorChat';
 import { QuizView } from './QuizView';
 import { ConceptMapView } from './ConceptMapView';
@@ -40,22 +39,12 @@ export function LaHistoryApp() {
         />
 
         {view === 'map' ? (
-          // Mirrors the original `.map-layout` (fixed below the navbar).
-          // Replaced by the real sidebar + map + detail panel in Step 2.
-          <div
-            style={{
-              position: 'fixed',
-              left: 0,
-              right: 0,
-              top: 'var(--nav-height)',
-              bottom: 0,
-            }}
-          >
-            <MapView
-              selectedLocationId={selectedLocationId}
-              onSelect={(id) => setSelectedLocationId(id)}
-            />
-          </div>
+          <MapScreen
+            selectedLocationId={selectedLocationId}
+            onSelect={(id) => setSelectedLocationId(id)}
+            onClose={() => setSelectedLocationId(null)}
+            onOpenQuiz={(id) => setQuizLocationId(id)}
+          />
         ) : (
           <div style={{ paddingTop: 'var(--nav-height)' }}>
             {view === 'concept-map' && <ConceptMapView />}
@@ -63,13 +52,8 @@ export function LaHistoryApp() {
           </div>
         )}
 
-        <LocationDetail
-          locationId={view === 'map' ? selectedLocationId : null}
-          onClose={() => setSelectedLocationId(null)}
-          onOpenQuiz={(id) => setQuizLocationId(id)}
-          onOpenTutor={(id) => setTutorLocationId(id)}
-        />
-
+        {/* Tutor chat becomes a docked, context-driven panel in Step 3; for
+            now it stays mounted but closed (tutorLocationId is dormant). */}
         <TutorChat
           locationId={tutorLocationId}
           onClose={() => setTutorLocationId(null)}
