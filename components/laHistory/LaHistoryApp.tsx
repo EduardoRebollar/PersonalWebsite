@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { HydrationGate } from './HydrationGate';
-import { Toolbar } from './Toolbar';
+import { Navbar } from './Navbar';
 import { MapView } from './MapView';
 import { LocationDetail } from './LocationDetail';
 import { TutorChat } from './TutorChat';
@@ -26,25 +26,42 @@ export function LaHistoryApp() {
 
   return (
     <HydrationGate>
-      <div className="flex min-h-dvh flex-col bg-base text-fg">
-        <Toolbar
+      {/* `data-theme` is hardcoded to light parchment for now; the settings
+          theme switcher (Step 6) will drive it (light / dark / dark + map
+          tile inversion via the data-map-dark attribute). */}
+      <div className="lah-root" data-theme="light">
+        <Navbar
           view={view}
           onViewChange={setView}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenShortcuts={() => {
+            /* Keyboard-shortcuts overlay is built in Step 6. */
+          }}
         />
 
-        <div className="relative flex-1">
-          {view === 'map' && (
-            <div className="absolute inset-0">
-              <MapView
-                selectedLocationId={selectedLocationId}
-                onSelect={(id) => setSelectedLocationId(id)}
-              />
-            </div>
-          )}
-          {view === 'concept-map' && <ConceptMapView />}
-          {view === 'dashboard' && <Dashboard />}
-        </div>
+        {view === 'map' ? (
+          // Mirrors the original `.map-layout` (fixed below the navbar).
+          // Replaced by the real sidebar + map + detail panel in Step 2.
+          <div
+            style={{
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              top: 'var(--nav-height)',
+              bottom: 0,
+            }}
+          >
+            <MapView
+              selectedLocationId={selectedLocationId}
+              onSelect={(id) => setSelectedLocationId(id)}
+            />
+          </div>
+        ) : (
+          <div style={{ paddingTop: 'var(--nav-height)' }}>
+            {view === 'concept-map' && <ConceptMapView />}
+            {view === 'dashboard' && <Dashboard />}
+          </div>
+        )}
 
         <LocationDetail
           locationId={view === 'map' ? selectedLocationId : null}

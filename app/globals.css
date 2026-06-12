@@ -3053,6 +3053,15 @@
   .contact-console .cc8-bar .path .cwd {
     display: none;
   }
+  /* let the email note wrap instead of overflowing (it's nowrap by default,
+     which clips "…reaches me first." off the panel on narrow phones), and
+     center the icon + text block */
+  .contact-console .cc8-foot {
+    white-space: normal;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: center;
+  }
   .contact-console .cc8-fields {
     grid-template-columns: 1fr;
   }

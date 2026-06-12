@@ -1,0 +1,5 @@
+/* LA History replica — aggregated stylesheet.
+   Imported once from app/work/la-history/play/layout.tsx. Every rule here is
+   scoped under `.lah-root` so it never leaks into the rest of the portfolio.
+   Order matters: tokens/base (main) first, then per-screen sheets. */
+@import './main.css';
