@@ -224,7 +224,7 @@ export function Nav() {
       <Container as="nav" className="flex h-16 items-center justify-between">
         <Link
           href="#hero"
-          aria-label={`${site.name} — home`}
+          aria-label={`${site.initials} — ${site.name}, home`}
           className="font-display text-2xl leading-none tracking-tight text-fg transition-colors hover:text-accent"
           onClick={() => setOpen(false)}
         >

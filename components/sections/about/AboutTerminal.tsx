@@ -126,7 +126,7 @@ function HudShell({ children }: { children: ReactNode }) {
   const chars = (text: string, bold = false) => {
     const Tag = bold ? 'b' : 'span';
     return (
-      <Tag aria-label={text}>
+      <Tag role="img" aria-label={text}>
         {Array.from(text).map((ch, i) => (
           <span key={i} aria-hidden="true" className="tm-char" style={{ transitionDelay: `${2300 + ci++ * 16}ms` }}>
             {ch === ' ' ? ' ' : ch}

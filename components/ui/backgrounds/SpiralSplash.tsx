@@ -127,7 +127,7 @@ export function SpiralSplash() {
     const t = window.setTimeout(() => {
       setEnterVisible(true);
       buttonRef.current?.focus();
-    }, 2000);
+    }, 600);
     return () => window.clearTimeout(t);
   }, []);
 
@@ -211,8 +211,8 @@ export function SpiralSplash() {
             exploding
               ? 'pointer-events-none translate-y-0 scale-95 opacity-0 blur-[2px] duration-500'
               : enterVisible
-                ? 'translate-y-0 opacity-100 duration-[1500ms]'
-                : 'translate-y-4 opacity-0 duration-[1500ms]'
+                ? 'translate-y-0 opacity-100 duration-[800ms]'
+                : 'translate-y-4 opacity-0 duration-[800ms]'
           }`}
         >
           <div className="relative rounded-full px-16 py-10">

@@ -168,7 +168,7 @@ export function FloatingText({
   }, [play, scramble, inView, chars, scrambleStart]);
 
   return (
-    <span ref={wrapRef} className={cn('inline-flex gap-[0.16em]', className)} aria-label={text}>
+    <span ref={wrapRef} role="img" className={cn('inline-flex gap-[0.16em]', className)} aria-label={text}>
       {chars.map((ch, i) => {
         const seed = i + 1;
         // Per-letter motion profile — stable across renders, varied per index.
