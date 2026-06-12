@@ -227,9 +227,15 @@ export function Hero() {
               href="#contact"
               internal
               onClick={scrollToContact}
-              className="cta-glow inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[9px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
+              className="cta-glow group inline-flex items-center gap-2 rounded-full px-5 py-3 font-mono text-[9px] tracking-[0.18em] text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"
             >
               Get in touch
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-300 group-hover:translate-x-1"
+              >
+                →
+              </span>
             </RippleLink>
           </motion.span>
         </motion.div>

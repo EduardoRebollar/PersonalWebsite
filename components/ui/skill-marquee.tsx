@@ -8,8 +8,8 @@ import type { SkillCard } from '@/types/content';
  * SkillMarquee — a single continuously-scrolling row of SkillHighlightCards.
  *
  * Reuses the `scroll-marquee` keyframe in app/globals.css (translateX 0 → -50%
- * over a doubled item list, so the loop seam is invisible) and the edge-fade
- * mask pattern from AppleCardsCarousel. Pauses on hover.
+ * over a doubled item list, so the loop seam is invisible) and a soft edge-fade
+ * mask (MARQUEE_MASK below). Pauses on hover.
  *
  * Reduced-motion: the global prefers-reduced-motion clamp would freeze the
  * animation mid-track and clip cards behind the mask, so under `reducedMotion`

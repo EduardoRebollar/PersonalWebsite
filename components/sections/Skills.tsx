@@ -59,7 +59,7 @@ export function Skills() {
     <section
       id="skills"
       aria-labelledby="skills-heading"
-      className="relative isolate overflow-hidden pt-3 pb-6 md:pt-4 md:pb-8"
+      className="relative isolate overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16"
     >
       {/* Same starfield as the Journey section, extended down through Skills so
           the field reads as one continuous sky. Solid at both edges — it joins

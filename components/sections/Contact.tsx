@@ -166,6 +166,7 @@ export function Contact() {
   const [sent, setSent] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const formRef = useRef<HTMLFormElement>(null);
   const clock = useClock();
 
   // In-view toggle drives the CSS "boot sequence" entrance (same plain
@@ -182,6 +183,9 @@ export function Contact() {
 
   const send = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    // The submit is driven via onClick/⌘↵ (not a native form submit), so trigger
+    // the browser's built-in required/email validation ourselves before drafting.
+    if (formRef.current && !formRef.current.reportValidity()) return;
     const subject = form.subject.trim() || `Hello from ${form.name || 'your site'}`;
     const body = form.msg + (form.email ? `\n\n— ${form.name} (${form.email})` : '');
     const url = `mailto:${site.email.primary}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -220,7 +224,7 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="contact-console relative overflow-hidden pt-12 pb-4 md:pt-16 md:pb-6"
+      className="contact-console relative overflow-hidden pt-16 pb-4 md:pt-24 md:pb-6"
     >
       {/* Shared starfield sky — continues unbroken from Work above, fading into
           the footer below. Same centered 1.5x band the overflow-hidden crops. */}
@@ -234,7 +238,7 @@ export function Contact() {
         <ShootingStars minDelay={1200} maxDelay={3200} starColor="#fcd34d" trailColor="#818cf8" />
       </div>
 
-      <Container className="relative z-10 mt-16 md:mt-24">
+      <Container className="relative z-10">
         {/* `.is-on` (added once the console scrolls into view) drives the boot
             sequence: head fades up → panel powers on → the prompt types in → the
             channel rows print one-by-one. All choreography is in globals.css,
@@ -296,7 +300,7 @@ export function Contact() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={send} className="cc8-form">
+                <form ref={formRef} onSubmit={send} className="cc8-form">
                   <div className="cc8-fhead">
                     <p className="t">Send a message</p>
                   </div>
@@ -308,6 +312,8 @@ export function Contact() {
                         id="cc-name"
                         className="cc8-input"
                         placeholder="John Doe"
+                        autoComplete="name"
+                        required
                         value={form.name}
                         onChange={set('name')}
                         onKeyDown={onKey}
@@ -320,6 +326,8 @@ export function Contact() {
                         className="cc8-input"
                         type="email"
                         placeholder="john@company.com"
+                        autoComplete="email"
+                        required
                         value={form.email}
                         onChange={set('email')}
                         onKeyDown={onKey}
@@ -342,6 +350,7 @@ export function Contact() {
                         id="cc-msg"
                         className="cc8-input"
                         placeholder="Tell me about the role, project, or idea…"
+                        required
                         value={form.msg}
                         onChange={set('msg')}
                         onKeyDown={onKey}
@@ -352,6 +361,7 @@ export function Contact() {
                   <div className="cc8-submit">
                     <ShinyButton
                       href="#contact"
+                      aria-keyshortcuts="Meta+Enter Control+Enter"
                       onClick={(e) => {
                         e.preventDefault();
                         send();
@@ -366,7 +376,7 @@ export function Contact() {
                         →
                       </span>
                     </ShinyButton>
-                    <span className="cc8-hint">
+                    <span className="cc8-hint" aria-hidden="true">
                       or press <kbd>⌘</kbd>
                       <kbd>↵</kbd>
                     </span>
@@ -381,13 +391,21 @@ export function Contact() {
             <div className="cc8-right">
               <p className="cc8-rlabel">Reach me directly</p>
 
-              <div className="cc8-list">
+              <div className="cc8-list" role="list" aria-label="Contact channels">
                 {CHANNELS.map((c) => {
                   const done = copied === c.id;
                   const ActionIcon = c.kind === 'copy' ? Copy : c.kind === 'download' ? Download : ArrowUpRight;
+                  const rowLabel =
+                    c.kind === 'ext'
+                      ? `${c.label} — ${c.value} (opens in new tab)`
+                      : c.kind === 'download'
+                        ? `Download ${c.label} (${c.value})`
+                        : `Copy ${c.label}: ${c.value}`;
                   return (
                     <a
                       key={c.id}
+                      role="listitem"
+                      aria-label={rowLabel}
                       className="cc8-row"
                       data-kind={c.kind}
                       href={c.href}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { Code2, FolderGit2, Mail, Milestone, User } from 'lucide-react';
@@ -24,6 +24,8 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined);
   const isDemoRoute = useIsLaHistoryDemoRoute();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -63,7 +65,25 @@ export function Nav() {
     [scrollWorkControlsIntoView],
   );
 
-  // About / Journey / Skills: scroll explicitly instead of leaning on Next's
+  // Skills lands further down than a plain section-top jump: the section carries
+  // a tall top padding (pt-24) of empty starfield, so scrolling to its top leaves
+  // the heading mid-screen and the orbit constellations below the fold. Instead,
+  // tuck the heading just under the fixed nav so the orbits are framed. Tune CLEAR
+  // to sit the heading higher (smaller) or lower (larger).
+  const scrollToSkills = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (typeof window === 'undefined') return;
+    const target =
+      document.getElementById('skills-heading') ?? document.getElementById('skills');
+    if (!target) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const CLEAR = 88; // fixed nav (h-16 = 64px) + breathing room
+    const top = window.scrollY + target.getBoundingClientRect().top - CLEAR;
+    window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+    history.replaceState(null, '', '#skills');
+  }, []);
+
+  // About / Journey: scroll explicitly instead of leaning on Next's
   // <Link> hash navigation, which only scrolls when the hash *changes*. Once
   // the URL hash already matches the target (clicked before, or left stale),
   // a repeat click is a silent no-op — the "sometimes works" bug. Driving the
@@ -96,9 +116,11 @@ export function Nav() {
             ? scrollToBottom
             : link.href === '#work'
               ? scrollToWorkControls
-              : scrollToSection,
+              : link.href === '#skills'
+                ? scrollToSkills
+                : scrollToSection,
       })),
-    [scrollToBottom, scrollToWorkControls, scrollToSection],
+    [scrollToBottom, scrollToWorkControls, scrollToSkills, scrollToSection],
   );
 
   useEffect(() => {
@@ -108,13 +130,50 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Mobile-menu focus management: on open, move focus into the menu and trap Tab
+  // within it (Escape closes); on close, the cleanup returns focus to the toggle.
+  // The cleanup only fires on the open→close transition (and unmount), so the
+  // initial closed render never steals focus.
   useEffect(() => {
     if (!open) return;
+    const menu = mobileNavRef.current;
+    // Capture the (always-mounted) toggle now so the cleanup focuses the same
+    // node — satisfies react-hooks and is correct since the toggle never unmounts.
+    const toggle = toggleRef.current;
+    const focusables = () =>
+      menu
+        ? Array.from(
+            menu.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+          )
+        : [];
+    focusables()[0]?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const items = focusables();
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey) {
+        if (active === first || !menu?.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !menu?.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      toggle?.focus();
+    };
   }, [open]);
 
   useEffect(() => {
@@ -131,7 +190,7 @@ export function Nav() {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
         if (visible) setActiveHref(`#${visible.target.id}`);
       },
-      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0.25, 0.5] },
     );
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
@@ -176,6 +235,7 @@ export function Nav() {
 
         <div className="flex items-center gap-2">
           <RippleButton
+            ref={toggleRef}
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? 'Close menu' : 'Open menu'}
@@ -203,6 +263,7 @@ export function Nav() {
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
+            ref={mobileNavRef}
             id="mobile-nav"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -219,6 +280,7 @@ export function Nav() {
                       onClick={(e) => {
                         if (link.href === '#contact') scrollToBottom(e);
                         else if (link.href === '#work') scrollToWorkControls(e);
+                        else if (link.href === '#skills') scrollToSkills(e);
                         else scrollToSection(e);
                         setOpen(false);
                       }}

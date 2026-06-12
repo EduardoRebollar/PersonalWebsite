@@ -23,6 +23,10 @@ const exampleProject: Project = {
   year: 2026,
   tier: 'hero',
   tech: ['MDX', 'Next.js', 'TypeScript'],
+  accent: '#818cf8',
+  hue: 245,
+  role: 'Demo',
+  highlights: [],
 };
 
 function findProject(slug: string): Project | undefined {

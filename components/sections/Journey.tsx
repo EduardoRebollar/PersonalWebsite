@@ -291,7 +291,7 @@ export function Journey() {
     <section
       id="journey"
       aria-labelledby="journey-heading"
-      className="relative py-12 md:py-16"
+      className="relative pt-16 pb-12 md:pt-24 md:pb-16"
     >
       {/* Mid-chain section: the starfield is solid at both edges, handing off
           from About above and into Skills below. The fade-in into Hero now lives

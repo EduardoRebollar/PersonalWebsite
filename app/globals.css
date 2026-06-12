@@ -244,6 +244,25 @@
   animation: glow-pulse 2.2s ease-in-out infinite;
 }
 
+/* Gentle continuous bob for the footer heart emoji (components/ui/primitives/
+   Footer.tsx) — drifts ~2px up and down so it looks like it's floating. Top-level
+   keyframe (not in @theme) so Tailwind v4 doesn't tree-shake it; the global
+   reduced-motion clamp freezes it automatically. */
+@keyframes heart-float {
+  0%,
+  100% {
+    transform: translateY(1px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.heart-float {
+  display: inline-block;
+  animation: heart-float 2.4s ease-in-out infinite;
+}
+
 /* Infinite left→right wave for the section titles (components/ui/wave-text.tsx):
    each character lifts up briefly and tints indigo as an invisible crest passes
    over it, so a glinting wave travels across the words on a loop, then rests.
@@ -344,7 +363,7 @@
   }
 
   /* --- Per-section scroll offset -------------------------------------------
-     Sections carry very different top paddings (About/Work pt-32, Journey/
+     Sections carry very different top paddings (About/- pt-32, Journey/
      Contact py-16, Skills pt-4), so a single offset lands their headings at
      different heights under the fixed nav (h-16 = 4rem).
 
@@ -363,11 +382,13 @@
     }
   }
 
-  /* mobile top paddings: About/Work pt-24 (6rem), Journey/Contact py-12 (3rem),
-     Skills pt-3 (0.75rem) */
-  #about,
-  #work {
+  /* mobile top paddings: About pt-24 (6rem), Work pt-20 (5rem), Journey/Contact
+     py-12 (3rem), Skills pt-3 (0.75rem) */
+  #about {
     scroll-margin-top: calc(var(--heading-clear) - 6rem);
+  }
+  #work {
+    scroll-margin-top: calc(var(--heading-clear) - 5rem);
   }
   #journey,
   #contact {
@@ -377,12 +398,14 @@
     scroll-margin-top: calc(var(--heading-clear) - 0.75rem);
   }
 
-  /* md+ top paddings: About/Work pt-32 (8rem), Journey/Contact py-16 (4rem),
-     Skills pt-4 (1rem) */
+  /* md+ top paddings: About pt-32 (8rem), Work pt-20 (5rem), Journey/Contact
+     py-16 (4rem), Skills pt-4 (1rem) */
   @media (min-width: 48rem) {
-    #about,
-    #work {
+    #about {
       scroll-margin-top: calc(var(--heading-clear) - 8rem);
+    }
+    #work {
+      scroll-margin-top: calc(var(--heading-clear) - 5rem);
     }
     #journey {
       scroll-margin-top: calc(var(--heading-clear) - 6.5rem);
@@ -3050,5 +3073,791 @@
   .contact-console .cc8-rval {
     grid-column: 1 / -1;
     font-size: 11.5px;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+ * Work — featured-panel + filterable index (Direction B1). Ported from the
+ * work-section design handoff, scoped under .work-featured.
+ *
+ * Same local-token-remap precedent as .about-terminal / .contact-console: the
+ * prototype CSS uses short names (--accent = indigo, --fg-dim = #8b8b8b, …); in
+ * this repo indigo lives in --primary and there's no --fg-dim, so we re-map them
+ * locally here. Only raw var(--accent) etc. inside this subtree is affected —
+ * Tailwind utilities use the --color-* names and are untouched.
+ *
+ * The featured "visual" is an abstract per-project-hued figure plate (gradient
+ * glow + faint grid + big ghost serif number + FIG·NN tag), NOT a screenshot —
+ * the prototype's image slot / "drop a screenshot" placeholder is intentionally
+ * omitted. Per-project recolor is driven by inline CSS vars (--f-accent etc.)
+ * set from the data in Projects.tsx.
+ * --------------------------------------------------------------------------- */
+
+.work-featured {
+  --base: var(--background);
+  --fg: var(--foreground);
+  --fg-mute: var(--muted-foreground); /* #cccccc */
+  --fg-dim: #8b8b8b; /* tertiary/meta — not a repo token, define locally */
+  --hairline: var(--border); /* #545454 */
+  --hair-soft: rgba(255, 255, 255, 0.1);
+  --accent: var(--primary); /* handoff --accent (indigo) = repo --primary */
+  /* --secondary (teal #2dd4bf) inherits from :root */
+}
+
+/* grid: featured (left) + index (right) */
+.work-featured .prod-grid {
+  display: grid;
+  grid-template-columns: 1.32fr 1fr;
+  gap: clamp(24px, 3vw, 40px);
+  align-items: stretch;
+}
+
+/* ---- featured panel ---- */
+.work-featured .prod-feat {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hair-soft);
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--f-top), #070809 80%);
+  transition: background 0.5s ease;
+}
+
+/* abstract figure plate (hued glow + grid + ghost number); --f-* set inline */
+.work-featured .prod-vis {
+  position: relative;
+  height: clamp(104px, 11vw, 128px);
+  border-bottom: 1px solid var(--hair-soft);
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 100% at 25% 0%, var(--f-glow), transparent 62%),
+    linear-gradient(160deg, var(--f-base), #06070a 86%);
+}
+.work-featured .prod-vis::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 40%, #000, transparent 80%);
+  mask-image: radial-gradient(120% 100% at 50% 40%, #000, transparent 80%);
+}
+.work-featured .prod-vis-no {
+  position: absolute;
+  right: 20px;
+  bottom: 2px;
+  z-index: 0;
+  font-family: var(--font-display);
+  font-size: clamp(68px, 8vw, 90px);
+  line-height: 0.8;
+  color: color-mix(in oklab, var(--f-accent) 18%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+.work-featured .prod-figtag {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border: 1px solid var(--hair-soft);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.work-featured .prod-feat-body {
+  padding: clamp(18px, 2vw, 24px) clamp(24px, 2.6vw, 34px) clamp(20px, 2.2vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+.work-featured .prod-feat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+/* content swap — transform-only (never hides content) so it stays visible for
+   print/reduced-motion. Replayed by remounting via key={sel.slug}. Keyframe is
+   top-level (below) so Tailwind v4 doesn't tree-shake it; the global @layer base
+   reduced-motion clamp neutralizes it to end-state. */
+.work-featured .prod-swap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: bf-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.work-featured .prod-feat .bf-title {
+  font-size: clamp(28px, 3vw, 40px);
+}
+.work-featured .prod-feat .bf-blurb {
+  font-size: clamp(15.5px, 1.3vw, 17.5px);
+  max-width: 44ch;
+}
+.work-featured .prod-feat-foot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--hair-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+/* ---- featured primitives (badge / meta / title / blurb / highlights) ---- */
+.work-featured .bf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--f-accent);
+  border: 1px solid color-mix(in oklab, var(--f-accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 6px 13px;
+}
+.work-featured .bf-badge .d {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--f-accent);
+  box-shadow: 0 0 8px var(--f-accent);
+}
+.work-featured .bf-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  line-height: 1;
+  color: var(--fg);
+  margin: 0;
+}
+.work-featured .bf-meta {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.work-featured .bf-meta b {
+  color: var(--f-accent);
+  font-weight: 500;
+}
+.work-featured .bf-blurb {
+  color: var(--fg);
+  line-height: 1.55;
+  margin: 0;
+}
+.work-featured .bf-highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.work-featured .bf-highlights li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--fg-mute);
+}
+.work-featured .bf-highlights svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--f-accent);
+}
+
+/* tech tags */
+.work-featured .bf-tagrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.work-featured .wk-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  border: 1px solid var(--hair-soft);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* CTAs: accent pill (RippleLink) + circular icon links */
+.work-featured .bf-ctas {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.work-featured .bf-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #07080b;
+  background: var(--c-accent);
+  border-radius: 999px;
+  padding: 13px 20px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.work-featured .bf-cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -14px var(--c-accent);
+}
+.work-featured .bf-cta-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.work-featured .bf-cta-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  color: var(--fg-mute);
+  transition: all 0.25s;
+}
+.work-featured .bf-cta-icon:hover {
+  color: var(--fg);
+  border-color: var(--fg-mute);
+  transform: translateY(-2px);
+}
+
+/* ---- index ---- */
+.work-featured .prod-index {
+  display: flex;
+  flex-direction: column;
+}
+.work-featured .prod-index-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.work-featured .prod-index-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.work-featured .prod-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  outline: none;
+  margin-top: 10px;
+}
+.work-featured .prod-item {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.22s, border-color 0.22s;
+}
+.work-featured .prod-item + .prod-item {
+  margin-top: 2px;
+}
+.work-featured .prod-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.work-featured .prod-item.sel {
+  background: var(--i-tint);
+  border-color: color-mix(in oklab, var(--i-accent) 38%, transparent);
+}
+.work-featured .prod-item-no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+.work-featured .prod-item.sel .prod-item-no {
+  color: var(--i-accent);
+}
+.work-featured .prod-item-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.4vw, 19px);
+  line-height: 1.08;
+  color: var(--fg);
+}
+.work-featured .prod-item-sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-top: 3px;
+}
+.work-featured .prod-item-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.work-featured .prod-item-year {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-dim);
+}
+.work-featured .prod-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--i-accent);
+  opacity: 0;
+  transition: opacity 0.22s;
+  box-shadow: 0 0 8px var(--i-accent);
+}
+.work-featured .prod-item.sel .prod-item-dot {
+  opacity: 1;
+}
+.work-featured .prod-index-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  /* hue-tinted hairline so the divider picks up the selected build's accent */
+  border-top: 1px solid color-mix(in oklab, var(--foot-accent, var(--hair-soft)) 22%, var(--hair-soft));
+}
+.work-featured .bf-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.work-featured .bf-count-cur {
+  color: var(--foot-accent, var(--fg));
+  font-weight: 600;
+  text-shadow: 0 0 14px color-mix(in oklab, var(--foot-accent, transparent) 50%, transparent);
+}
+.work-featured .bf-count-sep {
+  color: var(--fg-dim);
+  opacity: 0.45;
+}
+.work-featured .bf-count-tot {
+  color: var(--fg-dim);
+}
+.work-featured .bf-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.work-featured .bf-navbtn {
+  position: relative;
+  overflow: hidden;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  color: var(--fg-mute);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.14s ease;
+}
+/* Streaking sheen — same diagonal glint as the "See work" ShinyButton, but
+   pure-CSS (these are plain <button>s). A thin bright band sweeps across, then
+   parks off-screen for the rest of the cycle so the streak reads as periodic.
+   Frozen automatically under the @layer base reduced-motion clamp. */
+.work-featured .bf-navbtn::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: 0;
+  width: 45%;
+  height: 220%;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, #fff 38%, transparent),
+    transparent
+  );
+  transform: translateX(-260%) rotate(20deg);
+  animation: bf-navshine 3.6s ease-in-out infinite;
+}
+@keyframes bf-navshine {
+  0% {
+    transform: translateX(-260%) rotate(20deg);
+  }
+  30%,
+  100% {
+    transform: translateX(360%) rotate(20deg);
+  }
+}
+/* Offset the next button so the pair glints out of phase, not in lockstep. */
+.work-featured .bf-nav .bf-navbtn:last-child::after {
+  animation-delay: 1.8s;
+}
+.work-featured .bf-navbtn:hover {
+  color: var(--foot-accent, var(--fg));
+  border-color: color-mix(in oklab, var(--foot-accent, var(--fg-mute)) 55%, transparent);
+  background: color-mix(in oklab, var(--foot-accent, transparent) 9%, transparent);
+  box-shadow: 0 0 18px -5px color-mix(in oklab, var(--foot-accent, transparent) 65%, transparent);
+}
+.work-featured .bf-navbtn:active {
+  transform: scale(0.92);
+}
+.work-featured .bf-navbtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* filters */
+.work-featured .bf-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.work-featured .bf-filter {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-soft);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.work-featured .bf-filter:hover {
+  color: var(--fg);
+  border-color: var(--hairline);
+}
+.work-featured .bf-filter.on {
+  color: #07080b;
+  background: var(--fg);
+  border-color: var(--fg);
+}
+
+/* content-swap keyframe — top-level so Tailwind v4 emits it (referenced via a
+   plain class, not animate-[var(...)]); the reduced-motion clamp freezes it. */
+@keyframes bf-swap {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* ---- responsive ---- */
+@media (max-width: 980px) {
+  .work-featured .prod-grid {
+    grid-template-columns: 1fr;
+  }
+  .work-featured .prod-vis {
+    height: clamp(130px, 30vw, 190px);
+  }
+}
+@media (max-width: 560px) {
+  .work-featured .prod-feat-foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Archive-indexing entrance (Work). The grid toggles `.is-on` once it scrolls
+   into view (useInView in components/sections/Projects.tsx). The featured plate
+   "develops" — its hue glow ignites (::before flare), the grid overlay draws in
+   left→right (::after clip sweep), and the ghost number flickers up — while the
+   panel rises and its top/foot rows cascade. The index then "prints": head +
+   filters fade, each numbered row slides in from the right with its accent dot
+   firing one-per-row (wk-dot-flash), and the counter foot rises last. The
+   selected project's dot leads — it fades in just ahead of the row stagger and
+   STAYS lit (wk-dot-on), so it sits on screen alongside each one-shot dot as it
+   fires. Same scaffold as `.skills-reveal`:
+   reuses sk-rise / sk-fade, all gated by prefers-reduced-motion so reduced-motion
+   (and no-JS) users get fully-visible static content. Keyframes are referenced by
+   real selectors (not `animate-[var(...)]`) so Tailwind v4 won't tree-shake them.
+   `.prod-swap` is deliberately untouched — it keeps its own `bf-swap` for the
+   per-selection content swap. The `.prod-item` cascade is triggered by `.is-on`,
+   so it plays once on first reveal (all rows mounted up front); on later filter
+   changes React only mounts the newly-shown rows, which then print in fresh. */
+@media (prefers-reduced-motion: no-preference) {
+  /* hidden pre-state */
+  .work-reveal .prod-feat,
+  .work-reveal .prod-feat-top,
+  .work-reveal .prod-feat-foot,
+  .work-reveal .prod-index-head,
+  .work-reveal .bf-filter,
+  .work-reveal .prod-index-foot,
+  .work-reveal .prod-item,
+  .work-reveal .prod-vis-no {
+    opacity: 0;
+  }
+  .work-reveal .prod-feat {
+    transform: translateY(16px);
+  }
+  .work-reveal .prod-item {
+    transform: translateX(14px);
+  }
+  /* each filter chip enters individually (quick one-after-another stagger). */
+  .work-reveal .bf-filter {
+    transform: translateY(8px);
+  }
+  /* hue ignition flare — the ::before is unused (::after is the grid overlay);
+     --f-accent is inherited from the inline style on .prod-feat. */
+  .work-reveal .prod-vis::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      circle at 28% 24%,
+      color-mix(in oklab, var(--f-accent) 60%, transparent) 0%,
+      transparent 60%
+    );
+  }
+  /* grid draws in left→right; clip-path leaves the base radial mask intact. */
+  .work-reveal .prod-vis::after {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  /* revealed state — keyframe ANIMATIONS (not transitions) so they fire on
+     class-add even when the grid mounts already in view. */
+  .work-reveal.is-on .prod-feat {
+    animation: sk-rise 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .work-reveal.is-on .prod-vis::before {
+    animation: wk-ignite 1700ms ease-out 250ms forwards;
+  }
+  .work-reveal.is-on .prod-vis::after {
+    animation: wk-grid-draw 1300ms cubic-bezier(0.16, 1, 0.3, 1) 350ms forwards;
+  }
+  .work-reveal.is-on .prod-vis-no {
+    animation: wk-flicker 1100ms ease 650ms both;
+  }
+  .work-reveal.is-on .prod-feat-top {
+    animation: sk-rise 800ms cubic-bezier(0.16, 1, 0.3, 1) 500ms both;
+  }
+  .work-reveal.is-on .prod-feat-foot {
+    animation: sk-rise 800ms cubic-bezier(0.16, 1, 0.3, 1) 1150ms both;
+  }
+  .work-reveal.is-on .prod-index-head {
+    animation: sk-fade 750ms ease 550ms both;
+  }
+  .work-reveal.is-on .bf-filter {
+    animation: wk-chip-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* quick one-after-another chip stagger (100ms apart), starting once the index
+     head has settled. Covers the five filters (All / Case / Project / 2026 / 2025). */
+  .work-reveal.is-on .bf-filter:nth-child(1) {
+    animation-delay: 800ms;
+  }
+  .work-reveal.is-on .bf-filter:nth-child(2) {
+    animation-delay: 900ms;
+  }
+  .work-reveal.is-on .bf-filter:nth-child(3) {
+    animation-delay: 1000ms;
+  }
+  .work-reveal.is-on .bf-filter:nth-child(4) {
+    animation-delay: 1100ms;
+  }
+  .work-reveal.is-on .bf-filter:nth-child(5) {
+    animation-delay: 1200ms;
+  }
+  .work-reveal.is-on .prod-index-foot {
+    animation: sk-rise 750ms cubic-bezier(0.16, 1, 0.3, 1) 3300ms both;
+  }
+  .work-reveal.is-on .prod-item {
+    animation: wk-row-in 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* every dot flashes once as its row prints — one-per-row, staggered via the
+     per-row delays below (each dot shares its row's delay). NO fill-mode, so a
+     flashed dot reverts to its base opacity afterward (0 unselected). The
+     SELECTED dot is overridden separately (after the delay block) to lead the
+     sequence + persist, so it sits on screen alongside each firing dot. */
+  .work-reveal.is-on .prod-item .prod-item-dot {
+    animation: wk-dot-flash 850ms ease;
+  }
+
+  /* per-row print stagger — the row and its dot share each delay so the dot
+     fires as the row prints. Starts after the last filter chip has faded in
+     (~1560ms), so the index list builds once the filter bar is complete. Covers
+     up to 8 rows (the index holds 7). */
+  .work-reveal.is-on .prod-item:nth-child(1),
+  .work-reveal.is-on .prod-item:nth-child(1) .prod-item-dot {
+    animation-delay: 1600ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(2),
+  .work-reveal.is-on .prod-item:nth-child(2) .prod-item-dot {
+    animation-delay: 1790ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(3),
+  .work-reveal.is-on .prod-item:nth-child(3) .prod-item-dot {
+    animation-delay: 1980ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(4),
+  .work-reveal.is-on .prod-item:nth-child(4) .prod-item-dot {
+    animation-delay: 2170ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(5),
+  .work-reveal.is-on .prod-item:nth-child(5) .prod-item-dot {
+    animation-delay: 2360ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(6),
+  .work-reveal.is-on .prod-item:nth-child(6) .prod-item-dot {
+    animation-delay: 2550ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(7),
+  .work-reveal.is-on .prod-item:nth-child(7) .prod-item-dot {
+    animation-delay: 2740ms;
+  }
+  .work-reveal.is-on .prod-item:nth-child(8),
+  .work-reveal.is-on .prod-item:nth-child(8) .prod-item-dot {
+    animation-delay: 2930ms;
+  }
+
+  /* SELECTED dot leads + persists. Declared after the per-row block so its
+     early delay wins at equal specificity, overriding both its row's flash and
+     that row's stagger delay: it fades in just before the rows print and holds
+     lit (`forwards`, ending at the resting .sel state) — so while each other
+     row fires its one-shot dot, the selected dot is already on screen. */
+  .work-reveal.is-on .prod-item.sel .prod-item-dot {
+    animation: wk-dot-on 650ms ease 1450ms forwards;
+  }
+}
+
+/* Work-entrance keyframes — top-level so Tailwind v4 emits them (referenced via
+   real selectors above). sk-rise / sk-fade are reused from the Skills reveal. */
+@keyframes wk-ignite {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  35% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+@keyframes wk-grid-draw {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 0.5;
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes wk-flicker {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  32% {
+    opacity: 0.12;
+  }
+  48% {
+    opacity: 0.8;
+  }
+  64% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes wk-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes wk-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Per-row dot flash — fades up to its accent (with glow) then back out as the
+   row prints; no fill, so it reverts to base opacity. (--i-accent is inherited
+   from each .prod-item's inline style.) */
+@keyframes wk-dot-flash {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+    box-shadow: 0 0 12px 2px var(--i-accent);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* Selected dot — fades in and stays at the resting .sel state (opacity 1 +
+   accent glow), held by `forwards` on the rule above. */
+@keyframes wk-dot-on {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--i-accent);
   }
 }

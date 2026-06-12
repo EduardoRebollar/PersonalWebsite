@@ -56,6 +56,19 @@ export type Project = {
   year: number;
   tier: ProjectTier;
   tech: string[];
+  /**
+   * Per-project accent (hex) + its oklch `hue`. Drive the Work section's
+   * featured-panel recolor (badge, dot, tints, CTA, glow) when this build is
+   * selected. `hue` feeds the `tint()` helper in Projects.tsx.
+   */
+  accent: string;
+  hue: number;
+  /** Short role/meta line shown beside the year, e.g. 'Full-stack · game design'. */
+  role: string;
+  /** Three honest highlight bullets shown in the featured panel. */
+  highlights: string[];
+  /** Abbreviated display name for the index list when `title` is long. */
+  short?: string;
   cover?: {
     src: string;
     alt: string;
@@ -65,6 +78,8 @@ export type Project = {
     live?: string;
     repo?: string;
     demo?: string;
+    /** Paper / report PDF (served from /public/projects/<slug>/…). */
+    paper?: string;
   };
   challenges?: string[];
   featured?: boolean;
