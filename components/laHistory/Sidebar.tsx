@@ -16,7 +16,13 @@ import type { Location } from '@/types/laHistory';
 const RING_CIRCUMFERENCE = 125.7; // 2πr, r = 20
 const TOTAL_LOCATIONS = locations.length;
 
-export function Sidebar({ collapsed }: { collapsed: boolean }) {
+export function Sidebar({
+  collapsed,
+  onOpenConceptMap,
+}: {
+  collapsed: boolean;
+  onOpenConceptMap: (eraOrder: number) => void;
+}) {
   const points = useLaHistoryStore((s) => s.points);
   const visited = useLaHistoryStore((s) => s.visited);
   const quizPasses = useLaHistoryStore((s) => s.quizPasses);
@@ -116,8 +122,39 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                 ) : (
                   <div className="era-unlock-hint">{unlockHint(era.order)}</div>
                 )}
-                {/* The per-era "Concept Map" trigger button is added in Step 4,
-                    alongside the concept-map overlay + concept_map.css port. */}
+
+                {(() => {
+                  const submitted = !!conceptMaps[era.order]?.submitted;
+                  if (!unlocked) {
+                    return (
+                      <button
+                        type="button"
+                        className={cn(
+                          'cm-era-trigger-btn',
+                          `era-${era.key}`,
+                          'cm-btn-locked',
+                        )}
+                        disabled
+                        title="Complete the previous era to unlock"
+                      >
+                        🔒 Concept Map
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      className={cn(
+                        'cm-era-trigger-btn',
+                        `era-${era.key}`,
+                        submitted && 'cm-btn-submitted',
+                      )}
+                      onClick={() => onOpenConceptMap(era.order)}
+                    >
+                      {submitted ? '✅ Concept Map' : '🗺 Concept Map'}
+                    </button>
+                  );
+                })()}
               </div>
             );
           })}

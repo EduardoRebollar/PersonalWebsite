@@ -3,17 +3,19 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import type { ElementDefinition } from 'cytoscape';
 import type { ConceptMapGraph } from '@/types/laHistory';
+import type { CyApi } from './ConceptMapInner';
 
 type InnerProps = {
   graph: ConceptMapGraph;
   locked: boolean;
-  selectedId: string | null;
-  connectFromId: string | null;
+  pendingSourceId: string | null;
   accentColor: string;
-  onSelect: (id: string | null, kind: 'node' | 'edge' | null) => void;
-  onConnectFromCleared: () => void;
-  onCreateEdge: (sourceId: string, targetId: string) => void;
+  isDark: boolean;
+  onNodeTap: (id: string, pos: { x: number; y: number }) => void;
+  onEdgeTap: (id: string, pos: { x: number; y: number }) => void;
+  onBackgroundTap: () => void;
   onCommitPositions: (elements: ElementDefinition[]) => void;
+  onApiReady: (api: CyApi | null) => void;
 };
 
 export function ConceptMapCanvas(props: InnerProps) {
@@ -32,10 +34,8 @@ export function ConceptMapCanvas(props: InnerProps) {
 
   if (!Inner) {
     return (
-      <div className="grid h-full place-items-center bg-base">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-fg-mute uppercase">
-          Loading concept-map editor…
-        </p>
+      <div className="cm-empty-state">
+        <div className="cm-empty-state-text">Loading concept-map editor…</div>
       </div>
     );
   }

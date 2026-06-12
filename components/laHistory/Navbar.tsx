@@ -11,10 +11,6 @@ import type { ViewKey } from './LaHistoryApp';
 
 const VIEWS: { key: ViewKey; label: string }[] = [
   { key: 'map', label: 'Map' },
-  // NOTE: the original navbar has only Map + Dashboard; the concept map opens
-  // as a full-screen overlay. This temporary link keeps it reachable until
-  // Step 4 converts it to an overlay launched from the dashboard.
-  { key: 'concept-map', label: 'Concept Map' },
   { key: 'dashboard', label: 'Dashboard' },
 ];
 

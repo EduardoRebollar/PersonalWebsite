@@ -1,15 +1,11 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ElementDefinition } from 'cytoscape';
 
 import { cn } from '@/lib/cn';
 import { eras, eraByOrder } from '@/content/data/laHistory/eras';
+import { ERA_META } from '@/lib/laHistory/display';
 import {
   INSIGHT_MAX_USES,
   POINTS,
@@ -20,153 +16,116 @@ import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type {
   ConceptMapEvaluation,
   ConceptMapGraph,
+  EdgeAssessment,
+  Location,
 } from '@/types/laHistory';
 import { ConceptMapCanvas } from './ConceptMapCanvas';
 import { ConceptMapChat } from './ConceptMapChat';
+import type { CyApi } from './ConceptMapInner';
 
 const MIN_EDGES_TO_SUBMIT = 3;
 const HISTORY_LIMIT = 30;
 
-type EvaluateResponse = {
-  evaluation?: {
-    edgeFeedback: ConceptMapEvaluation['edgeFeedback'];
-    overallComment: string;
-    followUpQuestion: string;
-    synthesisScore: number;
-  };
-  error?: string;
-  message?: string;
+type Pos = { x: number; y: number };
+type NodeData = {
+  id: string;
+  label?: string;
+  source?: string;
+  target?: string;
+  custom?: boolean;
+  cross_era?: boolean;
 };
 
 function nextId(prefix: 'n' | 'e'): string {
-  const r = Math.random().toString(36).slice(2, 9);
-  return `${prefix}_${Date.now().toString(36)}_${r}`;
+  return `${prefix}_${Date.now().toString(36)}_${Math.random()
+    .toString(36)
+    .slice(2, 9)}`;
 }
-
 function emptyGraph(): ConceptMapGraph {
   return { elements: [] };
 }
-
 function cloneGraph(g: ConceptMapGraph): ConceptMapGraph {
   return { elements: g.elements.map((e) => ({ ...e, data: { ...e.data } })) };
 }
-
-function findElement(
-  graph: ConceptMapGraph,
-  id: string,
-): ElementDefinition | undefined {
-  return graph.elements.find(
-    (el) => (el.data as { id?: string } | undefined)?.id === id,
-  );
+function dataOf(el: ElementDefinition): NodeData {
+  return (el.data ?? {}) as NodeData;
+}
+function isEdgeEl(el: ElementDefinition): boolean {
+  const d = dataOf(el);
+  return !!(d.source && d.target);
+}
+function shortLabel(s: string): string {
+  return s.length > 22 ? `${s.slice(0, 21)}…` : s;
+}
+function jitteredPosition(graph: ConceptMapGraph): Pos {
+  const ps = graph.elements
+    .map((el) => (el as { position?: Pos }).position)
+    .filter((p): p is Pos => !!p);
+  const cx = ps.length ? ps.reduce((a, p) => a + p.x, 0) / ps.length : 0;
+  const cy = ps.length ? ps.reduce((a, p) => a + p.y, 0) / ps.length : 0;
+  return { x: cx + (Math.random() - 0.5) * 120, y: cy + (Math.random() - 0.5) * 120 };
 }
 
-function isEdge(el: ElementDefinition): boolean {
-  const data = el.data as { source?: string; target?: string } | undefined;
-  return !!(data?.source && data?.target);
-}
+export function ConceptMapView({
+  eraOrder,
+  onClose,
+}: {
+  eraOrder: number;
+  onClose: () => void;
+}) {
+  const era = eraByOrder.get(eraOrder)!;
+  const meta = ERA_META[era.key];
 
-// Top-level shell. Holds only the active era. Editor is keyed on era so
-// switching eras tears down + re-mounts state cleanly with no resync effect.
-export function ConceptMapView() {
-  const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
-  const quizPasses = useLaHistoryStore((s) => s.quizPasses);
-
-  const initialEra = useMemo(() => {
-    for (const era of eras) {
-      if (
-        isEraUnlocked(era.order, { quizPasses, conceptMaps }) &&
-        !conceptMaps[era.order]?.submitted
-      ) {
-        return era.order;
-      }
-    }
-    return 1;
-  }, [quizPasses, conceptMaps]);
-  const [eraOrder, setEraOrder] = useState<number>(initialEra);
-
-  return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-hairline px-4 py-2 sm:px-6">
-        <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-          Era
-        </p>
-        {eras.map((e) => {
-          const unlocked = isEraUnlocked(e.order, { quizPasses, conceptMaps });
-          const submitted = !!conceptMaps[e.order]?.submitted;
-          const active = e.order === eraOrder;
-          return (
-            <button
-              key={e.order}
-              type="button"
-              disabled={!unlocked}
-              onClick={() => setEraOrder(e.order)}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'rounded-full border px-3 py-1 font-mono text-[10px] tracking-[0.14em] uppercase transition-colors',
-                active
-                  ? 'border-accent text-accent'
-                  : 'border-hairline text-fg-mute hover:border-fg-mute hover:text-fg',
-                !unlocked && 'opacity-40',
-              )}
-              style={
-                active
-                  ? { borderColor: e.accentColor, color: e.accentColor }
-                  : undefined
-              }
-            >
-              {e.shortLabel}
-              {submitted ? ' ✓' : ''}
-            </button>
-          );
-        })}
-      </div>
-      <ConceptMapEditor key={eraOrder} eraOrder={eraOrder} />
-    </div>
-  );
-}
-
-function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
   const conceptMap = useLaHistoryStore((s) => s.conceptMaps[eraOrder]);
   const points = useLaHistoryStore((s) => s.points);
+  const visited = useLaHistoryStore((s) => s.visited);
+  const quizPasses = useLaHistoryStore((s) => s.quizPasses);
+  const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
   const saveConceptMap = useLaHistoryStore((s) => s.saveConceptMap);
   const chargeInsight = useLaHistoryStore((s) => s.chargeInsight);
   const submitConceptMap = useLaHistoryStore((s) => s.submitConceptMap);
 
-  const era = eraByOrder.get(eraOrder)!;
   const locked = conceptMap?.submitted === true;
-  const eraLocations = useMemo(() => locationsInEra(eraOrder), [eraOrder]);
 
   const [graph, setGraph] = useState<ConceptMapGraph>(
     () => conceptMap?.graph ?? emptyGraph(),
   );
-  const [pastStack, setPastStack] = useState<ConceptMapGraph[]>([]);
-  const [futureStack, setFutureStack] = useState<ConceptMapGraph[]>([]);
-  const [selectedId, setSelected] = useState<string | null>(null);
-  const [selectedKind, setSelectedKind] = useState<
-    'node' | 'edge' | null
+  // Undo/redo history — read only through the setters' callback args
+  // (no toolbar buttons; Ctrl+Z / Ctrl+Shift+Z drive it, like the original).
+  const [, setPastStack] = useState<ConceptMapGraph[]>([]);
+  const [, setFutureStack] = useState<ConceptMapGraph[]>([]);
+
+  const [pendingSource, setPendingSource] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<
+    { pos: Pos; kind: 'node' | 'edge'; id: string } | null
   >(null);
-  const [connectFromId, setConnectFromId] = useState<string | null>(null);
-  const [labelEditor, setLabelEditor] = useState<
-    { id: string; kind: 'node' | 'edge'; value: string } | null
+  const [edgePopup, setEdgePopup] = useState<
+    { pos: Pos; source: string; target: string; editingEdgeId?: string; value: string }
+    | null
   >(null);
-  const [customNodeDraft, setCustomNodeDraft] = useState('');
+  const [crossEraOpen, setCrossEraOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customDraft, setCustomDraft] = useState('');
+
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightText, setInsightText] = useState<string | null>(null);
-  const [insightError, setInsightError] = useState<string | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
 
-  const insightUsesLeft =
-    INSIGHT_MAX_USES - (conceptMap?.insightUses ?? 0);
-  const edgeCount = graph.elements.filter(isEdge).length;
+  const apiRef = useRef<CyApi | null>(null);
+
+  const insightUsesLeft = INSIGHT_MAX_USES - (conceptMap?.insightUses ?? 0);
+  const edgeCount = graph.elements.filter(isEdgeEl).length;
   const nodeCount = graph.elements.length - edgeCount;
+  const onCanvas = useMemo(
+    () => new Set(graph.elements.map((e) => dataOf(e).id)),
+    [graph],
+  );
 
   const commit = useCallback(
     (next: ConceptMapGraph) => {
-      setPastStack((prev) =>
-        [...prev, cloneGraph(graph)].slice(-HISTORY_LIMIT),
-      );
+      setPastStack((p) => [...p, cloneGraph(graph)].slice(-HISTORY_LIMIT));
       setFutureStack([]);
       setGraph(next);
       saveConceptMap(eraOrder, next);
@@ -174,91 +133,109 @@ function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
     [graph, saveConceptMap, eraOrder],
   );
 
-  const addNode = useCallback(
-    (label: string) => {
-      const trimmed = label.trim();
-      if (!trimmed) return;
-      const id = nextId('n');
-      const next: ConceptMapGraph = {
+  const addLocationNode = useCallback(
+    (loc: Location, crossEra = false) => {
+      const id = `loc-${loc.id}`;
+      if (graph.elements.some((e) => dataOf(e).id === id)) return;
+      const color = ERA_META[loc.era].color;
+      commit({
         elements: [
           ...graph.elements,
           {
-            data: { id, label: trimmed },
+            data: {
+              id,
+              label: loc.name,
+              shortLabel: shortLabel(loc.name),
+              color,
+              borderColor: color,
+              ...(crossEra ? { cross_era: true } : {}),
+            },
             position: jitteredPosition(graph),
           },
         ],
-      };
-      commit(next);
-      setSelected(id);
-      setSelectedKind('node');
+      });
+    },
+    [graph, commit],
+  );
+
+  const addCustomNode = useCallback(
+    (label: string) => {
+      const t = label.trim();
+      if (!t) return;
+      commit({
+        elements: [
+          ...graph.elements,
+          {
+            data: {
+              id: nextId('n'),
+              label: t,
+              shortLabel: shortLabel(t),
+              custom: true,
+              color: '#7c4daf',
+              borderColor: '#a070d0',
+            },
+            position: jitteredPosition(graph),
+          },
+        ],
+      });
     },
     [graph, commit],
   );
 
   const addEdge = useCallback(
-    (sourceId: string, targetId: string) => {
-      if (sourceId === targetId) return;
-      const exists = graph.elements.some((el) => {
-        const d = el.data as
-          | { source?: string; target?: string }
-          | undefined;
-        return d?.source === sourceId && d?.target === targetId;
-      });
-      if (exists) {
-        setSelected(null);
+    (source: string, target: string, label: string) => {
+      if (source === target) return;
+      if (
+        graph.elements.some((e) => {
+          const d = dataOf(e);
+          return d.source === source && d.target === target;
+        })
+      ) {
         return;
       }
-      const id = nextId('e');
-      const next: ConceptMapGraph = {
+      commit({
         elements: [
           ...graph.elements,
-          { data: { id, source: sourceId, target: targetId, label: '' } },
+          { data: { id: nextId('e'), source, target, label } },
         ],
-      };
-      commit(next);
-      setSelected(id);
-      setSelectedKind('edge');
-      setLabelEditor({ id, kind: 'edge', value: '' });
+      });
     },
     [graph, commit],
   );
 
   const updateLabel = useCallback(
     (id: string, value: string) => {
-      const next: ConceptMapGraph = {
-        elements: graph.elements.map((el) => {
-          const d = el.data as { id?: string } | undefined;
-          if (d?.id !== id) return el;
-          return { ...el, data: { ...el.data, label: value } };
-        }),
-      };
-      commit(next);
+      commit({
+        elements: graph.elements.map((el) =>
+          dataOf(el).id === id
+            ? { ...el, data: { ...el.data, label: value } }
+            : el,
+        ),
+      });
     },
     [graph, commit],
   );
 
-  const removeSelected = useCallback(() => {
-    if (!selectedId) return;
-    const next: ConceptMapGraph = {
-      elements: graph.elements.filter((el) => {
-        const d = el.data as
-          | { id?: string; source?: string; target?: string }
-          | undefined;
-        if (d?.id === selectedId) return false;
-        if (
-          selectedKind === 'node' &&
-          (d?.source === selectedId || d?.target === selectedId)
-        ) {
-          return false;
-        }
-        return true;
-      }),
-    };
-    commit(next);
-    setSelected(null);
-    setSelectedKind(null);
-    setLabelEditor(null);
-  }, [graph, commit, selectedId, selectedKind]);
+  const removeNode = useCallback(
+    (id: string) => {
+      commit({
+        elements: graph.elements.filter((el) => {
+          const d = dataOf(el);
+          return d.id !== id && d.source !== id && d.target !== id;
+        }),
+      });
+    },
+    [graph, commit],
+  );
+
+  const removeEdge = useCallback(
+    (id: string) => {
+      commit({
+        elements: graph.elements.filter((el) => dataOf(el).id !== id),
+      });
+    },
+    [graph, commit],
+  );
 
   const undo = useCallback(() => {
     setPastStack((past) => {
@@ -284,55 +261,83 @@ function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
 
   const commitPositions = useCallback(
     (elements: ElementDefinition[]) => {
-      const next: ConceptMapGraph = { elements };
+      const next = { elements };
       setGraph(next);
       saveConceptMap(eraOrder, next);
     },
     [saveConceptMap, eraOrder],
   );
 
+  function clearOverlays() {
+    setContextMenu(null);
+    setEdgePopup(null);
+  }
+
+  const onNodeTap = useCallback(
+    (id: string, pos: Pos) => {
+      setEdgePopup(null);
+      if (!pendingSource) {
+        setContextMenu({ pos, kind: 'node', id });
+      } else if (pendingSource === id) {
+        setPendingSource(null);
+        setContextMenu(null);
+      } else {
+        setContextMenu(null);
+        setEdgePopup({ pos, source: pendingSource, target: id, value: '' });
+      }
+    },
+    [pendingSource],
+  );
+
+  const onEdgeTap = useCallback((id: string, pos: Pos) => {
+    setEdgePopup(null);
+    setContextMenu({ pos, kind: 'edge', id });
+  }, []);
+
+  const onBackgroundTap = useCallback(() => {
+    setPendingSource(null);
+    clearOverlays();
+  }, []);
+
+  // Keyboard: undo/redo/escape.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
-      ) {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
+        if (e.key === 'Escape') (t as HTMLElement).blur();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (contextMenu || edgePopup || pendingSource) {
+          setPendingSource(null);
+          clearOverlays();
+        } else if (crossEraOpen || customOpen) {
+          setCrossEraOpen(false);
+          setCustomOpen(false);
+        } else {
+          onClose();
+        }
         return;
       }
       if (locked) return;
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
-        e.preventDefault();
-        removeSelected();
-        return;
-      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
-        return;
-      }
-      if (e.key === 'Escape') {
-        setSelected(null);
-        setSelectedKind(null);
-        setConnectFromId(null);
-        setLabelEditor(null);
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedId, locked, removeSelected, undo, redo]);
+  }, [contextMenu, edgePopup, pendingSource, crossEraOpen, customOpen, locked, undo, redo, onClose]);
 
   async function fetchInsight() {
-    setInsightError(null);
+    setStatusMsg(null);
     if (insightUsesLeft <= 0) {
-      setInsightError('No insight uses remaining for this era.');
+      setStatusMsg('No insight uses remaining for this era.');
       return;
     }
     if (points < POINTS.insight) {
-      setInsightError(`Need ${POINTS.insight} pts for an insight.`);
+      setStatusMsg(`Need ${POINTS.insight} pts for a hint.`);
       return;
     }
     setInsightLoading(true);
@@ -343,37 +348,35 @@ function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
         body: JSON.stringify({ eraOrder, graph }),
       });
       if (!res.ok) {
-        setInsightError('Couldn’t fetch an insight. Try again in a moment.');
+        setStatusMsg('Couldn’t fetch a hint. Try again in a moment.');
         return;
       }
       const data = (await res.json()) as { insight?: string };
       if (!data.insight) {
-        setInsightError('Insight service returned an empty response.');
+        setStatusMsg('The hint service returned an empty response.');
         return;
       }
       const charge = chargeInsight(eraOrder);
       if (!charge.ok) {
-        setInsightError(
+        setStatusMsg(
           charge.reason === 'no_uses_left'
             ? 'No insight uses remaining.'
-            : `Need ${POINTS.insight} pts for an insight.`,
+            : `Need ${POINTS.insight} pts for a hint.`,
         );
         return;
       }
       setInsightText(data.insight);
     } catch {
-      setInsightError('Network error fetching insight.');
+      setStatusMsg('Network error fetching hint.');
     } finally {
       setInsightLoading(false);
     }
   }
 
   async function submit() {
-    setSubmitError(null);
+    setStatusMsg(null);
     if (edgeCount < MIN_EDGES_TO_SUBMIT) {
-      setSubmitError(
-        `Add at least ${MIN_EDGES_TO_SUBMIT} edges before submitting.`,
-      );
+      setStatusMsg(`Add at least ${MIN_EDGES_TO_SUBMIT} connections before submitting.`);
       return;
     }
     setSubmitLoading(true);
@@ -383,11 +386,17 @@ function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ eraOrder, graph }),
       });
-      const data = (await res.json()) as EvaluateResponse;
+      const data = (await res.json()) as {
+        evaluation?: {
+          edgeFeedback: ConceptMapEvaluation['edgeFeedback'];
+          overallComment: string;
+          followUpQuestion: string;
+          synthesisScore: number;
+        };
+        message?: string;
+      };
       if (!res.ok || !data.evaluation) {
-        setSubmitError(
-          data.message ?? 'The evaluator couldn’t grade your map. Try again.',
-        );
+        setStatusMsg(data.message ?? 'The evaluator couldn’t grade your map. Try again.');
         return;
       }
       submitConceptMap(eraOrder, {
@@ -399,473 +408,692 @@ function ConceptMapEditor({ eraOrder }: { eraOrder: number }) {
         evaluatedAt: 0,
       });
     } catch {
-      setSubmitError('Network error submitting your map.');
+      setStatusMsg('Network error submitting your map.');
     } finally {
       setSubmitLoading(false);
     }
   }
 
-  return (
-    <>
-      <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-hairline p-4 sm:flex">
-          <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-            {era.shortLabel} locations
-          </p>
-          <ul className="mt-2 flex flex-col gap-1.5 overflow-y-auto">
-            {eraLocations.map((loc) => (
-              <li key={loc.id}>
-                <button
-                  type="button"
-                  disabled={locked}
-                  onClick={() => addNode(loc.name)}
-                  className="w-full rounded-lg border border-hairline px-2 py-1.5 text-left text-xs text-fg transition-colors enabled:hover:border-fg-mute disabled:opacity-50"
-                >
-                  + {loc.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4">
-            <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-              Custom node
-            </p>
-            <form
-              className="mt-2 flex gap-1.5"
-              onSubmit={(e) => {
-                e.preventDefault();
-                addNode(customNodeDraft);
-                setCustomNodeDraft('');
-              }}
-            >
-              <input
-                value={customNodeDraft}
-                onChange={(e) => setCustomNodeDraft(e.target.value)}
-                disabled={locked}
-                placeholder="theme, event…"
-                className="min-w-0 flex-1 rounded-md border border-hairline bg-base px-2 py-1.5 text-xs text-fg placeholder-fg-mute outline-none focus-visible:border-accent disabled:opacity-50"
-                aria-label="Custom node label"
-              />
-              <button
-                type="submit"
-                disabled={locked || !customNodeDraft.trim()}
-                className="rounded-md border border-hairline px-2 py-1 font-mono text-[10px] tracking-[0.14em] text-fg uppercase enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
-              >
-                Add
-              </button>
-            </form>
-          </div>
-        </aside>
-
-        <div className="relative flex-1">
-          <ConceptMapCanvas
-            graph={graph}
-            locked={locked}
-            selectedId={selectedId}
-            connectFromId={connectFromId}
-            accentColor={era.accentColor}
-            onSelect={(id, kind) => {
-              setSelected(id);
-              setSelectedKind(kind);
-              if (kind !== 'node' && connectFromId) setConnectFromId(null);
-            }}
-            onConnectFromCleared={() => setConnectFromId(null)}
-            onCreateEdge={(s, t) => addEdge(s, t)}
-            onCommitPositions={commitPositions}
-          />
-
-          {graph.elements.length === 0 ? (
-            <div className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center">
-              <p className="max-w-sm text-sm text-fg-mute">
-                Pick a location from the left to drop your first node, then
-                drag nodes apart and click{' '}
-                <span className="text-fg">Connect</span> to draw relationships
-                between them.
-              </p>
-            </div>
-          ) : null}
-
-          {insightText ? (
-            <div className="pointer-events-auto absolute bottom-4 left-1/2 z-10 w-[min(28rem,90vw)] -translate-x-1/2 rounded-xl border border-glow/40 bg-base/95 p-4 text-sm leading-relaxed text-fg shadow-2xl backdrop-blur-md">
-              <p className="font-mono text-[10px] tracking-[0.18em] text-glow uppercase">
-                Insight
-              </p>
-              <p className="mt-1">{insightText}</p>
-              <button
-                type="button"
-                onClick={() => setInsightText(null)}
-                className="mt-3 font-mono text-[10px] tracking-[0.14em] text-fg-mute uppercase hover:text-fg"
-              >
-                Dismiss
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        <aside className="hidden w-72 shrink-0 flex-col border-l border-hairline p-4 lg:flex">
-          {locked && conceptMap?.evaluation ? (
-            <EvaluationPanel
-              evaluation={conceptMap.evaluation}
-              accent={era.accentColor}
-            />
-          ) : selectedId && selectedKind ? (
-            <SelectionEditor
-              key={selectedId}
-              graph={graph}
-              selectedId={selectedId}
-              selectedKind={selectedKind}
-              labelEditor={labelEditor}
-              setLabelEditor={setLabelEditor}
-              onUpdateLabel={updateLabel}
-              onRemove={removeSelected}
-              connectFromId={connectFromId}
-              onStartConnect={() => setConnectFromId(selectedId)}
-              onCancelConnect={() => setConnectFromId(null)}
-              locked={locked}
-            />
-          ) : (
-            <HelpPanel
-              nodeCount={nodeCount}
-              insightUsesLeft={insightUsesLeft}
-            />
-          )}
-        </aside>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 border-t border-hairline px-4 py-3 sm:px-6">
-        <button
-          type="button"
-          onClick={undo}
-          disabled={pastStack.length === 0 || locked}
-          className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg uppercase enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
-        >
-          Undo
-        </button>
-        <button
-          type="button"
-          onClick={redo}
-          disabled={futureStack.length === 0 || locked}
-          className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg uppercase enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
-        >
-          Redo
-        </button>
-        <button
-          type="button"
-          onClick={fetchInsight}
-          disabled={insightLoading || locked || insightUsesLeft <= 0}
-          className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg uppercase enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
-        >
-          {insightLoading
-            ? 'Loading insight…'
-            : `Insight (−${POINTS.insight}, ${insightUsesLeft}/${INSIGHT_MAX_USES})`}
-        </button>
-        <button
-          type="button"
-          onClick={() => setChatOpen(true)}
-          className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg uppercase hover:border-accent hover:text-accent"
-        >
-          Tutor chat
-        </button>
-
-        <span className="ml-auto font-mono text-[10px] tracking-[0.14em] text-fg-mute uppercase">
-          {nodeCount} nodes · {edgeCount} edges
-        </span>
-
-        {!locked ? (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={submitLoading || edgeCount < MIN_EDGES_TO_SUBMIT}
-            className="rounded-full border border-accent bg-accent/10 px-4 py-1.5 font-mono text-[11px] tracking-[0.14em] text-accent uppercase enabled:hover:bg-accent/20 disabled:opacity-40"
-          >
-            {submitLoading ? 'Grading…' : 'Submit map'}
-          </button>
-        ) : (
-          <span className="rounded-full border border-accent/40 px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-accent uppercase">
-            Submitted
-          </span>
-        )}
-      </div>
-
-      {insightError ? (
-        <p
-          role="status"
-          className="border-t border-warn/40 bg-warn/5 px-4 py-2 text-xs text-warn sm:px-6"
-        >
-          {insightError}
-        </p>
-      ) : null}
-      {submitError ? (
-        <p
-          role="status"
-          className="border-t border-warn/40 bg-warn/5 px-4 py-2 text-xs text-warn sm:px-6"
-        >
-          {submitError}
-        </p>
-      ) : null}
-
-      <ConceptMapChat
-        open={chatOpen}
-        eraOrder={eraOrder}
-        graph={graph}
-        onClose={() => setChatOpen(false)}
-      />
-    </>
-  );
-}
-
-function HelpPanel({
-  nodeCount,
-  insightUsesLeft,
-}: {
-  nodeCount: number;
-  insightUsesLeft: number;
-}) {
-  return (
-    <div>
-      <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-        Building
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-fg">
-        {nodeCount === 0
-          ? 'Drop a few locations from the palette to start.'
-          : 'Tap a node to select it, then tap Connect on the selected node to draw an edge to another node.'}
-      </p>
-      <p className="mt-3 text-xs text-fg-mute">
-        Submit at {MIN_EDGES_TO_SUBMIT} edges. {insightUsesLeft} insight
-        {insightUsesLeft === 1 ? '' : 's'} left.
-      </p>
-    </div>
-  );
-}
-
-function SelectionEditor({
-  graph,
-  selectedId,
-  selectedKind,
-  labelEditor,
-  setLabelEditor,
-  onUpdateLabel,
-  onRemove,
-  connectFromId,
-  onStartConnect,
-  onCancelConnect,
-  locked,
-}: {
-  graph: ConceptMapGraph;
-  selectedId: string;
-  selectedKind: 'node' | 'edge';
-  labelEditor: { id: string; kind: 'node' | 'edge'; value: string } | null;
-  setLabelEditor: (
-    v: { id: string; kind: 'node' | 'edge'; value: string } | null,
-  ) => void;
-  onUpdateLabel: (id: string, value: string) => void;
-  onRemove: () => void;
-  connectFromId: string | null;
-  onStartConnect: () => void;
-  onCancelConnect: () => void;
-  locked: boolean;
-}) {
-  const el = findElement(graph, selectedId);
-  const data = el?.data as
-    | { id?: string; label?: string; source?: string; target?: string }
-    | undefined;
-  const currentLabel = data?.label ?? '';
-  const editing = labelEditor?.id === selectedId;
-  const isSource = connectFromId === selectedId;
-
-  function commit() {
-    if (!labelEditor) return;
-    onUpdateLabel(labelEditor.id, labelEditor.value.trim());
-    setLabelEditor(null);
+  function flashSaved() {
+    saveConceptMap(eraOrder, graph);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1600);
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-        Selected {selectedKind}
-      </p>
-
-      {editing ? (
-        <textarea
-          value={labelEditor.value}
-          onChange={(e) =>
-            setLabelEditor({ ...labelEditor, value: e.target.value })
-          }
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              commit();
-            }
-          }}
-          autoFocus
-          rows={3}
-          placeholder={
-            selectedKind === 'edge'
-              ? 'How are these related?'
-              : 'Node label'
-          }
-          className="mt-2 w-full resize-none rounded-lg border border-accent bg-base px-3 py-2 text-sm text-fg outline-none"
-        />
-      ) : (
-        <p className="mt-2 break-words text-sm text-fg">
-          {currentLabel || (
-            <span className="text-fg-mute italic">No label</span>
-          )}
-        </p>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {editing ? (
-          <>
-            <button
-              type="button"
-              onClick={commit}
-              className="rounded-full border border-accent bg-accent/10 px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-accent uppercase hover:bg-accent/20"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => setLabelEditor(null)}
-              className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg-mute uppercase hover:text-fg"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            disabled={locked}
-            onClick={() =>
-              setLabelEditor({
-                id: selectedId,
-                kind: selectedKind,
-                value: currentLabel,
-              })
-            }
-            className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg uppercase enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-50"
-          >
-            Edit label
-          </button>
-        )}
-        {!editing && selectedKind === 'node' ? (
-          <button
-            type="button"
-            disabled={locked}
-            onClick={isSource ? onCancelConnect : onStartConnect}
-            className={cn(
-              'rounded-full border px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] uppercase transition-colors',
-              isSource
-                ? 'border-glow bg-glow/10 text-glow'
-                : 'border-hairline text-fg enabled:hover:border-accent enabled:hover:text-accent',
-              'disabled:opacity-50',
-            )}
-          >
-            {isSource ? 'Cancel connect' : 'Connect →'}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          disabled={locked}
-          onClick={onRemove}
-          className="ml-auto rounded-full border border-warn/40 px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-warn uppercase enabled:hover:bg-warn/10 disabled:opacity-40"
-        >
-          Delete
-        </button>
-      </div>
-
-      {isSource ? (
-        <p className="mt-3 text-xs text-glow">
-          Now tap another node to draw an edge from this one.
-        </p>
-      ) : null}
-    </div>
+  // Palette data.
+  const eraLocations = useMemo(() => locationsInEra(eraOrder), [eraOrder]);
+  const visitedEraLocs = useMemo(
+    () => eraLocations.filter((l) => visited[l.slug]),
+    [eraLocations, visited],
   );
-}
+  const crossEraLocs = useMemo(() => {
+    const out: Location[] = [];
+    for (const e of eras) {
+      if (e.order === eraOrder) continue;
+      if (!isEraUnlocked(e.order, { quizPasses, conceptMaps })) continue;
+      for (const l of locationsInEra(e.order)) {
+        if (visited[l.slug]) out.push(l);
+      }
+    }
+    return out;
+  }, [eraOrder, visited, quizPasses, conceptMaps]);
+  const customNodes = useMemo(
+    () =>
+      graph.elements
+        .filter((e) => !isEdgeEl(e) && dataOf(e).custom)
+        .map((e) => dataOf(e)),
+    [graph],
+  );
 
-function EvaluationPanel({
-  evaluation,
-  accent,
-}: {
-  evaluation: ConceptMapEvaluation;
-  accent: string;
-}) {
+  const evaluation = locked ? conceptMap?.evaluation : undefined;
+  const statusText = locked
+    ? 'Submitted ✓'
+    : graph.elements.length > 0
+      ? 'Draft saved'
+      : '';
+  const submitTooltip =
+    edgeCount < MIN_EDGES_TO_SUBMIT
+      ? `Add at least ${MIN_EDGES_TO_SUBMIT} connections to submit`
+      : '';
+
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-        Evaluation
-      </p>
-      <p className="mt-2 font-display text-3xl text-fg">
-        {evaluation.synthesisScore}
-        <span className="ml-1 align-top font-mono text-xs text-fg-mute">
-          /100
-        </span>
-      </p>
-      <p className="mt-1 text-xs text-fg-mute">
-        +{evaluation.pointsAwarded} pts
-      </p>
-
-      <p className="mt-4 text-sm leading-relaxed text-fg">
-        {evaluation.overallComment}
-      </p>
-
-      {evaluation.edgeFeedback.length > 0 ? (
-        <div className="mt-4">
-          <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-            Edges
-          </p>
-          <ul className="mt-2 space-y-2">
-            {evaluation.edgeFeedback.map((e, i) => (
-              <li
-                key={i}
-                className={cn(
-                  'rounded-lg border px-3 py-2 text-xs leading-relaxed',
-                  e.rating === 'strong' && 'border-accent/40 bg-accent/5',
-                  e.rating === 'partial' && 'border-glow/40 bg-glow/5',
-                  e.rating === 'weak' && 'border-warn/40 bg-warn/5',
-                )}
-                style={
-                  e.rating === 'strong'
-                    ? { borderColor: `${accent}66` }
-                    : undefined
-                }
-              >
-                <p className="font-mono text-[10px] tracking-[0.14em] text-fg-mute uppercase">
-                  {e.edgeLabel} · {e.rating}
-                </p>
-                <p className="mt-1 text-fg">{e.feedback}</p>
-              </li>
-            ))}
-          </ul>
+    <div
+      className="cm-overlay open"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Concept Map"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="cm-panel">
+        <div className="cm-panel-header">
+          <div className="cm-panel-title">
+            <span className="cm-panel-title-icon" aria-hidden>
+              🗺️
+            </span>
+            <span>Concept Map</span>
+            <span className="cm-era-pill" style={{ background: meta.color }}>
+              {era.name}
+            </span>
+          </div>
+          <div className="cm-header-actions">
+            <span className="cm-status">{statusText}</span>
+            <button
+              type="button"
+              className="cm-close-btn"
+              aria-label="Close concept map"
+              onClick={onClose}
+            >
+              ×
+            </button>
+          </div>
         </div>
-      ) : null}
 
-      <div className="mt-4 rounded-lg border border-hairline bg-base/40 p-3">
-        <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-          Follow-up question
-        </p>
-        <p className="mt-1 text-sm text-fg">{evaluation.followUpQuestion}</p>
+        <div className="cm-body">
+          {/* Palette */}
+          <aside className="cm-palette" aria-label="Location palette">
+            <div className="cm-palette-section cm-section--era">
+              <h4 className="cm-palette-heading">
+                <span className="cm-section-icon" aria-hidden>
+                  📍
+                </span>
+                Era Locations
+              </h4>
+              {visitedEraLocs.length === 0 ? (
+                <p className="cm-palette-empty">
+                  Visit locations on the map to add them here.
+                </p>
+              ) : (
+                visitedEraLocs.map((loc) => {
+                  const added = onCanvas.has(`loc-${loc.id}`);
+                  return (
+                    <div className="cm-palette-item" key={loc.id}>
+                      <span
+                        className="cm-palette-dot"
+                        style={{ background: ERA_META[loc.era].color }}
+                        aria-hidden
+                      />
+                      <span
+                        className={cn('cm-palette-item-name', added && 'on-map')}
+                        title={loc.name}
+                      >
+                        {loc.name}
+                      </span>
+                      <button
+                        type="button"
+                        className="cm-btn cm-btn-secondary cm-palette-add-btn"
+                        disabled={locked || added}
+                        onClick={() => addLocationNode(loc)}
+                        aria-label={`Add ${loc.name}`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="cm-palette-section cm-section--cross">
+              <h4 className="cm-palette-heading">
+                <span className="cm-section-icon" aria-hidden>
+                  🔗
+                </span>
+                Cross-Era
+              </h4>
+              <button
+                type="button"
+                className="cm-palette-action-btn cm-palette-action-btn--cross"
+                disabled={locked || crossEraLocs.length === 0}
+                onClick={() => setCrossEraOpen(true)}
+              >
+                <span className="cm-action-plus" aria-hidden>
+                  ＋
+                </span>
+                Add from another era
+              </button>
+            </div>
+
+            <div className="cm-palette-section cm-section--custom">
+              <h4 className="cm-palette-heading">
+                <span className="cm-section-icon" aria-hidden>
+                  ✦
+                </span>
+                Custom Nodes
+              </h4>
+              <button
+                type="button"
+                className="cm-palette-action-btn cm-palette-action-btn--custom"
+                disabled={locked}
+                onClick={() => setCustomOpen(true)}
+              >
+                <span className="cm-action-plus" aria-hidden>
+                  ＋
+                </span>
+                Create custom node
+              </button>
+              {customNodes.map((n) => (
+                <div className="cm-custom-palette-item" key={n.id}>
+                  <span className="cm-custom-palette-dot" aria-hidden />
+                  <span className="cm-custom-palette-name on-map" title={n.label}>
+                    {n.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="cm-instructions">
+              <strong>💡 Quick Start</strong>
+              <div className="cm-steps">
+                <div className="cm-step">
+                  <span className="cm-step-n">1</span>
+                  <span>
+                    Click <strong>+</strong> beside a location to add it
+                  </span>
+                </div>
+                <div className="cm-step">
+                  <span className="cm-step-n">2</span>
+                  <span>
+                    Click a node, then <strong>Start connection</strong>
+                  </span>
+                </div>
+                <div className="cm-step">
+                  <span className="cm-step-n">3</span>
+                  <span>Click the destination node</span>
+                </div>
+                <div className="cm-step">
+                  <span className="cm-step-n">4</span>
+                  <span>Describe the relationship, then add it</span>
+                </div>
+              </div>
+              <div className="cm-instructions-tip">
+                Click any edge to edit its label or delete it
+              </div>
+            </div>
+          </aside>
+
+          {/* Canvas */}
+          <div className={cn('cm-canvas-area', pendingSource && 'source-pending')}>
+            <ConceptMapCanvas
+              graph={graph}
+              locked={locked}
+              pendingSourceId={pendingSource}
+              accentColor={meta.color}
+              isDark={false}
+              onNodeTap={onNodeTap}
+              onEdgeTap={onEdgeTap}
+              onBackgroundTap={onBackgroundTap}
+              onCommitPositions={commitPositions}
+              onApiReady={(api) => {
+                apiRef.current = api;
+              }}
+            />
+
+            <div className={cn('cm-empty-state', graph.elements.length > 0 && 'hidden')}>
+              <div className="cm-empty-state-icon" aria-hidden>
+                🕸️
+              </div>
+              <div className="cm-empty-state-text">
+                Add locations from the sidebar to start building your concept
+                map
+              </div>
+            </div>
+
+            <div className="cm-zoom-controls">
+              <button
+                type="button"
+                className="cm-zoom-btn"
+                title="Zoom in"
+                aria-label="Zoom in"
+                onClick={() => apiRef.current?.zoomIn()}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="cm-zoom-btn"
+                title="Zoom out"
+                aria-label="Zoom out"
+                onClick={() => apiRef.current?.zoomOut()}
+              >
+                −
+              </button>
+            </div>
+
+            {insightText ? (
+              <div
+                className="cm-edge-popup visible"
+                style={{ left: 16, top: 16, width: 320 }}
+                role="status"
+              >
+                <span className="cm-edge-popup-label">💡 AI Hint</span>
+                <p style={{ fontSize: '0.83rem', lineHeight: 1.55, color: 'var(--text)' }}>
+                  {insightText}
+                </p>
+                <div className="cm-edge-popup-actions">
+                  <button
+                    type="button"
+                    className="cm-btn cm-btn-secondary"
+                    onClick={() => setInsightText(null)}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {contextMenu ? (
+              <div
+                className="cm-context-menu visible"
+                style={{ left: contextMenu.pos.x, top: contextMenu.pos.y }}
+                role="menu"
+              >
+                {contextMenu.kind === 'node' ? (
+                  <>
+                    <button
+                      type="button"
+                      className="cm-context-menu-item"
+                      onClick={() => {
+                        setPendingSource(contextMenu.id);
+                        setContextMenu(null);
+                      }}
+                    >
+                      🔗 Start connection from here
+                    </button>
+                    <div className="cm-context-menu-sep" />
+                    <button
+                      type="button"
+                      className="cm-context-menu-item danger"
+                      onClick={() => {
+                        removeNode(contextMenu.id);
+                        setContextMenu(null);
+                      }}
+                    >
+                      🗑️ Remove from map
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="cm-context-menu-item"
+                      onClick={() => {
+                        const edge = graph.elements.find(
+                          (e) => dataOf(e).id === contextMenu.id,
+                        );
+                        const d = edge ? dataOf(edge) : undefined;
+                        setContextMenu(null);
+                        if (d?.source && d?.target) {
+                          setEdgePopup({
+                            pos: contextMenu.pos,
+                            source: d.source,
+                            target: d.target,
+                            editingEdgeId: contextMenu.id,
+                            value: d.label ?? '',
+                          });
+                        }
+                      }}
+                    >
+                      Edit label
+                    </button>
+                    <div className="cm-context-menu-sep" />
+                    <button
+                      type="button"
+                      className="cm-context-menu-item danger"
+                      onClick={() => {
+                        removeEdge(contextMenu.id);
+                        setContextMenu(null);
+                      }}
+                    >
+                      Delete connection
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            {edgePopup ? (
+              <div
+                className="cm-edge-popup visible"
+                style={{ left: edgePopup.pos.x, top: edgePopup.pos.y }}
+              >
+                <label className="cm-edge-popup-label" htmlFor="cm-edge-label-input">
+                  Relationship label
+                </label>
+                <input
+                  id="cm-edge-label-input"
+                  type="text"
+                  value={edgePopup.value}
+                  onChange={(e) =>
+                    setEdgePopup((p) => (p ? { ...p, value: e.target.value } : p))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      confirmEdgePopup();
+                    }
+                  }}
+                  placeholder="e.g. both displaced by Mission system"
+                  maxLength={120}
+                  autoComplete="off"
+                  autoFocus
+                />
+                <div className="cm-edge-popup-actions">
+                  <button
+                    type="button"
+                    className="cm-btn cm-btn-secondary"
+                    onClick={() => {
+                      setEdgePopup(null);
+                      setPendingSource(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="cm-btn cm-btn-primary"
+                    onClick={confirmEdgePopup}
+                  >
+                    {edgePopup.editingEdgeId ? 'Save' : 'Add Connection'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Cross-era picker */}
+            <div className={cn('cm-cross-era-picker', crossEraOpen && 'visible')}>
+              <div className="cm-cross-era-picker-inner">
+                <div className="cm-cross-era-picker-header">
+                  <span>Add location from another era</span>
+                  <button
+                    type="button"
+                    className="cm-close-btn"
+                    aria-label="Close picker"
+                    onClick={() => setCrossEraOpen(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div id="cm-picker-list">
+                  {crossEraLocs.length === 0 ? (
+                    <p className="cm-picker-empty">
+                      No visited locations in other unlocked eras yet.
+                    </p>
+                  ) : (
+                    crossEraLocs.map((loc) => {
+                      const added = onCanvas.has(`loc-${loc.id}`);
+                      return (
+                        <div className="cm-picker-item" key={loc.id}>
+                          <span className={cn('cm-picker-era-badge', loc.era)}>
+                            {ERA_META[loc.era].label}
+                          </span>
+                          <span className="cm-picker-name">{loc.name}</span>
+                          <button
+                            type="button"
+                            className="cm-btn cm-btn-secondary cm-picker-add-btn"
+                            disabled={added}
+                            onClick={() => {
+                              addLocationNode(loc, true);
+                              setCrossEraOpen(false);
+                            }}
+                          >
+                            {added ? 'Added' : 'Add'}
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Custom node dialog */}
+            <div className={cn('cm-custom-node-dialog', customOpen && 'visible')}>
+              <div className="cm-custom-node-dialog-inner">
+                <div className="cm-cross-era-picker-header">
+                  <span>Add custom node</span>
+                  <button
+                    type="button"
+                    className="cm-close-btn"
+                    aria-label="Close"
+                    onClick={() => {
+                      setCustomOpen(false);
+                      setCustomDraft('');
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={{ padding: '14px 16px 16px' }}>
+                  <label className="cm-edge-popup-label" htmlFor="cm-custom-node-input">
+                    Node label
+                  </label>
+                  <input
+                    id="cm-custom-node-input"
+                    type="text"
+                    value={customDraft}
+                    onChange={(e) => setCustomDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomNode(customDraft);
+                        setCustomDraft('');
+                        setCustomOpen(false);
+                      }
+                    }}
+                    placeholder="e.g. Trade Routes, Disease, Religion…"
+                    maxLength={60}
+                    autoComplete="off"
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '8px 11px',
+                      border: '1.5px solid var(--border)',
+                      borderRadius: 8,
+                      fontSize: '0.85rem',
+                      background: 'var(--bg)',
+                      color: 'var(--text)',
+                      outline: 'none',
+                    }}
+                  />
+                  <div className="cm-edge-popup-actions" style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className="cm-btn cm-btn-secondary"
+                      onClick={() => {
+                        setCustomOpen(false);
+                        setCustomDraft('');
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="cm-btn cm-btn-primary"
+                      onClick={() => {
+                        addCustomNode(customDraft);
+                        setCustomDraft('');
+                        setCustomOpen(false);
+                      }}
+                    >
+                      Add Node
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tutor */}
+          <ConceptMapChat eraOrder={eraOrder} graph={graph} />
+        </div>
+
+        {/* AI feedback results */}
+        {evaluation ? (
+          <div className="cm-results-panel">
+            <div className="cm-results-header">
+              <div className="cm-results-header-title">
+                <span className="cm-results-header-icon" aria-hidden>
+                  ✨
+                </span>
+                <span>AI Feedback</span>
+              </div>
+              <span className="cm-synthesis-score">
+                {evaluation.synthesisScore}/100
+              </span>
+            </div>
+            <div className="cm-edge-feedback-list">
+              {evaluation.edgeFeedback.map((ef, i) => (
+                <EdgeFeedbackItem key={i} ef={ef} />
+              ))}
+            </div>
+            <div className="cm-results-overall">
+              <span className="cm-results-overall-icon" aria-hidden>
+                📝
+              </span>
+              <span>{evaluation.overallComment}</span>
+            </div>
+            {evaluation.followUpQuestion ? (
+              <div className="cm-results-follow-up">
+                <span className="cm-results-follow-up-icon" aria-hidden>
+                  ❓
+                </span>
+                <span>{evaluation.followUpQuestion}</span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Footer */}
+        <div className="cm-panel-footer">
+          <div className="cm-footer-left">
+            <span className="cm-edge-count">
+              {nodeCount} nodes · {edgeCount} connections
+            </span>
+            <span className={cn('cm-save-indicator', savedFlash && 'visible')}>
+              ✓ Saved
+            </span>
+            <button
+              type="button"
+              className="cm-btn cm-btn-secondary"
+              title="Fit all nodes in view"
+              onClick={() => apiRef.current?.fit()}
+            >
+              ⤢ Fit
+            </button>
+            <button
+              type="button"
+              className="cm-btn cm-btn-secondary"
+              title="Auto-arrange nodes"
+              onClick={() => apiRef.current?.layout()}
+            >
+              ⟳ Auto-arrange
+            </button>
+            <button
+              type="button"
+              className="cm-btn cm-btn-secondary cm-clear-all-btn"
+              disabled={locked || graph.elements.length === 0}
+              onClick={() => commit(emptyGraph())}
+            >
+              Clear All
+            </button>
+            {!locked ? (
+              <button
+                type="button"
+                className="cm-btn cm-btn-insight"
+                disabled={insightLoading || insightUsesLeft <= 0}
+                onClick={fetchInsight}
+                title={`Spend ${POINTS.insight} pts for a direct hint`}
+              >
+                {insightLoading
+                  ? 'Loading…'
+                  : `💡 AI Hint (${POINTS.insight} pts) — ${insightUsesLeft} left`}
+              </button>
+            ) : null}
+          </div>
+          <div className="cm-footer-right">
+            {!locked ? (
+              <button
+                type="button"
+                className="cm-btn cm-btn-secondary"
+                onClick={flashSaved}
+              >
+                💾 Save
+              </button>
+            ) : null}
+            {!locked ? (
+              <div className="cm-submit-wrapper">
+                <button
+                  type="button"
+                  className="cm-btn cm-btn-primary"
+                  disabled={submitLoading || edgeCount < MIN_EDGES_TO_SUBMIT}
+                  onClick={submit}
+                >
+                  {submitLoading ? 'Grading…' : 'Submit for Feedback'}
+                </button>
+                <span className="cm-submit-tooltip" role="tooltip">
+                  {submitTooltip}
+                </span>
+              </div>
+            ) : (
+              <span className="cm-status">Submitted ✓</span>
+            )}
+          </div>
+        </div>
+
+        {statusMsg ? (
+          <div
+            role="status"
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.8rem',
+              color: 'var(--danger)',
+              borderTop: '1px solid var(--border)',
+            }}
+          >
+            {statusMsg}
+          </div>
+        ) : null}
       </div>
     </div>
   );
+
+  function confirmEdgePopup() {
+    if (!edgePopup) return;
+    const value = edgePopup.value.trim();
+    if (edgePopup.editingEdgeId) {
+      updateLabel(edgePopup.editingEdgeId, value);
+    } else {
+      addEdge(edgePopup.source, edgePopup.target, value);
+    }
+    setEdgePopup(null);
+    setPendingSource(null);
+  }
 }
 
-function jitteredPosition(graph: ConceptMapGraph): {
-  x: number;
-  y: number;
-} {
-  const positions = graph.elements
-    .map((el) => (el as { position?: { x: number; y: number } }).position)
-    .filter((p): p is { x: number; y: number } => !!p);
-  const cx = positions.length
-    ? positions.reduce((a, p) => a + p.x, 0) / positions.length
-    : 0;
-  const cy = positions.length
-    ? positions.reduce((a, p) => a + p.y, 0) / positions.length
-    : 0;
-  return {
-    x: cx + (Math.random() - 0.5) * 80,
-    y: cy + (Math.random() - 0.5) * 80,
-  };
+function EdgeFeedbackItem({ ef }: { ef: EdgeAssessment }) {
+  const ratingClass =
+    ef.rating === 'strong'
+      ? 'strong'
+      : ef.rating === 'partial'
+        ? 'partial'
+        : 'needs_probing';
+  const ratingLabel =
+    ef.rating === 'strong'
+      ? 'Strong'
+      : ef.rating === 'partial'
+        ? 'Partial'
+        : 'Needs probing';
+  return (
+    <div className={cn('cm-edge-feedback-item', `cm-ef-${ratingClass}`)}>
+      <div className="cm-edge-feedback-connection">
+        <span className={cn('cm-ef-quality-badge', `cm-ef-badge-${ratingClass}`)}>
+          {ratingLabel}
+        </span>
+        <span className="cm-ef-label">“{ef.edgeLabel}”</span>
+      </div>
+      <div className="cm-edge-feedback-comment">{ef.feedback}</div>
+    </div>
+  );
 }

@@ -17,6 +17,7 @@ type Props = {
   onSelect: (id: number) => void;
   onClose: () => void;
   onOpenQuiz: (id: number) => void;
+  onOpenConceptMap: (eraOrder: number) => void;
 };
 
 export function MapScreen({
@@ -24,13 +25,14 @@ export function MapScreen({
   onSelect,
   onClose,
   onOpenQuiz,
+  onOpenConceptMap,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
       <div className="map-layout">
-        <Sidebar collapsed={collapsed} />
+        <Sidebar collapsed={collapsed} onOpenConceptMap={onOpenConceptMap} />
 
         <button
           type="button"

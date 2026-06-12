@@ -1,24 +1,14 @@
 'use client';
 
-// Concept-map-scoped Socratic chat. Same shape as TutorChat but bound to
-// the era and injects the current graph state into the request body so the
-// 17-rule system prompt has live map context to reason about.
+// Concept-map-scoped Socratic tutor — the right-column `.cm-chat-panel`
+// (1:1 with the original). Bound to the era and injects the current graph
+// into the request body so the system prompt has live map context.
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 
-const TRANSPORT = new DefaultChatTransport({
-  api: '/api/la-history/concept-map/chat',
-});
-
 import { cn } from '@/lib/cn';
-import { eraByOrder } from '@/content/data/laHistory/eras';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type {
   ConceptMapGraph,
@@ -26,12 +16,13 @@ import type {
   TutorRole,
 } from '@/types/laHistory';
 
-type Props = {
-  open: boolean;
-  eraOrder: number;
-  graph: ConceptMapGraph;
-  onClose: () => void;
-};
+const TRANSPORT = new DefaultChatTransport({
+  api: '/api/la-history/concept-map/chat',
+});
+
+function chatKeyForEra(eraOrder: number): string {
+  return `era:${eraOrder}`;
+}
 
 function uiToTutor(m: UIMessage): TutorMessage {
   const text = m.parts
@@ -53,16 +44,20 @@ function tutorToUi(m: TutorMessage, idx: number): UIMessage {
   } as UIMessage;
 }
 
-function chatKeyForEra(eraOrder: number): string {
-  return `era:${eraOrder}`;
-}
+export function ConceptMapChat({
+  eraOrder,
+  graph,
+}: {
+  eraOrder: number;
+  graph: ConceptMapGraph;
+}) {
+  const [draft, setDraft] = useState('');
 
-export function ConceptMapChat({ open, eraOrder, graph, onClose }: Props) {
-  const era = eraByOrder.get(eraOrder);
   const restoredMessages = useLaHistoryStore(
     (s) => s.chatHistory[chatKeyForEra(eraOrder)],
   );
   const setChatHistory = useLaHistoryStore((s) => s.setChatHistory);
+  const clearChatHistory = useLaHistoryStore((s) => s.clearChatHistory);
 
   const initialMessages = useMemo<UIMessage[]>(
     () => (restoredMessages ? restoredMessages.map(tutorToUi) : []),
@@ -80,149 +75,98 @@ export function ConceptMapChat({ open, eraOrder, graph, onClose }: Props) {
   }, [initialMessages, setMessages]);
 
   useEffect(() => {
-    if (status !== 'ready') return;
-    if (messages.length === 0) return;
-    const tutored = messages.map(uiToTutor);
-    setChatHistory(chatKeyForEra(eraOrder), tutored);
+    if (status !== 'ready' || messages.length === 0) return;
+    setChatHistory(chatKeyForEra(eraOrder), messages.map(uiToTutor));
   }, [messages, status, eraOrder, setChatHistory]);
 
-  const [draft, setDraft] = useState('');
-  const listRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
-  }, [messages, status]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    if (open) {
-      window.addEventListener('keydown', onKey);
-      return () => window.removeEventListener('keydown', onKey);
-    }
-  }, [open, onClose]);
+  const busy = status === 'streaming' || status === 'submitted';
 
   function submit() {
     const trimmed = draft.trim();
-    if (!trimmed) return;
-    if (status === 'streaming' || status === 'submitted') return;
-    sendMessage(
-      { text: trimmed },
-      { body: { eraOrder, graph } },
-    );
+    if (!trimmed || busy) return;
+    sendMessage({ text: trimmed }, { body: { eraOrder, graph } });
     setDraft('');
   }
 
   return (
-    <>
-      <button
-        type="button"
-        aria-hidden={!open}
-        tabIndex={-1}
-        onClick={onClose}
-        className={cn(
-          'fixed inset-0 z-40 cursor-pointer bg-base/50 backdrop-blur-[2px] transition-opacity duration-300',
-          open ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-      />
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label="Concept-map tutor chat"
-        className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[80vh] min-h-[55vh] flex-col rounded-t-2xl border-t border-hairline bg-surface shadow-2xl transition-transform duration-300 ease-out',
-          'sm:right-4 sm:bottom-4 sm:left-auto sm:w-[26rem] sm:rounded-2xl sm:border',
-          open ? 'translate-y-0' : 'translate-y-full',
-        )}
-      >
-        <header className="flex items-center justify-between border-b border-hairline px-4 py-3">
-          <div>
-            <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-              Concept-map tutor
-            </p>
-            <p className="mt-0.5 font-display text-base text-fg">
-              {era?.name ?? `Era ${eraOrder}`}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close tutor"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-hairline text-fg-mute transition-colors hover:border-accent hover:text-accent"
-          >
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              className="h-4 w-4"
-            >
-              <path d="M6 6 L18 18 M18 6 L6 18" strokeLinecap="round" />
-            </svg>
-          </button>
-        </header>
-
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto px-4 py-3"
-          aria-live="polite"
-        >
-          {messages.length === 0 ? (
-            <p className="mx-auto max-w-[20rem] text-center text-sm text-fg-mute">
-              The tutor sees your current map and follows strict Socratic
-              rules — it asks questions, never states facts.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {messages.map((m) => {
-                const text = m.parts
-                  .filter(
-                    (p): p is { type: 'text'; text: string } =>
-                      p.type === 'text',
-                  )
-                  .map((p) => p.text)
-                  .join('');
-                const isUser = m.role === 'user';
-                return (
-                  <li
-                    key={m.id}
-                    className={cn(
-                      'max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed',
-                      isUser
-                        ? 'ml-auto bg-elev text-fg'
-                        : 'mr-auto bg-base/60 text-fg',
-                    )}
-                  >
-                    {text || <span className="text-fg-mute">…</span>}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {status === 'submitted' || status === 'streaming' ? (
-            <p className="mt-3 font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-              Tutor is thinking…
-            </p>
-          ) : null}
-          {error ? (
-            <p className="mt-3 text-sm text-warn">
-              The tutor couldn&apos;t respond. Try again in a moment.
-            </p>
-          ) : null}
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
+    <aside className="cm-chat-panel" aria-label="AI Tutor">
+      <div className="cm-chat-header">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.8 }} aria-hidden>
+          <path
+            d="M14 1H2C1.45 1 1 1.45 1 2v8c0 .55.45 1 1 1h2v3l3.5-3H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1z"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+        <span className="cm-chat-title">AI Tutor</span>
+        <button
+          type="button"
+          className="cm-chat-clear-btn"
+          title="Clear conversation"
+          aria-label="Clear conversation"
+          onClick={() => {
+            clearChatHistory(chatKeyForEra(eraOrder));
+            setMessages([]);
           }}
-          className="flex items-end gap-2 border-t border-hairline px-3 py-3"
         >
+          <svg width="12" height="12" viewBox="0 0 13 13" fill="none" aria-hidden>
+            <path
+              d="M2 3h9M5 3V2h3v1M4 3l.5 7h4L9 3"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div className="cm-chat-messages">
+        {messages.length === 0 ? (
+          <div className="chat-intro">
+            <div className="chat-intro-icon" aria-hidden>
+              🎓
+            </div>
+            <strong>AI Tutor</strong>
+            I guide your thinking with questions — I won’t give answers
+            directly. Use the <strong>💡 AI Hint</strong> button below for
+            direct suggestions.
+          </div>
+        ) : (
+          messages.map((m) => {
+            const text = m.parts
+              .filter(
+                (p): p is { type: 'text'; text: string } => p.type === 'text',
+              )
+              .map((p) => p.text)
+              .join('');
+            return (
+              <div key={m.id} className={cn('chat-msg', m.role)}>
+                <div className="chat-bubble">{text || '…'}</div>
+              </div>
+            );
+          })
+        )}
+        {status === 'submitted' ? (
+          <div className="chat-typing" aria-label="Tutor is thinking">
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+          </div>
+        ) : null}
+        {error ? (
+          <div className="chat-error">
+            The tutor couldn’t respond. Try again in a moment.
+          </div>
+        ) : null}
+      </div>
+
+      <div className="chat-input-area">
+        <div className="chat-input-wrap">
           <textarea
+            id="cm-chat-input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -232,23 +176,38 @@ export function ConceptMapChat({ open, eraOrder, graph, onClose }: Props) {
               }
             }}
             rows={1}
-            placeholder="What are you noticing about your map?"
-            className="max-h-32 min-h-[2.25rem] flex-1 resize-none rounded-xl border border-hairline bg-base px-3 py-2 text-sm text-fg placeholder-fg-mute outline-none focus-visible:border-accent"
+            placeholder="Ask about your map…"
             aria-label="Your message"
           />
+          {/* Mic wired in Step 7. */}
           <button
-            type="submit"
-            disabled={
-              !draft.trim() ||
-              status === 'streaming' ||
-              status === 'submitted'
-            }
-            className="inline-flex h-9 items-center rounded-full border border-hairline bg-base px-4 font-mono text-[11px] tracking-[0.14em] text-fg uppercase transition-colors enabled:hover:border-accent enabled:hover:text-accent disabled:opacity-40"
+            type="button"
+            className="chat-mic-btn"
+            id="cm-chat-mic-btn"
+            title="Voice input"
+            aria-label="Start voice input"
+            tabIndex={-1}
           >
-            Send
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+              <rect x="4" y="1" width="5" height="7" rx="2.5" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M2 7a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1="6.5" y1="11.5" x2="6.5" y2="12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
           </button>
-        </form>
-      </section>
-    </>
+        </div>
+        <button
+          type="button"
+          className="chat-send-btn"
+          title="Send"
+          aria-label="Send message"
+          onClick={submit}
+          disabled={!draft.trim() || busy}
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden>
+            <path d="M13 7.5L2 2l2.5 5.5L2 13l11-5.5z" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+    </aside>
   );
 }

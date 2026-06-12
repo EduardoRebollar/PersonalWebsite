@@ -11,7 +11,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { Tutorial } from './Tutorial';
 import { MusicEngine } from './MusicEngine';
 
-export type ViewKey = 'map' | 'concept-map' | 'dashboard';
+export type ViewKey = 'map' | 'dashboard';
 
 export function LaHistoryApp() {
   const [view, setView] = useState<ViewKey>('map');
@@ -20,6 +20,9 @@ export function LaHistoryApp() {
     null,
   );
   const [quizLocationId, setQuizLocationId] = useState<number | null>(null);
+  // The concept map opens as a full-screen overlay for a given era (launched
+  // from the sidebar / dashboard), matching the original.
+  const [conceptMapEra, setConceptMapEra] = useState<number | null>(null);
 
   return (
     <HydrationGate>
@@ -42,13 +45,21 @@ export function LaHistoryApp() {
             onSelect={(id) => setSelectedLocationId(id)}
             onClose={() => setSelectedLocationId(null)}
             onOpenQuiz={(id) => setQuizLocationId(id)}
+            onOpenConceptMap={(eraOrder) => setConceptMapEra(eraOrder)}
           />
         ) : (
           <div style={{ paddingTop: 'var(--nav-height)' }}>
-            {view === 'concept-map' && <ConceptMapView />}
-            {view === 'dashboard' && <Dashboard />}
+            <Dashboard />
           </div>
         )}
+
+        {conceptMapEra != null ? (
+          <ConceptMapView
+            key={conceptMapEra}
+            eraOrder={conceptMapEra}
+            onClose={() => setConceptMapEra(null)}
+          />
+        ) : null}
 
         {quizLocationId != null ? (
           <QuizView
