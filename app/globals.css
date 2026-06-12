@@ -3043,9 +3043,14 @@
 
 @media (max-width: 30rem) {
   /* keep the console bar from overflowing on narrow phones — drop the
-     location, leave the live clock */
+     location (icon + words) and separator, leave the live clock */
+  .contact-console .cc8-bar .clock svg.ic:first-of-type,
   .contact-console .cc8-bar .clock .loc,
   .contact-console .cc8-bar .clock .sep {
+    display: none;
+  }
+  /* trim the prompt to just eduardo@portfolio on narrow phones */
+  .contact-console .cc8-bar .path .cwd {
     display: none;
   }
   .contact-console .cc8-fields {

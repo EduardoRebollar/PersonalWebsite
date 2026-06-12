@@ -89,7 +89,6 @@ function StatusBar({ branch = 'main' }: { branch?: string }) {
         </svg>
         {branch}
       </span>
-      <span className="seg">utf-8</span>
       <span className="seg right">
         <span className="on" /> online
       </span>

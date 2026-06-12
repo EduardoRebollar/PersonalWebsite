@@ -49,6 +49,15 @@ function pickFromRing<T>(arr: readonly T[], i: number): T {
 }
 
 const NODE_SIZE = 40;
+// Chips + core shrink toward these floors on narrow (mobile) containers, then
+// interpolate back up to full size as the container approaches `maxSize`. At a
+// fixed 40px the chips bleed into neighbouring orbits once the radii scale down
+// on a phone, so each ring needs the smaller chip to keep its gap.
+const NODE_SIZE_MIN = 28;
+const CORE_SIZE = 80;
+const CORE_SIZE_MIN = 58;
+// Container width at/below which the floor sizes apply (≈ a phone's 90vw).
+const COMPACT_WIDTH = 360;
 
 type IconRenderer = () => ReactNode;
 
@@ -580,6 +589,7 @@ type OrbitingSkillsProps = {
 const SkillNode = memo(function SkillNode({
   node,
   index,
+  size,
   registerNode,
   opacity,
   selected,
@@ -589,6 +599,8 @@ const SkillNode = memo(function SkillNode({
   /** This node's slot in the parent's element registry, passed back through
    *  `registerNode` so the orbit loop can write its transform imperatively. */
   index: number;
+  /** Chip diameter in px — shrinks with the container on mobile. */
+  size: number;
   registerNode: (index: number, el: HTMLDivElement | null) => void;
   /** Per-layer reveal opacity (undefined = fully visible / no reveal). */
   opacity?: number;
@@ -617,8 +629,8 @@ const SkillNode = memo(function SkillNode({
       data-ring={node.ringIndex}
       className="absolute top-1/2 left-1/2 transition-transform duration-300 ease-out"
       style={{
-        width: `${NODE_SIZE}px`,
-        height: `${NODE_SIZE}px`,
+        width: `${size}px`,
+        height: `${size}px`,
         // `transform` is written imperatively by the parent's orbit loop — it is
         // deliberately omitted here so hover/select re-renders don't clobber it.
         zIndex: active ? 30 : 10,
@@ -801,9 +813,19 @@ export function OrbitingSkills({
   // render the constellation fully visible with no entrance.
   const animateReveal = reveal && !staticMode;
 
+  // Shrink the chips + core as the container narrows (mobile), so adjacent
+  // rings keep their gap once the orbit radii scale down. Ramps from the floor
+  // sizes at COMPACT_WIDTH up to full size at/above `maxSize`.
+  const sizeRatio = Math.max(
+    0,
+    Math.min(1, (containerSize - COMPACT_WIDTH) / Math.max(1, maxSize - COMPACT_WIDTH)),
+  );
+  const nodeSize = Math.round(NODE_SIZE_MIN + (NODE_SIZE - NODE_SIZE_MIN) * sizeRatio);
+  const coreSize = Math.round(CORE_SIZE_MIN + (CORE_SIZE - CORE_SIZE_MIN) * sizeRatio);
+
   // Scale so that the outermost orbit + node radius fits inside container
   // with a small breathing margin.
-  const scale = Math.min(1, (containerSize / 2 - NODE_SIZE) / maxRadius);
+  const scale = Math.min(1, (containerSize / 2 - nodeSize) / maxRadius);
 
   // Write every node's current orbital position straight to the DOM. Shared by
   // the rAF loop and the pre-paint layout pass below.
@@ -924,8 +946,10 @@ export function OrbitingSkills({
           setSelected(null);
           setCoreOpen(true);
         }}
-        className="os-core relative z-20 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="os-core relative z-20 flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary shadow-2xl transition-transform duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary"
         style={{
+          width: `${coreSize}px`,
+          height: `${coreSize}px`,
           transform: coreHovered ? 'scale(1.1)' : undefined,
           opacity: revealOpacity(REVEAL_CORE_DELAY),
         }}
@@ -973,6 +997,7 @@ export function OrbitingSkills({
             key={node.id}
             node={node}
             index={index}
+            size={nodeSize}
             registerNode={registerNode}
             opacity={revealOpacity(REVEAL_RING_BASE + node.ringIndex * REVEAL_RING_STAGGER)}
             selected={selected?.node.id === node.id}

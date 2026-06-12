@@ -266,7 +266,7 @@ function buildTimelineData(onExpand: (img: MediaImage) => void): TimelineEntry[]
     title: item.start.slice(0, 4),
     content: (
       <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-        <div className="jr-media w-full max-w-[14rem] shrink-0 md:flex md:w-56 md:max-w-none md:flex-col lg:w-64">
+        <div className="jr-media w-full shrink-0 md:flex md:w-56 md:flex-col lg:w-64">
           <JourneyMedia
             title={item.kind === 'education' ? item.institution : item.role}
             images={item.images}

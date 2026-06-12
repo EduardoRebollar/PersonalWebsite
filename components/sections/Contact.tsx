@@ -252,7 +252,7 @@ export function Contact() {
           <div className="cc8-bar">
             <span className="sq" aria-hidden="true" />
             <span className="path">
-              <b>eduardo</b>@portfolio : ~/contact
+              <b>eduardo</b>@portfolio<span className="cwd"> : ~/contact</span>
             </span>
             <span className="clock">
               <MapPin className="ic" strokeWidth={1.6} aria-hidden="true" />
