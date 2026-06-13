@@ -11,6 +11,7 @@ import {
 } from '@/lib/laHistory/gamification';
 import { ERA_META, badgeIcon } from '@/lib/laHistory/display';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 import type { ConceptMapGraph, EraKey, Location } from '@/types/laHistory';
 
 // Progress dashboard — 1:1 port of templates/dashboard/index.html: hero stats,
@@ -49,6 +50,7 @@ export function Dashboard({ onOpenConceptMap, onGoToMap, onOpenLocation }: Props
   const quizPasses = useLaHistoryStore((s) => s.quizPasses);
   const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
   const earnedBadges = useLaHistoryStore((s) => s.badges);
+  const isDark = useLaHistorySettings((st) => st.theme) !== 'light';
 
   const [badgeSort, setBadgeSort] = useState<BadgeSort>('default');
   const [locSort, setLocSort] = useState<LocSort>('era');
@@ -505,7 +507,7 @@ export function Dashboard({ onOpenConceptMap, onGoToMap, onOpenLocation }: Props
 
               {unlocked ? (
                 <div className="cm-mini-preview">
-                  <CmMini nodes={nodes} edges={edges} color={meta.color} />
+                  <CmMini nodes={nodes} edges={edges} color={meta.color} isDark={isDark} />
                 </div>
               ) : null}
 
@@ -586,10 +588,12 @@ function CmMini({
   nodes,
   edges,
   color,
+  isDark,
 }: {
   nodes: string[];
   edges: [number, number][];
   color: string;
+  isDark: boolean;
 }) {
   if (nodes.length === 0) {
     return <div className="cm-mini-preview-empty">No concepts added yet</div>;
@@ -605,9 +609,9 @@ function CmMini({
     const r = Math.min(W, H) * 0.36;
     return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
   });
-  const nodeFill = '#f8f4ec';
-  const textFill = '#5a4535';
-  const edgeStroke = 'rgba(0,0,0,0.12)';
+  const nodeFill = isDark ? '#2e2820' : '#f8f4ec';
+  const textFill = isDark ? '#d4c4a8' : '#5a4535';
+  const edgeStroke = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)';
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       {edges.map(([s, t], i) =>

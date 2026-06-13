@@ -26,7 +26,14 @@ import {
   locationsInEra,
 } from '@/lib/laHistory/gamification';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 import { ERA_KEYS, type EraKey, type Location } from '@/types/laHistory';
+
+const TILE_URLS = {
+  voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  positron: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  dark_matter: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+} as const;
 
 const LA_CENTER: [number, number] = [34.05, -118.25];
 const LA_ZOOM = 11;
@@ -97,6 +104,7 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
   const visited = useLaHistoryStore((s) => s.visited);
   const quizPasses = useLaHistoryStore((s) => s.quizPasses);
   const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
+  const mapTile = useLaHistorySettings((s) => s.mapTile);
 
   const [activeEras, setActiveEras] = useState<Set<EraKey>>(
     () => new Set<EraKey>(ERA_KEYS),
@@ -158,8 +166,9 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
         style={{ height: '100%', width: '100%', background: 'var(--bg)' }}
       >
         <TileLayer
+          key={mapTile}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url={TILE_URLS[mapTile]}
           subdomains="abcd"
           maxZoom={19}
         />

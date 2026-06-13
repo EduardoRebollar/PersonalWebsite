@@ -13,6 +13,7 @@ import {
   locationsInEra,
 } from '@/lib/laHistory/gamification';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 import type {
   ConceptMapEvaluation,
   ConceptMapGraph,
@@ -84,6 +85,7 @@ export function ConceptMapView({
   const saveConceptMap = useLaHistoryStore((s) => s.saveConceptMap);
   const chargeInsight = useLaHistoryStore((s) => s.chargeInsight);
   const submitConceptMap = useLaHistoryStore((s) => s.submitConceptMap);
+  const isDark = useLaHistorySettings((s) => s.theme) !== 'light';
 
   const locked = conceptMap?.submitted === true;
 
@@ -620,7 +622,7 @@ export function ConceptMapView({
               locked={locked}
               pendingSourceId={pendingSource}
               accentColor={meta.color}
-              isDark={false}
+              isDark={isDark}
               onNodeTap={onNodeTap}
               onEdgeTap={onEdgeTap}
               onBackgroundTap={onBackgroundTap}

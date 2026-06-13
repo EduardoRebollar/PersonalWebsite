@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { HydrationGate } from './HydrationGate';
 import { Navbar } from './Navbar';
 import { MapScreen } from './MapScreen';
@@ -8,14 +8,17 @@ import { QuizView } from './QuizView';
 import { ConceptMapView } from './ConceptMapView';
 import { Dashboard } from './Dashboard';
 import { SettingsPanel } from './SettingsPanel';
+import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { Tutorial } from './Tutorial';
 import { MusicEngine } from './MusicEngine';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 
 export type ViewKey = 'map' | 'dashboard';
 
 export function LaHistoryApp() {
   const [view, setView] = useState<ViewKey>('map');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );
@@ -24,19 +27,54 @@ export function LaHistoryApp() {
   // from the sidebar / dashboard), matching the original.
   const [conceptMapEra, setConceptMapEra] = useState<number | null>(null);
 
+  // UI preferences applied to the scoped `.lah-root` element.
+  const theme = useLaHistorySettings((s) => s.theme);
+  const animations = useLaHistorySettings((s) => s.animations);
+  const fontSize = useLaHistorySettings((s) => s.fontSize);
+  const markerSize = useLaHistorySettings((s) => s.markerSize);
+  const themeAttr = theme === 'light' ? 'light' : 'dark';
+  const mapDark = theme === 'dark';
+
+  // Global `?` toggles the keyboard-shortcuts overlay.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== '?') return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          t.tagName === 'SELECT' ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setShortcutsOpen((o) => !o);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   return (
     <HydrationGate>
-      {/* `data-theme` is hardcoded to light parchment for now; the settings
-          theme switcher (Step 6) will drive it (light / dark / dark + map
-          tile inversion via the data-map-dark attribute). */}
-      <div className="lah-root" data-theme="light">
+      <div
+        className="lah-root"
+        data-theme={themeAttr}
+        data-anim={animations}
+        {...(mapDark ? { 'data-map-dark': '' } : {})}
+        style={
+          {
+            '--font-size-base': `${fontSize}px`,
+            '--marker-size': `${markerSize + 2}px`,
+          } as CSSProperties
+        }
+      >
         <Navbar
           view={view}
           onViewChange={setView}
           onOpenSettings={() => setSettingsOpen(true)}
-          onOpenShortcuts={() => {
-            /* Keyboard-shortcuts overlay is built in Step 6. */
-          }}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
         />
 
         {view === 'map' ? (
@@ -77,8 +115,18 @@ export function LaHistoryApp() {
         ) : null}
 
         {settingsOpen ? (
-          <SettingsPanel onClose={() => setSettingsOpen(false)} />
+          <SettingsPanel
+            onClose={() => setSettingsOpen(false)}
+            onReplayTutorial={() => {
+              /* Tutorial replay is wired in Step 7. */
+            }}
+          />
         ) : null}
+
+        <KeyboardShortcuts
+          open={shortcutsOpen}
+          onClose={() => setShortcutsOpen(false)}
+        />
 
         <Tutorial />
         <MusicEngine />

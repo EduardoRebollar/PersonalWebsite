@@ -816,3 +816,19 @@
   white-space: nowrap;
   line-height: 1.6;
 }
+
+/* ---- Animation speed presets (Settings → Appearance) ---- */
+.lah-root[data-anim="reduced"] *,
+.lah-root[data-anim="reduced"] *::before,
+.lah-root[data-anim="reduced"] *::after {
+  animation-duration: 0.12s !important;
+  transition-duration: 0.1s !important;
+}
+.lah-root[data-anim="off"] *,
+.lah-root[data-anim="off"] *::before,
+.lah-root[data-anim="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
