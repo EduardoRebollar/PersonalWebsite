@@ -21,6 +21,7 @@ import 'leaflet/dist/leaflet.css';
 import { cn } from '@/lib/cn';
 import { locations } from '@/content/data/laHistory/locations';
 import { ERA_META } from '@/lib/laHistory/display';
+import { playSfx } from '@/lib/laHistory/sfx';
 import {
   isLocationUnlocked,
   locationsInEra,
@@ -145,6 +146,7 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
   }, [markers, query]);
 
   function toggleEra(era: EraKey) {
+    playSfx('filter-toggle');
     setActiveEras((prev) => {
       const next = new Set(prev);
       if (next.has(era)) next.delete(era);
@@ -181,7 +183,12 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
             icon={buildIcon({ color, emoji, visited: v, unlocked })}
             eventHandlers={{
               click: () => {
-                if (unlocked) onSelect(loc.id);
+                if (unlocked) {
+                  playSfx('marker-click');
+                  onSelect(loc.id);
+                } else {
+                  playSfx('locked');
+                }
               },
             }}
             keyboard
@@ -264,6 +271,7 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
                 type="button"
                 className="map-search-result"
                 onClick={() => {
+                  playSfx('search-ping');
                   onSelect(m.loc.id);
                   setQuery('');
                 }}

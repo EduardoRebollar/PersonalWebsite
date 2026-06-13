@@ -19,6 +19,7 @@ export function LaHistoryApp() {
   const [view, setView] = useState<ViewKey>('map');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [tutorialForce, setTutorialForce] = useState(false);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );
@@ -117,9 +118,7 @@ export function LaHistoryApp() {
         {settingsOpen ? (
           <SettingsPanel
             onClose={() => setSettingsOpen(false)}
-            onReplayTutorial={() => {
-              /* Tutorial replay is wired in Step 7. */
-            }}
+            onReplayTutorial={() => setTutorialForce(true)}
           />
         ) : null}
 
@@ -128,7 +127,10 @@ export function LaHistoryApp() {
           onClose={() => setShortcutsOpen(false)}
         />
 
-        <Tutorial />
+        <Tutorial
+          forceOpen={tutorialForce}
+          onForceClose={() => setTutorialForce(false)}
+        />
         <MusicEngine />
       </div>
     </HydrationGate>

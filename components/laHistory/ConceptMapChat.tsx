@@ -9,6 +9,8 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 
 import { cn } from '@/lib/cn';
+import { playSfx } from '@/lib/laHistory/sfx';
+import { useVoiceInput } from '@/lib/laHistory/voice';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type {
   ConceptMapGraph,
@@ -52,6 +54,9 @@ export function ConceptMapChat({
   graph: ConceptMapGraph;
 }) {
   const [draft, setDraft] = useState('');
+  const voice = useVoiceInput((text) =>
+    setDraft((d) => (d ? `${d} ${text}` : text)),
+  );
 
   const restoredMessages = useLaHistoryStore(
     (s) => s.chatHistory[chatKeyForEra(eraOrder)],
@@ -84,6 +89,7 @@ export function ConceptMapChat({
   function submit() {
     const trimmed = draft.trim();
     if (!trimmed || busy) return;
+    playSfx('chat-send');
     sendMessage({ text: trimmed }, { body: { eraOrder, graph } });
     setDraft('');
   }
@@ -164,7 +170,7 @@ export function ConceptMapChat({
       </div>
 
       <div className="chat-input-area">
-        <div className="chat-input-wrap">
+        <div className={cn('chat-input-wrap', voice.supported && 'voice-enabled')}>
           <textarea
             id="cm-chat-input"
             value={draft}
@@ -179,14 +185,19 @@ export function ConceptMapChat({
             placeholder="Ask about your map…"
             aria-label="Your message"
           />
-          {/* Mic wired in Step 7. */}
           <button
             type="button"
-            className="chat-mic-btn"
+            className={cn(
+              'chat-mic-btn',
+              voice.supported && 'visible',
+              voice.state === 'listening' && 'listening',
+              voice.state === 'error' && 'error',
+            )}
             id="cm-chat-mic-btn"
             title="Voice input"
             aria-label="Start voice input"
-            tabIndex={-1}
+            aria-pressed={voice.state === 'listening'}
+            onClick={voice.start}
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
               <rect x="4" y="1" width="5" height="7" rx="2.5" stroke="currentColor" strokeWidth="1.4" />

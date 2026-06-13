@@ -1,18 +1,18 @@
 'use client';
 
-// Thin 3-step onboarding. Suppressed on prefers-reduced-motion (per
-// CLAUDE.md user memory). One-shot — once dismissed it never re-appears
-// unless the user resets progress in Settings.
+// Parchment-skinned onboarding walkthrough. Auto-shows once on first visit
+// (suppressed under prefers-reduced-motion), and can be replayed from
+// Settings via `forceOpen`. (A lighter card than the original spotlight tour.)
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/cn';
 import { prefersReducedMotion } from '@/lib/motion';
+import { playSfx } from '@/lib/laHistory/sfx';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 
 const STEPS: { title: string; body: string }[] = [
   {
     title: 'Explore the map',
-    body: 'Tap an unlocked marker to open its history. Era 1 (Tongva) is open right away; the others unlock as you build up.',
+    body: 'Tap an unlocked marker to open its history. Era 1 (Tongva) is open right away; the others unlock as you progress.',
   },
   {
     title: 'Take quizzes and chat with the tutor',
@@ -20,87 +20,137 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: 'Build a concept map',
-    body: 'In Concept Map view, drop nodes, draw labeled edges, and submit your map for an AI evaluation. Submitting completes an era and unlocks the next.',
+    body: 'Open a concept map from the sidebar, drop nodes, draw labeled edges, and submit for an AI evaluation. Submitting completes an era and unlocks the next.',
   },
 ];
 
-export function Tutorial() {
+export function Tutorial({
+  forceOpen,
+  onForceClose,
+}: {
+  forceOpen: boolean;
+  onForceClose: () => void;
+}) {
   const tutorialSeen = useLaHistoryStore((s) => s.tutorialSeen);
   const markTutorialSeen = useLaHistoryStore((s) => s.markTutorialSeen);
   const [step, setStep] = useState(0);
 
-  // Auto-suppress when the OS asks for reduced motion. We also flag it as
-  // seen so the user doesn't get a fresh tutorial on next visit.
+  const visible = !tutorialSeen || forceOpen;
+
+  // Reset to the first step each time the dialog becomes visible.
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (visible) setStep(0);
+  }
+
+  // Auto-suppress the first-run tour under reduced motion (not a replay).
   useEffect(() => {
-    if (!tutorialSeen && prefersReducedMotion()) {
+    if (!tutorialSeen && !forceOpen && prefersReducedMotion()) {
       markTutorialSeen();
     }
-  }, [tutorialSeen, markTutorialSeen]);
+  }, [tutorialSeen, forceOpen, markTutorialSeen]);
+
+  function finish() {
+    if (!tutorialSeen) markTutorialSeen();
+    if (forceOpen) onForceClose();
+    playSfx('tutorial-complete');
+  }
 
   useEffect(() => {
+    if (!visible) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') markTutorialSeen();
+      if (e.key === 'Escape') finish();
     }
-    if (!tutorialSeen) {
-      window.addEventListener('keydown', onKey);
-      return () => window.removeEventListener('keydown', onKey);
-    }
-  }, [tutorialSeen, markTutorialSeen]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
-  if (tutorialSeen) return null;
+  if (!visible) return null;
 
   const current = STEPS[step]!;
   const isLast = step === STEPS.length - 1;
 
   return (
     <div
+      className="settings-overlay open"
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to the LA History demo"
-      className="fixed inset-0 z-[55] grid place-items-center bg-base/70 p-4 backdrop-blur-md"
+      style={{ zIndex: 1300 }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) finish();
+      }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
-        <p className="font-mono text-[10px] tracking-[0.18em] text-fg-mute uppercase">
-          Welcome · {step + 1} / {STEPS.length}
-        </p>
-        <h2 className="mt-2 font-display text-2xl text-fg">{current.title}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-fg">{current.body}</p>
-
-        <div className="mt-6 flex items-center gap-2">
-          <div
-            className="flex gap-1.5"
-            role="tablist"
-            aria-label="Tutorial steps"
+      <div className="settings-modal" style={{ width: 460, maxWidth: 'calc(100vw - 32px)' }}>
+        <div className="settings-modal-header">
+          <span>
+            Welcome · {step + 1} / {STEPS.length}
+          </span>
+          <button
+            type="button"
+            className="settings-close"
+            aria-label="Close walkthrough"
+            onClick={finish}
           >
-            {STEPS.map((_, i) => (
-              <span
-                key={i}
-                aria-hidden
-                className={cn(
-                  'h-1.5 w-6 rounded-full',
-                  i === step ? 'bg-accent' : 'bg-hairline',
-                )}
-              />
-            ))}
-          </div>
-
-          <div className="ml-auto flex gap-2">
-            <button
-              type="button"
-              onClick={markTutorialSeen}
-              className="rounded-full border border-hairline px-3 py-1.5 font-mono text-[10px] tracking-[0.14em] text-fg-mute uppercase hover:text-fg"
-            >
-              Skip
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                isLast ? markTutorialSeen() : setStep((s) => s + 1)
-              }
-              className="rounded-full border border-accent bg-accent/10 px-4 py-1.5 font-mono text-[11px] tracking-[0.14em] text-accent uppercase hover:bg-accent/20"
-            >
-              {isLast ? 'Start' : 'Next'}
-            </button>
+            ×
+          </button>
+        </div>
+        <div style={{ padding: '16px 20px 20px' }}>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.4rem',
+              fontWeight: 600,
+              color: 'var(--text)',
+              marginBottom: 8,
+            }}
+          >
+            {current.title}
+          </h2>
+          <p style={{ fontSize: '0.9rem', lineHeight: 1.65, color: 'var(--text)' }}>
+            {current.body}
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginTop: 20,
+            }}
+          >
+            <div style={{ display: 'flex', gap: 6 }} aria-hidden>
+              {STEPS.map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    height: 6,
+                    width: 24,
+                    borderRadius: 99,
+                    background: i === step ? 'var(--accent)' : 'var(--border)',
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={finish}>
+                Skip
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  if (isLast) finish();
+                  else {
+                    setStep((x) => x + 1);
+                    playSfx('tutorial-step');
+                  }
+                }}
+              >
+                {isLast ? 'Start' : 'Next'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

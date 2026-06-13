@@ -11,7 +11,7 @@
 // "ambient backdrop" without porting the full 291 LOC music.js.
 
 import { useEffect, useRef } from 'react';
-import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 
 type EngineState = {
   ctx: AudioContext;
@@ -88,8 +88,8 @@ function stopEngine(engine: EngineState) {
 }
 
 export function MusicEngine() {
-  const enabled = useLaHistoryStore((s) => s.audio.enabled);
-  const volume = useLaHistoryStore((s) => s.audio.volume);
+  const enabled = useLaHistorySettings((s) => s.music);
+  const volume = useLaHistorySettings((s) => s.musicVolume);
   const engineRef = useRef<EngineState | null>(null);
 
   // Start/stop on enable toggle.

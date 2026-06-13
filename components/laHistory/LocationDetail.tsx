@@ -7,7 +7,9 @@ import {
   locationForId,
   quizForSlug,
 } from '@/lib/laHistory/gamification';
+import { useTts } from '@/lib/laHistory/tts';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
+import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 import type { Location } from '@/types/laHistory';
 
 // Sliding right detail panel — 1:1 port of the original `.detail-panel`
@@ -37,6 +39,9 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
   const visited = useLaHistoryStore((s) => s.visited);
   const quizPasses = useLaHistoryStore((s) => s.quizPasses);
   const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
+
+  const tts = useTts();
+  const ttsHighlight = useLaHistorySettings((st) => st.ttsHighlight);
 
   const [lightbox, setLightbox] = useState<{
     src: string;
@@ -128,8 +133,26 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
                     ✓ Visited
                   </span>
                 ) : null}
+                {tts.supported ? (
+                  <button
+                    type="button"
+                    className={cn('detail-tts-btn', tts.activeId === 'desc' && 'active')}
+                    title="Read aloud"
+                    onClick={() => tts.toggle('desc', location.fullDescription)}
+                  >
+                    {tts.activeId === 'desc' ? '⏹ Stop' : '🔊 Read Aloud'}
+                  </button>
+                ) : null}
               </div>
             </div>
+            {tts.activeId === 'desc' ? (
+              <div className="tts-progress-bar">
+                <div
+                  className="tts-progress-fill"
+                  style={{ width: `${tts.ratio * 100}%` }}
+                />
+              </div>
+            ) : null}
 
             {location.imageUrl ? (
               <figure
@@ -212,18 +235,38 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
             ) : null}
 
             <div className="detail-description">
-              {location.fullDescription.split('\n').map((line, i) => (
-                <Fragment key={i}>
-                  {i > 0 ? <br /> : null}
-                  {line}
-                </Fragment>
-              ))}
+              <TtsDescription
+                text={location.fullDescription}
+                active={tts.activeId === 'desc'}
+                ratio={tts.ratio}
+                highlight={ttsHighlight}
+              />
             </div>
 
             {sortedEvents.length > 0 ? (
               <div className="events-section">
                 <div className="events-section-header">
                   <h4>Historical Timeline</h4>
+                  {tts.supported ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        'timeline-tts-btn',
+                        tts.activeId === 'timeline' && 'active',
+                      )}
+                      title="Read timeline aloud"
+                      onClick={() =>
+                        tts.toggle(
+                          'timeline',
+                          sortedEvents
+                            .map((e) => `${e.yearDisplay}. ${e.title}. ${e.content}`)
+                            .join(' '),
+                        )
+                      }
+                    >
+                      {tts.activeId === 'timeline' ? '⏹' : '🔊'}
+                    </button>
+                  ) : null}
                 </div>
                 <div className="timeline">
                   {sortedEvents.map((ev) => (
@@ -302,6 +345,61 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
           ) : null}
         </div>
       </div>
+    </>
+  );
+}
+
+// Renders the description as word spans; when TTS is reading (and word
+// highlight is on) the word at the current progress ratio gets `.tts-active`.
+function TtsDescription({
+  text,
+  active,
+  ratio,
+  highlight,
+}: {
+  text: string;
+  active: boolean;
+  ratio: number;
+  highlight: boolean;
+}) {
+  const tokens = useMemo(() => {
+    const total = text.length || 1;
+    const out: { type: 'word' | 'space' | 'br'; text: string; frac: number; wi: number }[] = [];
+    const re = /(\n)|([^\S\n]+)|(\S+)/g;
+    let charPos = 0;
+    let wi = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      if (m[1]) out.push({ type: 'br', text: '', frac: charPos / total, wi: -1 });
+      else if (m[2]) out.push({ type: 'space', text: m[2], frac: charPos / total, wi: -1 });
+      else out.push({ type: 'word', text: m[3]!, frac: charPos / total, wi: wi++ });
+      charPos += m[0].length;
+    }
+    return out;
+  }, [text]);
+
+  // Active word index from the progress ratio.
+  let activeWi = -1;
+  if (active && highlight) {
+    for (const t of tokens) {
+      if (t.type === 'word' && t.frac <= ratio) activeWi = t.wi;
+    }
+  }
+
+  return (
+    <>
+      {tokens.map((t, i) => {
+        if (t.type === 'br') return <br key={i} />;
+        if (t.type === 'space') return <Fragment key={i}>{t.text}</Fragment>;
+        return (
+          <span
+            key={i}
+            className={cn('tts-word', active && highlight && t.wi === activeWi && 'tts-active')}
+          >
+            {t.text}
+          </span>
+        );
+      })}
     </>
   );
 }

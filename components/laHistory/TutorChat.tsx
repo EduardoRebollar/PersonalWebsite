@@ -6,6 +6,9 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 
 import { cn } from '@/lib/cn';
 import { locationForId } from '@/lib/laHistory/gamification';
+import { playSfx } from '@/lib/laHistory/sfx';
+import { useTts } from '@/lib/laHistory/tts';
+import { useVoiceInput } from '@/lib/laHistory/voice';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type { TutorMessage, TutorRole } from '@/types/laHistory';
 
@@ -46,6 +49,10 @@ function tutorToUi(m: TutorMessage, idx: number): UIMessage {
 export function TutorChat({ locationId }: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const tts = useTts();
+  const voice = useVoiceInput((text) =>
+    setDraft((d) => (d ? `${d} ${text}` : text)),
+  );
 
   const location = locationId != null ? locationForId(locationId) : undefined;
 
@@ -90,6 +97,7 @@ export function TutorChat({ locationId }: Props) {
   function submit() {
     const trimmed = draft.trim();
     if (!trimmed || locationId == null || busy) return;
+    playSfx('chat-send');
     sendMessage({ text: trimmed });
     setDraft('');
   }
@@ -168,6 +176,16 @@ export function TutorChat({ locationId }: Props) {
             return (
               <div key={m.id} className={cn('chat-msg', m.role)}>
                 <div className="chat-bubble">{text || '…'}</div>
+                {m.role === 'assistant' && tts.supported && text ? (
+                  <button
+                    type="button"
+                    className={cn('chat-tts-btn', tts.activeId === m.id && 'active')}
+                    title="Read aloud"
+                    onClick={() => tts.toggle(m.id, text)}
+                  >
+                    {tts.activeId === m.id ? '⏹' : '🔊'}
+                  </button>
+                ) : null}
               </div>
             );
           })
@@ -189,7 +207,7 @@ export function TutorChat({ locationId }: Props) {
       </div>
 
       <div className="chat-input-area">
-        <div className="chat-input-wrap">
+        <div className={cn('chat-input-wrap', voice.supported && 'voice-enabled')}>
           <textarea
             id="chat-input"
             value={draft}
@@ -212,13 +230,18 @@ export function TutorChat({ locationId }: Props) {
             disabled={locationId == null}
             aria-label="Your message"
           />
-          {/* Mic button stays hidden until Step 7 wires voice input. */}
           <button
             type="button"
-            className="chat-mic-btn"
+            className={cn(
+              'chat-mic-btn',
+              voice.supported && 'visible',
+              voice.state === 'listening' && 'listening',
+              voice.state === 'error' && 'error',
+            )}
             title="Voice input"
             aria-label="Start voice input"
-            tabIndex={-1}
+            aria-pressed={voice.state === 'listening'}
+            onClick={voice.start}
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
               <rect x="4" y="1" width="5" height="7" rx="2.5" stroke="currentColor" strokeWidth="1.4" />

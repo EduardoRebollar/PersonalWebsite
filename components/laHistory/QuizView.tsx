@@ -8,6 +8,7 @@ import {
   locationForId,
   quizForSlug,
 } from '@/lib/laHistory/gamification';
+import { playSfx } from '@/lib/laHistory/sfx';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import type { AnswerKey, Badge, QuizQuestion } from '@/types/laHistory';
 
@@ -132,6 +133,7 @@ export function QuizView({ locationId, onClose }: Props) {
     const correct = picked === question.correctAnswer;
     setAnswers((a) => ({ ...a, [index]: { picked, correct } }));
     setReveal(true);
+    playSfx(correct ? 'quiz-success' : 'quiz-error');
   }
 
   // Auto-advance shortly after a correct answer (matches the original).
@@ -140,6 +142,10 @@ export function QuizView({ locationId, onClose }: Props) {
     const t = setTimeout(() => advance(), 1200);
     return () => clearTimeout(t);
   }, [revealedCorrect, result, advance]);
+
+  useEffect(() => {
+    playSfx('quiz-open');
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -176,7 +182,10 @@ export function QuizView({ locationId, onClose }: Props) {
       }
       const stored = recordHint(hintKey(location.slug, index), text);
       if (!stored.ok) setHintError(`Need ${POINTS.hint} pts for a hint.`);
-      else setHintsTotal((h) => h + 1);
+      else {
+        setHintsTotal((h) => h + 1);
+        playSfx('hint-reveal');
+      }
     } catch {
       setHintError('Network error fetching hint.');
     } finally {
