@@ -6,6 +6,7 @@ import type { ElementDefinition } from 'cytoscape';
 import { cn } from '@/lib/cn';
 import { eras, eraByOrder } from '@/content/data/laHistory/eras';
 import { ERA_META } from '@/lib/laHistory/display';
+import { playSfx } from '@/lib/laHistory/sfx';
 import {
   INSIGHT_MAX_USES,
   POINTS,
@@ -22,7 +23,10 @@ import type {
 } from '@/types/laHistory';
 import { ConceptMapCanvas } from './ConceptMapCanvas';
 import { ConceptMapChat } from './ConceptMapChat';
+import { TutorialTour, CM_STEPS } from './Tutorial';
 import type { CyApi } from './ConceptMapInner';
+
+const CM_TUTORIAL_KEY = 'la-history:cm_tutorial_completed';
 
 const MIN_EDGES_TO_SUBMIT = 3;
 const HISTORY_LIMIT = 30;
@@ -117,6 +121,35 @@ export function ConceptMapView({
 
   const apiRef = useRef<CyApi | null>(null);
 
+  // Concept-map walkthrough — auto-shows the first time the map opens, and is
+  // replayable via the header "?" button (mirrors the original CM tour).
+  const [cmTourOpen, setCmTourOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!localStorage.getItem(CM_TUTORIAL_KEY)) {
+      const t = window.setTimeout(() => setCmTourOpen(true), 500);
+      return () => window.clearTimeout(t);
+    }
+  }, []);
+  const closeCmTour = useCallback(() => {
+    try {
+      localStorage.setItem(CM_TUTORIAL_KEY, 'true');
+    } catch {
+      // storage unavailable
+    }
+    setCmTourOpen(false);
+  }, []);
+
+  // Open chime when the concept-map overlay mounts.
+  useEffect(() => {
+    playSfx('panel-open');
+  }, []);
+
+  const closeMap = useCallback(() => {
+    playSfx('panel-close');
+    onClose();
+  }, [onClose]);
+
   const insightUsesLeft = INSIGHT_MAX_USES - (conceptMap?.insightUses ?? 0);
   const edgeCount = graph.elements.filter(isEdgeEl).length;
   const nodeCount = graph.elements.length - edgeCount;
@@ -140,6 +173,7 @@ export function ConceptMapView({
       const id = `loc-${loc.id}`;
       if (graph.elements.some((e) => dataOf(e).id === id)) return;
       const color = ERA_META[loc.era].color;
+      playSfx('node-add');
       commit({
         elements: [
           ...graph.elements,
@@ -164,6 +198,7 @@ export function ConceptMapView({
     (label: string) => {
       const t = label.trim();
       if (!t) return;
+      playSfx('node-add');
       commit({
         elements: [
           ...graph.elements,
@@ -195,6 +230,7 @@ export function ConceptMapView({
       ) {
         return;
       }
+      playSfx('edge-create');
       commit({
         elements: [
           ...graph.elements,
@@ -220,6 +256,7 @@ export function ConceptMapView({
 
   const removeNode = useCallback(
     (id: string) => {
+      playSfx('node-delete');
       commit({
         elements: graph.elements.filter((el) => {
           const d = dataOf(el);
@@ -232,6 +269,7 @@ export function ConceptMapView({
 
   const removeEdge = useCallback(
     (id: string) => {
+      playSfx('node-delete');
       commit({
         elements: graph.elements.filter((el) => dataOf(el).id !== id),
       });
@@ -243,6 +281,7 @@ export function ConceptMapView({
     setPastStack((past) => {
       if (past.length === 0) return past;
       const prev = past[past.length - 1]!;
+      playSfx('undo');
       setFutureStack((f) => [...f, cloneGraph(graph)]);
       setGraph(prev);
       saveConceptMap(eraOrder, prev);
@@ -254,6 +293,7 @@ export function ConceptMapView({
     setFutureStack((future) => {
       if (future.length === 0) return future;
       const next = future[future.length - 1]!;
+      playSfx('undo');
       setPastStack((p) => [...p, cloneGraph(graph)]);
       setGraph(next);
       saveConceptMap(eraOrder, next);
@@ -317,7 +357,7 @@ export function ConceptMapView({
           setCrossEraOpen(false);
           setCustomOpen(false);
         } else {
-          onClose();
+          closeMap();
         }
         return;
       }
@@ -330,15 +370,17 @@ export function ConceptMapView({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [contextMenu, edgePopup, pendingSource, crossEraOpen, customOpen, locked, undo, redo, onClose]);
+  }, [contextMenu, edgePopup, pendingSource, crossEraOpen, customOpen, locked, undo, redo, closeMap]);
 
   async function fetchInsight() {
     setStatusMsg(null);
     if (insightUsesLeft <= 0) {
+      playSfx('locked');
       setStatusMsg('No insight uses remaining for this era.');
       return;
     }
     if (points < POINTS.insight) {
+      playSfx('locked');
       setStatusMsg(`Need ${POINTS.insight} pts for a hint.`);
       return;
     }
@@ -368,6 +410,7 @@ export function ConceptMapView({
         return;
       }
       setInsightText(data.insight);
+      playSfx('hint-reveal');
     } catch {
       setStatusMsg('Network error fetching hint.');
     } finally {
@@ -401,7 +444,7 @@ export function ConceptMapView({
         setStatusMsg(data.message ?? 'The evaluator couldn’t grade your map. Try again.');
         return;
       }
-      submitConceptMap(eraOrder, {
+      const outcome = submitConceptMap(eraOrder, {
         edgeFeedback: data.evaluation.edgeFeedback,
         overallComment: data.evaluation.overallComment,
         followUpQuestion: data.evaluation.followUpQuestion,
@@ -409,6 +452,14 @@ export function ConceptMapView({
         pointsAwarded: 0,
         evaluatedAt: 0,
       });
+      // Graded-successfully chime, then staggered reward cues so the SFX
+      // engine's single-sound gate keeps each one audible.
+      playSfx(
+        outcome.newlyUnlockedLocationIds.length > 0 ? 'era-unlock' : 'quiz-success',
+      );
+      if (outcome.newBadges.length > 0) {
+        window.setTimeout(() => playSfx('badge-earned'), 850);
+      }
     } catch {
       setStatusMsg('Network error submitting your map.');
     } finally {
@@ -465,7 +516,7 @@ export function ConceptMapView({
       aria-modal="true"
       aria-label="Concept Map"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) closeMap();
       }}
     >
       <div className="cm-panel">
@@ -483,9 +534,19 @@ export function ConceptMapView({
             <span className="cm-status">{statusText}</span>
             <button
               type="button"
+              id="cm-tour-btn"
+              className="cm-close-btn"
+              aria-label="Replay concept map tutorial"
+              title="Replay tutorial"
+              onClick={() => setCmTourOpen(true)}
+            >
+              ?
+            </button>
+            <button
+              type="button"
               className="cm-close-btn"
               aria-label="Close concept map"
-              onClick={onClose}
+              onClick={closeMap}
             >
               ×
             </button>
@@ -494,7 +555,7 @@ export function ConceptMapView({
 
         <div className="cm-body">
           {/* Palette */}
-          <aside className="cm-palette" aria-label="Location palette">
+          <aside id="cm-palette" className="cm-palette" aria-label="Location palette">
             <div className="cm-palette-section cm-section--era">
               <h4 className="cm-palette-heading">
                 <span className="cm-section-icon" aria-hidden>
@@ -1003,6 +1064,7 @@ export function ConceptMapView({
             {!locked ? (
               <button
                 type="button"
+                id="cm-insight-btn"
                 className="cm-btn cm-btn-insight"
                 disabled={insightLoading || insightUsesLeft <= 0}
                 onClick={fetchInsight}
@@ -1058,6 +1120,8 @@ export function ConceptMapView({
           </div>
         ) : null}
       </div>
+
+      <TutorialTour steps={CM_STEPS} open={cmTourOpen} onClose={closeCmTour} />
     </div>
   );
 

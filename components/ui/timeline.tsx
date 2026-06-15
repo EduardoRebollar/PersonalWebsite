@@ -68,10 +68,20 @@ export function Timeline({ data }: { data: TimelineEntry[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
 
+  // Track the timeline's height with a ResizeObserver rather than measuring
+  // once on mount. The spine + fill beam are absolutely positioned to this exact
+  // pixel height, so a stale measurement makes the beam overshoot the Journey
+  // section and bleed into the next section (Skills). Content reflows after the
+  // first paint — web-font swap settling, images laying out, viewport resizes —
+  // so re-measure on every size change to keep the beam bounded to the rows.
   useEffect(() => {
-    if (ref.current) {
-      setHeight(ref.current.getBoundingClientRect().height);
-    }
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setHeight(el.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const { scrollYProgress } = useScroll({

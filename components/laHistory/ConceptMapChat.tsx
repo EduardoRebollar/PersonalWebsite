@@ -4,7 +4,7 @@
 // (1:1 with the original). Bound to the era and injects the current graph
 // into the request body so the system prompt has live map context.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 
@@ -86,6 +86,15 @@ export function ConceptMapChat({
 
   const busy = status === 'streaming' || status === 'submitted';
 
+  // Soft two-tone ping when the tutor finishes responding.
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    if (prevStatusRef.current === 'streaming' && status === 'ready') {
+      playSfx('chat-receive');
+    }
+    prevStatusRef.current = status;
+  }, [status]);
+
   function submit() {
     const trimmed = draft.trim();
     if (!trimmed || busy) return;
@@ -95,7 +104,7 @@ export function ConceptMapChat({
   }
 
   return (
-    <aside className="cm-chat-panel" aria-label="AI Tutor">
+    <aside id="cm-chat-panel" className="cm-chat-panel" aria-label="AI Tutor">
       <div className="cm-chat-header">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.8 }} aria-hidden>
           <path
@@ -113,6 +122,7 @@ export function ConceptMapChat({
           title="Clear conversation"
           aria-label="Clear conversation"
           onClick={() => {
+            playSfx('clear-chat');
             clearChatHistory(chatKeyForEra(eraOrder));
             setMessages([]);
           }}

@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
+import { Music } from '@/lib/laHistory/music';
 
 function getSynth(): SpeechSynthesis | null {
   return typeof window !== 'undefined' && 'speechSynthesis' in window
@@ -24,6 +25,7 @@ export function isSpeaking(): boolean {
 
 export function stopTts(): void {
   getSynth()?.cancel();
+  Music.restore();
 }
 
 const ABBREV: [RegExp, string][] = [
@@ -93,6 +95,7 @@ export function speak(text: string, cb: SpeakCallbacks = {}): void {
 
   u.onstart = () => {
     start = Date.now();
+    Music.duck();
     if (cb.onRatio) {
       const cps = 14 * ttsRate;
       const estMs = Math.max((processed.length / cps) * 1000, 500);
@@ -110,6 +113,7 @@ export function speak(text: string, cb: SpeakCallbacks = {}): void {
   }
   u.onend = () => {
     if (interval) window.clearInterval(interval);
+    Music.restore();
     cb.onRatio?.(1);
     cb.onEnd?.();
   };

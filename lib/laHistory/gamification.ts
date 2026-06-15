@@ -34,23 +34,25 @@ type BadgeDef = {
   description: string;
 };
 
+// Names + descriptions match the original Flask seed (seed_db.py) for 1:1
+// fidelity. IDs (= original slugs) drive all award logic; names are display.
 export const BADGE_CATALOG: readonly BadgeDef[] = [
-  { id: 'first_steps', name: 'First Steps', description: 'Visit your first location.' },
-  { id: 'explorer', name: 'Explorer', description: 'Visit 5 locations.' },
-  { id: 'historian', name: 'Historian', description: 'Visit every location.' },
-  { id: 'first_victory', name: 'First Victory', description: 'Pass your first quiz.' },
-  { id: 'quiz_master', name: 'Quiz Master', description: 'Pass every quiz.' },
-  { id: 'thrifty_scholar', name: 'Thrifty Scholar', description: 'Pass a quiz on the first attempt without using any hints.' },
-  { id: 'century_seeker', name: 'Century Seeker', description: 'Earn 500 points.' },
-  { id: 'native_scholar', name: 'Native Scholar', description: 'Pass every quiz in the Tongva era.' },
-  { id: 'spanish_era_complete', name: 'Spanish Scholar', description: 'Pass every quiz in the Spanish era.' },
-  { id: 'rancho_era_complete', name: 'Rancho Scholar', description: 'Pass every quiz in the Rancho era.' },
-  { id: 'modern_era_complete', name: 'Modern Scholar', description: 'Pass every quiz in the Modern era.' },
-  { id: 'era_synthesizer_1', name: 'Tongva Synthesizer', description: 'Submit a concept map for the Tongva era.' },
-  { id: 'era_synthesizer_2', name: 'Spanish Synthesizer', description: 'Submit a concept map for the Spanish era.' },
-  { id: 'era_synthesizer_3', name: 'Rancho Synthesizer', description: 'Submit a concept map for the Rancho era.' },
-  { id: 'era_synthesizer_4', name: 'Modern Synthesizer', description: 'Submit a concept map for the Modern era.' },
-  { id: 'master_cartographer', name: 'Master Cartographer', description: 'Submit concept maps for all four eras.' },
+  { id: 'first_steps', name: 'First Steps', description: 'Visited your first historical location.' },
+  { id: 'explorer', name: 'Explorer', description: 'Visited 5 or more historical locations.' },
+  { id: 'historian', name: 'Historian', description: 'Visited every location on the map.' },
+  { id: 'first_victory', name: 'First Victory', description: 'Passed your first quiz.' },
+  { id: 'quiz_master', name: 'Quiz Master', description: 'Passed every quiz on the map.' },
+  { id: 'thrifty_scholar', name: 'Thrifty Scholar', description: 'Passed a quiz on the first attempt without using any hints.' },
+  { id: 'century_seeker', name: 'Century Seeker', description: 'Earned 500 total points.' },
+  { id: 'native_scholar', name: 'Native Grounds Scholar', description: 'Passed all Era 1 (Tongva) quizzes.' },
+  { id: 'spanish_era_complete', name: 'Colonial Chronicles', description: 'Passed all Era 2 (Spanish/Mexican) quizzes.' },
+  { id: 'rancho_era_complete', name: 'Frontier Historian', description: 'Passed all Era 3 (Rancho/American) quizzes.' },
+  { id: 'modern_era_complete', name: 'Modern LA Master', description: 'Passed all Era 4 (Modern) quizzes.' },
+  { id: 'era_synthesizer_1', name: 'Tongva Synthesizer', description: 'Submitted a concept map connecting Era 1 (Tongva) locations.' },
+  { id: 'era_synthesizer_2', name: 'Colonial Synthesizer', description: 'Submitted a concept map connecting Era 2 (Spanish/Mexican) locations.' },
+  { id: 'era_synthesizer_3', name: 'Rancho Synthesizer', description: 'Submitted a concept map connecting Era 3 (Rancho/American) locations.' },
+  { id: 'era_synthesizer_4', name: 'Modern Synthesizer', description: 'Submitted a concept map connecting Era 4 (Modern LA) locations.' },
+  { id: 'master_cartographer', name: 'Master Cartographer', description: 'Submitted concept maps for all 4 eras.' },
 ];
 
 const BADGE_BY_ID = new Map(BADGE_CATALOG.map((b) => [b.id, b] as const));

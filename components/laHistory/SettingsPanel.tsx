@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { playSfx } from '@/lib/laHistory/sfx';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 
@@ -40,13 +41,23 @@ export function SettingsPanel({ onClose, onReplayTutorial }: Props) {
   });
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
+  // Open chime on mount (the panel only mounts while open).
+  useEffect(() => {
+    playSfx('settings-open');
+  }, []);
+
+  const closeSettings = useCallback(() => {
+    playSfx('panel-close');
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeSettings();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [closeSettings]);
 
   useEffect(() => {
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
@@ -81,7 +92,7 @@ export function SettingsPanel({ onClose, onReplayTutorial }: Props) {
     <div
       className="settings-overlay open"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) closeSettings();
       }}
       role="dialog"
       aria-modal="true"
@@ -94,7 +105,7 @@ export function SettingsPanel({ onClose, onReplayTutorial }: Props) {
             type="button"
             className="settings-close"
             aria-label="Close settings"
-            onClick={onClose}
+            onClick={closeSettings}
           >
             ×
           </button>
@@ -305,7 +316,7 @@ export function SettingsPanel({ onClose, onReplayTutorial }: Props) {
               className="btn btn-secondary"
               style={{ width: '100%' }}
               onClick={() => {
-                onClose();
+                closeSettings();
                 onReplayTutorial();
               }}
             >

@@ -47,7 +47,7 @@ export function Sidebar({
     RING_CIRCUMFERENCE - (RING_CIRCUMFERENCE * completionPct) / 100;
 
   return (
-    <aside className={cn('sidebar', collapsed && 'collapsed')} aria-label="Your progress">
+    <aside id="sidebar" className={cn('sidebar', collapsed && 'collapsed')} aria-label="Your progress">
       <div className="sidebar-header">
         <div className="sidebar-header-top">
           <div>
@@ -164,7 +164,7 @@ export function Sidebar({
 
         <div className="badge-section">
           <h4>Badges Earned</h4>
-          <div className="badge-grid">
+          <div id="badge-grid" className="badge-grid">
             {badges.length === 0 ? (
               <span className="badge-empty">
                 No badges earned yet — keep exploring!

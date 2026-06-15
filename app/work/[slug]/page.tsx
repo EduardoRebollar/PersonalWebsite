@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/primitives/Container';
 import { Pill } from '@/components/ui/primitives/Pill';
-import { SkillsBackdrop } from '@/components/ui/backgrounds/SkillsBackdrop';
+import { LaHistoryCaseStudy } from '@/components/laHistory/casestudy/LaHistoryCaseStudy';
 import { SparklesCore } from '@/components/ui/backgrounds/sparkles';
 import { StarfieldBackground } from '@/components/ui/backgrounds/StarfieldBackground';
 import { BackgroundBeams } from '@/components/ui/backgrounds/BackgroundBeams';
@@ -67,27 +67,23 @@ export default async function ProjectPage({
   if (!loader) notFound();
 
   const project = findProject(slug);
+
+  // LA History is a bespoke, full-bleed "broadsheet" case study rather than the
+  // standard MDX article — render it (and its own starfield backdrop) directly,
+  // skipping the shared article chrome and the MDX bundle.
+  if (slug === 'la-history') {
+    return (
+      <>
+        {project && <JsonLd data={projectArticleSchema(project)} />}
+        <LaHistoryCaseStudy />
+      </>
+    );
+  }
+
   const { default: MDXContent } = await loader();
 
   return (
     <article className="relative z-10 pt-32 pb-24">
-      {slug === 'la-history' && (
-        // Same animated particle field as the Skills section, fixed full-bleed
-        // behind the case study. Negative-z keeps it behind the article's
-        // prose content; masked top/bottom so it fades into the page edges.
-        <div
-          aria-hidden
-          className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-          style={{
-            maskImage:
-              'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-          }}
-        >
-          <SkillsBackdrop />
-        </div>
-      )}
       {slug === 'interactivity-and-interpretability' && (
         // Same sparkles field as the Work section, fixed full-bleed behind the
         // case study. Negative-z keeps it behind the article's prose; masked

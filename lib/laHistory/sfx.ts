@@ -109,12 +109,18 @@ const SOUNDS: Record<SfxName, (c: AudioContext) => number> = {
     return 260;
   },
   'badge-earned': (c) => {
+    // Main arpeggio (sine — warm)
     note(c, 523.25, 'sine', 0.13, 0, 0.18);
     note(c, 659.25, 'sine', 0.14, 0.1, 0.18);
     note(c, 783.99, 'sine', 0.16, 0.2, 0.18);
     note(c, 1046.5, 'sine', 0.18, 0.3, 0.28);
+    // Shimmer layer (triangle, octave higher, quieter)
+    note(c, 1046.5, 'triangle', 0.06, 0.05, 0.12);
     note(c, 1318.5, 'triangle', 0.06, 0.15, 0.12);
+    note(c, 1568.0, 'triangle', 0.07, 0.25, 0.12);
     note(c, 2093.0, 'triangle', 0.08, 0.35, 0.2);
+    // Final sparkle — high sine ping
+    note(c, 2637.0, 'sine', 0.05, 0.45, 0.15);
     return 600;
   },
   hover: (c) => sweep(c, 'sine', 1200, 1190, 0.06, 0.03),
@@ -180,6 +186,8 @@ const SOUNDS: Record<SfxName, (c: AudioContext) => number> = {
     note(c, 659.25, 'sine', 0.15, 0.2, 0.14);
     note(c, 783.99, 'sine', 0.17, 0.3, 0.22);
     note(c, 1046.5, 'sine', 0.18, 0.42, 0.3);
+    note(c, 1568.0, 'triangle', 0.07, 0.48, 0.14);
+    note(c, 2093.0, 'triangle', 0.06, 0.56, 0.14);
     return 700;
   },
   'node-delete': (c) => sweep(c, 'triangle', 600, 250, 0.1, 0.12),

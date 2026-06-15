@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/cn';
 import {
   isLocationUnlocked,
@@ -8,6 +8,8 @@ import {
   quizForSlug,
 } from '@/lib/laHistory/gamification';
 import { useTts } from '@/lib/laHistory/tts';
+import { playSfx } from '@/lib/laHistory/sfx';
+import { extractYouTubeId } from '@/lib/laHistory/youtube';
 import { useLaHistoryStore } from '@/stores/useLaHistoryStore';
 import { useLaHistorySettings } from '@/stores/useLaHistorySettings';
 import type { Location } from '@/types/laHistory';
@@ -22,17 +24,6 @@ type Props = {
   onClose: () => void;
   onOpenQuiz: (locationId: number) => void;
 };
-
-function extractYouTubeId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes('youtube.com')) return u.searchParams.get('v');
-    if (u.hostname === 'youtu.be') return u.pathname.slice(1);
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
   const recordVisit = useLaHistoryStore((s) => s.recordVisit);
@@ -72,19 +63,32 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
 
   useEffect(() => {
     if (!location || !isUnlocked) return;
-    recordVisit(location.id);
+    const result = recordVisit(location.id);
+    // Reward chime on first visit; badge fanfare staggered after it so the
+    // SFX engine's single-sound gate doesn't drop the second cue.
+    if (!result.alreadyVisited && result.pointsEarned > 0) {
+      playSfx('visit-earn');
+    }
+    if (result.newBadges.length > 0) {
+      window.setTimeout(() => playSfx('badge-earned'), 400);
+    }
   }, [location, isUnlocked, recordVisit]);
+
+  const closePanel = useCallback(() => {
+    playSfx('panel-close');
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (locationId == null && !lightbox) return;
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
       if (lightbox) setLightbox(null);
-      else onClose();
+      else closePanel();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [locationId, lightbox, onClose]);
+  }, [locationId, lightbox, closePanel]);
 
   const open = locationId != null && location != null;
   const videoId = location?.videoUrl ? extractYouTubeId(location.videoUrl) : null;
@@ -114,7 +118,7 @@ export function LocationDetail({ locationId, onClose, onOpenQuiz }: Props) {
             className="detail-close"
             title="Close"
             aria-label="Close"
-            onClick={onClose}
+            onClick={closePanel}
           >
             ×
           </button>

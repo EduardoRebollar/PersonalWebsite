@@ -15,6 +15,7 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -22,6 +23,7 @@ import { cn } from '@/lib/cn';
 import { locations } from '@/content/data/laHistory/locations';
 import { ERA_META } from '@/lib/laHistory/display';
 import { playSfx } from '@/lib/laHistory/sfx';
+import { Music } from '@/lib/laHistory/music';
 import {
   isLocationUnlocked,
   locationsInEra,
@@ -43,22 +45,28 @@ const LA_MAX_BOUNDS: [[number, number], [number, number]] = [
   [34.45, -117.55],
 ];
 
-const MARKER_VISUAL = 34; // matches --marker-size
-const MARKER_PADDED = MARKER_VISUAL + 12; // shadow/hover headroom
-const MARKER_OFFSET: [number, number] = [0, -(MARKER_VISUAL + 8)];
-
 type Props = {
   selectedLocationId: number | null;
   onSelect: (locationId: number) => void;
 };
+
+// Marker dimensions from the marker-size setting (mirrors the original
+// getMarkerDimensions): visual = base + 2 (matches --marker-size), with a
+// 12px padded container so shadows / hover scale aren't clipped.
+function markerDims(base: number) {
+  const visual = base + 2;
+  const padded = visual + 12;
+  return { padded, offset: [0, -(visual + 8)] as [number, number] };
+}
 
 function buildIcon(args: {
   color: string;
   emoji: string;
   visited: boolean;
   unlocked: boolean;
+  padded: number;
 }): L.DivIcon {
-  const { color, emoji, visited, unlocked } = args;
+  const { color, emoji, visited, unlocked, padded } = args;
   const classes = [
     'map-marker',
     visited && 'visited',
@@ -71,9 +79,9 @@ function buildIcon(args: {
   return L.divIcon({
     className: '',
     html: `<div class="${classes}" style="background:${color};border-color:${borderColor}"><div class="map-marker-inner">${emoji}</div></div>`,
-    iconSize: [MARKER_PADDED, MARKER_PADDED],
-    iconAnchor: [MARKER_PADDED / 2, MARKER_PADDED - 6],
-    popupAnchor: MARKER_OFFSET,
+    iconSize: [padded, padded],
+    iconAnchor: [padded / 2, padded - 6],
+    popupAnchor: [0, -(padded - 6)],
   });
 }
 
@@ -85,6 +93,12 @@ function ResizeInvalidator() {
     ro.observe(map.getContainer());
     return () => ro.disconnect();
   }, [map]);
+  return null;
+}
+
+/** Soft tick on every zoom (matches the original map.js zoom cue). */
+function ZoomSound() {
+  useMapEvents({ zoomend: () => playSfx('zoom') });
   return null;
 }
 
@@ -106,6 +120,8 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
   const quizPasses = useLaHistoryStore((s) => s.quizPasses);
   const conceptMaps = useLaHistoryStore((s) => s.conceptMaps);
   const mapTile = useLaHistorySettings((s) => s.mapTile);
+  const markerSize = useLaHistorySettings((s) => s.markerSize);
+  const dims = markerDims(markerSize);
 
   const [activeEras, setActiveEras] = useState<Set<EraKey>>(
     () => new Set<EraKey>(ERA_KEYS),
@@ -175,16 +191,18 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
           maxZoom={19}
         />
         <ResizeInvalidator />
+        <ZoomSound />
         <FlyToSelected selectedId={selectedLocationId} />
         {visibleMarkers.map(({ loc, unlocked, visited: v, color, emoji }) => (
           <Marker
             key={loc.id}
             position={[loc.latitude, loc.longitude]}
-            icon={buildIcon({ color, emoji, visited: v, unlocked })}
+            icon={buildIcon({ color, emoji, visited: v, unlocked, padded: dims.padded })}
             eventHandlers={{
               click: () => {
                 if (unlocked) {
                   playSfx('marker-click');
+                  Music.play(loc.era);
                   onSelect(loc.id);
                 } else {
                   playSfx('locked');
@@ -196,7 +214,7 @@ export function MapInner({ selectedLocationId, onSelect }: Props) {
           >
             <Tooltip
               direction="top"
-              offset={MARKER_OFFSET}
+              offset={dims.offset}
               opacity={0.97}
               className={loc.imageUrl ? 'marker-tooltip-with-thumb' : ''}
             >

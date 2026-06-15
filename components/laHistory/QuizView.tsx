@@ -126,7 +126,20 @@ export function QuizView({ locationId, onClose }: Props) {
       newBadges: outcome.newBadges,
       newlyUnlockedLocationIds: outcome.newlyUnlockedLocationIds,
     });
+    // Reward cues — staggered so the SFX engine's single-sound gate keeps
+    // each one audible (unlock fanfare → badge fanfare).
+    if (outcome.newlyUnlockedLocationIds.length > 0) {
+      window.setTimeout(() => playSfx('era-unlock'), 250);
+    }
+    if (outcome.newBadges.length > 0) {
+      window.setTimeout(() => playSfx('badge-earned'), 1100);
+    }
   }, [quiz, location, index, total, answers, hintsTotal, recordQuizSubmission]);
+
+  const closeQuiz = useCallback(() => {
+    playSfx('panel-close');
+    onClose();
+  }, [onClose]);
 
   function checkAnswer() {
     if (picked == null || !question) return;
@@ -149,11 +162,11 @@ export function QuizView({ locationId, onClose }: Props) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeQuiz();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [closeQuiz]);
 
   const fetchHint = useCallback(async () => {
     if (!location) return;
@@ -214,7 +227,7 @@ export function QuizView({ locationId, onClose }: Props) {
       aria-modal="true"
       aria-label={`${location.name} quiz`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) closeQuiz();
       }}
     >
       <div className="quiz-modal">
@@ -234,7 +247,7 @@ export function QuizView({ locationId, onClose }: Props) {
             type="button"
             className="quiz-close"
             aria-label="Close quiz"
-            onClick={onClose}
+            onClick={closeQuiz}
           >
             ×
           </button>
@@ -263,7 +276,7 @@ export function QuizView({ locationId, onClose }: Props) {
             quiz={quiz}
             answers={answers}
             hintsTotal={hintsTotal}
-            onClose={onClose}
+            onClose={closeQuiz}
             onRetry={retry}
           />
         ) : (

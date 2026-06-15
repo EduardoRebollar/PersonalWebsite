@@ -66,6 +66,13 @@
   font-size: var(--font-size-base);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+
+  /* Render the whole demo at 75% of its natural size at 100% browser zoom.
+     `zoom` (not `transform: scale`) is used deliberately: the navbar and
+     `.map-layout` are `position: fixed`, and `zoom` re-resolves viewport
+     units for the subtree so the app still fills the screen — whereas a
+     transform would create a containing block and leave gaps. */
+  zoom: 0.75;
 }
 
 .lah-root, .lah-root *, .lah-root *::before, .lah-root *::after {
@@ -722,8 +729,11 @@
   box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,168,67,0.08);
   width: 400px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
+  /* The shortcut list is fixed and short — size to content so it never
+     scrolls. (No vh cap: under the root's `zoom: 0.75` a `100vh` cap compounds
+     and can still clip/scroll on shorter windows; the rendered height here is
+     ~480px, which fits any normal viewport.) */
+  overflow-y: visible;
   animation: slideUpModal 0.22s cubic-bezier(0.22,1,0.36,1);
 }
 
