@@ -3,6 +3,7 @@ import { fontClassNames } from './fonts';
 import { Providers } from './providers';
 import { Nav } from '@/components/ui/nav/Nav';
 import { Footer } from '@/components/ui/primitives/Footer';
+import { RouteTransition } from '@/components/ui/RouteTransition';
 import { SkipToContent } from '@/components/a11y/SkipToContent';
 import { site } from '@/content/data/site';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <RouteTransition />
         </Providers>
         <SpeedInsights />
         <Analytics />

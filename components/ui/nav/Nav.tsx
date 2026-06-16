@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
 import { Code2, FolderGit2, Mail, Milestone, User } from 'lucide-react';
 import { Container } from '../primitives/Container';
@@ -10,6 +11,7 @@ import { RippleButton } from '../cta/RippleButton';
 import { navLinks, site } from '@/content/data/site';
 import { cn } from '@/lib/cn';
 import { useIsLaHistoryDemoRoute } from '@/lib/laHistory/route';
+import { useSceneStore } from '@/stores/useSceneStore';
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
   '#about': <User className="h-full w-full" strokeWidth={1.6} />,
@@ -24,6 +26,16 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined);
   const isDemoRoute = useIsLaHistoryDemoRoute();
+  // The Nav also renders on the case-study routes (/work/[slug]), where the
+  // in-page section anchors (#about, #work, …) don't exist. Off the homepage,
+  // every nav target becomes a cross-page link to the homepage anchor (/#work)
+  // so clicks actually navigate instead of dead-ending on the current URL.
+  const pathname = usePathname();
+  const isHome = pathname === '/';
+  // Off-home nav clicks route to /#section. Mark the splash dismissed *before*
+  // that navigation so the fresh SpiralSplash that mounts on `/` skips the
+  // intro — the store persists across client-side route changes.
+  const dismissSplash = useSceneStore((s) => s.dismissSplash);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
@@ -109,10 +121,15 @@ export function Nav() {
     () =>
       navLinks.map((link) => ({
         title: link.label,
-        href: link.href,
+        // Off the homepage the anchor must be prefixed with "/" so Next routes
+        // to the homepage first; the in-page scroll handlers only apply at home.
+        href: isHome ? link.href : `/${link.href}`,
         icon: NAV_ICONS[link.href] ?? null,
-        onClick:
-          link.href === '#contact'
+        // Off-home: don't preventDefault — let <Link> navigate to /#section,
+        // just mark the splash dismissed so it won't replay on arrival.
+        onClick: !isHome
+          ? () => dismissSplash()
+          : link.href === '#contact'
             ? scrollToBottom
             : link.href === '#work'
               ? scrollToWorkControls
@@ -120,7 +137,7 @@ export function Nav() {
                 ? scrollToSkills
                 : scrollToSection,
       })),
-    [scrollToBottom, scrollToWorkControls, scrollToSkills, scrollToSection],
+    [isHome, dismissSplash, scrollToBottom, scrollToWorkControls, scrollToSkills, scrollToSection],
   );
 
   useEffect(() => {
@@ -223,10 +240,13 @@ export function Nav() {
     >
       <Container as="nav" className="flex h-16 items-center justify-between">
         <Link
-          href="#hero"
+          href={isHome ? '#hero' : '/'}
           aria-label={`${site.initials} — ${site.name}, home`}
           className="font-display text-2xl leading-none tracking-tight text-fg transition-colors hover:text-accent"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            if (!isHome) dismissSplash();
+            setOpen(false);
+          }}
         >
           {site.initials}
         </Link>
@@ -276,12 +296,19 @@ export function Nav() {
                 {navLinks.map((link) => (
                   <li key={link.href}>
                     <Link
-                      href={link.href}
+                      href={isHome ? link.href : `/${link.href}`}
                       onClick={(e) => {
-                        if (link.href === '#contact') scrollToBottom(e);
-                        else if (link.href === '#work') scrollToWorkControls(e);
-                        else if (link.href === '#skills') scrollToSkills(e);
-                        else scrollToSection(e);
+                        // Off the homepage, let Next navigate to /#section and
+                        // mark the splash dismissed so it won't replay on
+                        // arrival; only intercept for in-page scrolling at home.
+                        if (isHome) {
+                          if (link.href === '#contact') scrollToBottom(e);
+                          else if (link.href === '#work') scrollToWorkControls(e);
+                          else if (link.href === '#skills') scrollToSkills(e);
+                          else scrollToSection(e);
+                        } else {
+                          dismissSplash();
+                        }
                         setOpen(false);
                       }}
                       className="block py-3 font-mono text-[12px] tracking-wider text-fg-mute uppercase transition-colors hover:text-fg focus-visible:text-fg"

@@ -1,6 +1,4 @@
-import { caseStudy, eraLabels } from '@/content/data/laHistory/caseStudy';
-import { locations } from '@/content/data/laHistory/locations';
-import type { Location } from '@/types/laHistory';
+import { caseStudy } from '@/content/data/laHistory/caseStudy';
 import '@/components/laHistory/styles/casestudy.css';
 import { CaseStudyShell } from './CaseStudyShell';
 import { ScrollExpandCover } from './ScrollExpandCover';
@@ -12,43 +10,6 @@ import { ResultsBars } from './ResultsBars';
 
 const C = caseStudy;
 const M = C.meta;
-
-function locById(id: number): Location {
-  const loc = locations.find((l) => l.id === id);
-  if (!loc) throw new Error(`LA History case study: location id ${id} not found`);
-  return loc;
-}
-
-/** Photo + mono caption. Hero/wide plates pass `eager` so the LCP image isn't lazy. */
-function Figure({
-  src,
-  caption,
-  pin,
-  ratio = '4 / 3',
-  eager = false,
-}: {
-  src: string;
-  caption?: string;
-  pin?: string;
-  ratio?: string;
-  eager?: boolean;
-}) {
-  return (
-    <figure className="fig">
-      <div className="frame" style={{ aspectRatio: ratio }}>
-        {pin && <span className="tagpin">{pin}</span>}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={caption ?? ''}
-          loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
-        />
-      </div>
-      {caption && <figcaption>{caption}</figcaption>}
-    </figure>
-  );
-}
 
 const SCREENS = [
   { t: 'The map', d: 'Leaflet basemap, fifteen markers, era-locked progression.' },
@@ -117,17 +78,6 @@ export function LaHistoryCaseStudy() {
                 <span className="num">06</span>To Production
               </a>
             </nav>
-          </Reveal>
-
-          {/* hero — wide landmark plate */}
-          <Reveal className="bs-hero wide" variant="img">
-            <Figure
-              src={locById(12).imageUrl}
-              ratio="21 / 8"
-              pin="Fig · Griffith Observatory"
-              eager
-              caption="Griffith Observatory over the basin — one of fifteen locations the game threads into a single, connected history of Los Angeles."
-            />
           </Reveal>
 
           {/* lede + role */}
@@ -316,27 +266,6 @@ export function LaHistoryCaseStudy() {
             </Reveal>
           </div>
 
-          {/* dispatches / plates */}
-          <div className="wide">
-            <Reveal className="bs-divider">
-              <span>Dispatches from the Map</span>
-            </Reveal>
-            <Reveal className="bs-plates" stagger>
-              {[1, 5, 11].map((id, i) => {
-                const l = locById(id);
-                return (
-                  <Figure
-                    key={id}
-                    src={l.imageUrl}
-                    ratio="4 / 5"
-                    pin={`Pl · 0${i + 1}`}
-                    caption={`${l.name} · ${eraLabels[l.era]}`}
-                  />
-                );
-              })}
-            </Reveal>
-          </div>
-
           {/* gazetteer — illustrated atlas, filterable by era */}
           <div className="wide" id="gazetteer">
             <Reveal className="bs-divider">
@@ -344,16 +273,6 @@ export function LaHistoryCaseStudy() {
             </Reveal>
             <Gazetteer />
           </div>
-
-          {/* wide plate */}
-          <Reveal className="bs-wideplate wide" variant="img">
-            <Figure
-              src={locById(13).imageUrl}
-              ratio="16 / 7"
-              pin="Fig · Chavez Ravine"
-              caption="Chavez Ravine — three communities displaced for the housing project that became Dodger Stadium."
-            />
-          </Reveal>
 
           {/* how it's built */}
           <div className="wide" id="built">

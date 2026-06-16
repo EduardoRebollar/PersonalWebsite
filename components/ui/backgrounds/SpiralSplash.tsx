@@ -28,6 +28,24 @@ const SpiralAnimation = lazy(() =>
 const HERO_CASCADE_DELAY = 900;
 
 export function SpiralSplash() {
+  // Skip the intro on any in-app navigation that lands on `/`, so the spiral
+  // only plays on a genuine fresh page load. Decided once, in a lazy
+  // initializer. Two signals:
+  //   1. `splashDismissed` (store) — set true once the user has entered the
+  //      site. The store is module-level, so it survives client-side route
+  //      changes (e.g. case study → /#work) and only resets on a full reload.
+  //      This is the reliable signal: the hash isn't dependably populated at
+  //      the instant a fresh SpiralSplash mounts mid client-side navigation.
+  //   2. URL hash — fallback for a hard/deep load straight to /#section.
+  // Reading `window`/the store here is safe despite SSR: the component renders
+  // null until `hydrated`, so the server (window undefined → false) and the
+  // client's first render agree on the output regardless.
+  const [skipIntro] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      useSceneStore.getState().splashDismissed || window.location.hash.length > 1
+    );
+  });
   const [hydrated, setHydrated] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [visible, setVisible] = useState(true);
@@ -96,23 +114,30 @@ export function SpiralSplash() {
   }, [exploding, startWarp]);
 
   useEffect(() => {
+    // When skipping (cross-page jump to /#section), reveal the page so the Hero
+    // and its sections show immediately under the scroll target. dismissSplash
+    // is a store action, so this is a no-op on the overlay's own lifecycle.
+    if (skipIntro) {
+      dismissSplash();
+      return;
+    }
     // Flip the SSR/client boundary so createPortal only runs after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
-  }, []);
+  }, [skipIntro, dismissSplash]);
 
   // Lock body scroll only while the overlay is visible. Tied to `visible` (not
   // unmount) so reduced-motion users — whose global CSS clamps transitions to
   // 0.01ms — get scroll back the instant they click Enter, even if the
   // `transitionend` event that drives unmount is flaky.
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || skipIntro) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [visible]);
+  }, [visible, skipIntro]);
 
   // Fallback unmount: if `transitionend` never fires (reduced-motion clamp,
   // tab backgrounded, etc.), force-unmount just past the 1600ms fade window so
@@ -132,7 +157,7 @@ export function SpiralSplash() {
   }, []);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || skipIntro) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Enter') {
         e.preventDefault();
@@ -141,9 +166,9 @@ export function SpiralSplash() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, dismiss]);
+  }, [visible, dismiss, skipIntro]);
 
-  if (!hydrated || !mounted) return null;
+  if (skipIntro || !hydrated || !mounted) return null;
 
   const overlay = (
     <div

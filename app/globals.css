@@ -3860,3 +3860,22 @@
     box-shadow: 0 0 8px var(--i-accent);
   }
 }
+
+/* Cross-page fade transition (components/ui/RouteTransition.tsx). A fixed
+   full-bleed cover above the nav (z-50) but below the intro splash (z-[100]):
+   fades to the page background on an outgoing route change, holds while the
+   next route mounts + scrolls to top, then fades back out to reveal it. */
+.route-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background-color: var(--background);
+  opacity: 0;
+  pointer-events: none;
+  transition-property: opacity;
+  transition-timing-function: ease;
+}
+.route-transition[data-covering='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
