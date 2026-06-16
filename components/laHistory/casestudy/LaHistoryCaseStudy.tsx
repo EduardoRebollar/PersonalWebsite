@@ -3,26 +3,36 @@ import '@/components/laHistory/styles/casestudy.css';
 import { CaseStudyShell } from './CaseStudyShell';
 import { ScrollExpandCover } from './ScrollExpandCover';
 import { Reveal } from './Reveal';
+import { ScrollWipeHeading, ScrollFillQuote } from './ScrollRevealWords';
+import { SectionRail } from './SectionRail';
 import { LinkCluster } from './LinkCluster';
 import { TutorTranscript } from './TutorTranscript';
 import { Gazetteer } from './Gazetteer';
 import { ResultsBars } from './ResultsBars';
+import { ZoomParallax, type ParallaxImage } from './ZoomParallax';
 
 const C = caseStudy;
 const M = C.meta;
 
-const SCREENS = [
-  { t: 'The map', d: 'Leaflet basemap, fifteen markers, era-locked progression.' },
-  { t: 'The quiz', d: 'Short per-location check that unlocks the concept map.' },
-  { t: 'Concept map + tutor', d: 'Cytoscape graph editor with the Socratic chat panel.' },
-  { t: 'Progress', d: 'Points, badges, and era unlocks across a session.' },
-] as const;
+// Interface screenshots for the zoom-parallax montage (index 0 is the centered
+// hero plate). Captures live in public/la-history/screens/.
+const SCREENSHOTS: ParallaxImage[] = [
+  { src: '/la-history/screens/welcome.webp', alt: 'Onboarding tutorial modal introducing the LA History journey' },
+  { src: '/la-history/screens/map.webp', alt: 'Leaflet basemap with era markers and a location detail panel' },
+  { src: '/la-history/screens/quiz.webp', alt: 'Per-location quiz results modal that unlocks the concept map' },
+  { src: '/la-history/screens/concept-map.webp', alt: 'Concept map editor with the Socratic AI tutor chat panel' },
+  { src: '/la-history/screens/dashboard.webp', alt: 'Player dashboard with era progress and badge collection' },
+  { src: '/la-history/screens/breakdown.webp', alt: 'Location breakdown table and per-era concept maps' },
+  { src: '/la-history/screens/gallery.webp', alt: 'In-app photo viewer showing a location gallery image' },
+  { src: '/la-history/screens/build-map.webp', alt: 'Onboarding tutorial for building a concept map' },
+];
 
 export function LaHistoryCaseStudy() {
   const peakScore = Math.max(...C.results.versions.map((v) => v.score));
 
   return (
     <CaseStudyShell>
+      <SectionRail />
       <ScrollExpandCover
         videoUrl="/la-history/video/san-gabriel-cover.mp4"
         bgImageSrc="/la-history/img/san-gabriel-cover.jpg"
@@ -106,9 +116,7 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>The Pedagogical Bet</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              Three theories, <em>one</em> loop
-            </Reveal>
+            <ScrollWipeHeading text="Three theories, one loop" emphasis="one" />
             <Reveal className="bs-grid3" stagger>
               {C.theories.map((t, i) => (
                 <div className="bs-cell" key={t.name}>
@@ -130,28 +138,17 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>The Interface</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              Map → quiz → concept map → <em>tutor</em>
-            </Reveal>
-            <Reveal className="bs-screens" stagger>
-              {SCREENS.map((s) => (
-                <figure className="bs-screen" key={s.t}>
-                  <div className="bs-slot">Screenshot — {s.t}</div>
-                  <figcaption>
-                    <b>{s.t}.</b> {s.d}
-                  </figcaption>
-                </figure>
-              ))}
-            </Reveal>
+            <ScrollWipeHeading text="Map → quiz → concept map → tutor" emphasis="tutor" />
+            <ZoomParallax images={SCREENSHOTS} />
           </div>
 
           {/* pull-quote */}
           <div className="col">
             <Reveal className="bs-pull">
-              <blockquote>
-                &ldquo;Making connections is what produces lasting understanding&rdquo; —{' '}
-                <em>not reading facts once and moving on.</em>
-              </blockquote>
+              <ScrollFillQuote
+                text="“Making connections is what produces lasting understanding” — not reading facts once and moving on."
+                emphasis="not reading facts once and moving on."
+              />
               <cite>The premise</cite>
             </Reveal>
           </div>
@@ -161,9 +158,7 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>The Tutor That Won&rsquo;t Answer</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              A Socratic AI that <em>asks</em>, never tells
-            </Reveal>
+            <ScrollWipeHeading text="A Socratic AI that asks, never tells" emphasis="asks" />
             <div className="col" style={{ marginBottom: 'clamp(20px,2.4vw,30px)' }}>
               <Reveal className="bs-cols">
                 <p>
@@ -201,9 +196,7 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>Results · Prompt Optimization</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              Four versions, <em>scored</em>
-            </Reveal>
+            <ScrollWipeHeading text="Four versions, scored" emphasis="scored" />
             <div className="col">
               <Reveal className="bs-cols">
                 <p>{C.results.intro}</p>
@@ -279,9 +272,7 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>How It&rsquo;s Built</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              A deliberately <em>boring</em> stack
-            </Reveal>
+            <ScrollWipeHeading text="A deliberately boring stack" emphasis="boring" />
             <div className="col">
               <Reveal className="bs-cols">
                 <p className="raised">{C.stackProse}</p>
@@ -303,10 +294,10 @@ export function LaHistoryCaseStudy() {
           {/* pull-quote */}
           <div className="col">
             <Reveal className="bs-pull">
-              <blockquote>
-                The tutor&rsquo;s job isn&rsquo;t to answer. It&rsquo;s to ask the{' '}
-                <em>one question</em> that bridges what you have to what you don&rsquo;t.
-              </blockquote>
+              <ScrollFillQuote
+                text="The tutor’s job isn’t to answer. It’s to ask the one question that bridges what you have to what you don’t."
+                emphasis="one question"
+              />
               <cite>On the Socratic prompt</cite>
             </Reveal>
           </div>
@@ -316,9 +307,7 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>To Production</span>
             </Reveal>
-            <Reveal as="h2" className="bs-head">
-              From a laptop to a <em>district</em>
-            </Reveal>
+            <ScrollWipeHeading text="From a laptop to a district" emphasis="district" />
             <Reveal as="table" className="bs-ledger" stagger>
               <tbody>
                 {C.production.map((p) => (
@@ -337,7 +326,7 @@ export function LaHistoryCaseStudy() {
               <span>Reflections</span>
             </Reveal>
             <Reveal className="bs-pull">
-              <blockquote>{C.reflections.quote}</blockquote>
+              <ScrollFillQuote text={C.reflections.quote} />
               <cite>What we learned</cite>
             </Reveal>
             <Reveal className="bs-reflect" stagger>

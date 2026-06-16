@@ -693,47 +693,64 @@
   font-weight: 500;
 }
 
-/* interface — real-screenshot slots (placeholders until captures land) */
-.lah-cs .bs-screens {
+/* interface — scroll-driven zoom-parallax montage (ZoomParallax.tsx) */
+.lah-cs .bs-zoom {
+  position: relative;
+  height: 300vh;
+  margin-top: clamp(8px, 1.4vw, 18px);
+}
+.lah-cs .bs-zoom-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.lah-cs .bs-zoom-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+/* plate — size + offset are set inline per index (ZoomParallax.tsx); the box is
+   painted at its zoomed size and scaled DOWN, so the image stays crisp */
+.lah-cs .bs-zoom-frame {
+  position: relative;
+  border: 1px solid var(--line-2);
+  background: linear-gradient(180deg, #0e131a, #090b0f);
+  overflow: hidden;
+}
+.lah-cs .bs-zoom-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* static fallback — SSR / no-JS / reduced-motion (no 300vh scroll trap) */
+.lah-cs .bs-zoom-static {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: clamp(16px, 2.4vw, 28px);
   margin-top: clamp(8px, 1.4vw, 18px);
 }
 @media (max-width: 680px) {
-  .lah-cs .bs-screens {
+  .lah-cs .bs-zoom-static {
     grid-template-columns: 1fr;
   }
 }
-.lah-cs .bs-screen figure {
+.lah-cs .bs-zoom-plate {
   margin: 0;
-}
-.lah-cs .bs-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   aspect-ratio: 16 / 10;
-  border: 1px dashed var(--line-2);
+  border: 1px solid var(--line-2);
   background: linear-gradient(180deg, #0e131a, #090b0f);
-  color: color-mix(in oklab, var(--fg-mute) 60%, transparent);
-  font-family: var(--cs-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-align: center;
-  padding: 16px;
+  overflow: hidden;
 }
-.lah-cs .bs-screen figcaption {
-  margin-top: 10px;
-  font-family: var(--cs-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--fg-dim);
-}
-.lah-cs .bs-screen figcaption b {
-  color: var(--fg);
-  font-weight: 500;
+.lah-cs .bs-zoom-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* boxed pull quote */
@@ -1715,23 +1732,10 @@
   transform: scale(1.05);
 }
 
-/* results bars: fills grow up from the axis on reveal, staggered; peak glows */
-.lah-cs.anim-ok .reveal .bs-bar-fill {
-  height: 0;
-  transition: height 1s var(--ease-out);
-}
-.lah-cs.anim-ok .reveal.in .bs-bar-fill {
-  height: var(--fill);
-}
-.lah-cs.anim-ok .reveal.in .bs-bar:nth-child(2) .bs-bar-fill {
-  transition-delay: 90ms;
-}
-.lah-cs.anim-ok .reveal.in .bs-bar:nth-child(3) .bs-bar-fill {
-  transition-delay: 180ms;
-}
-.lah-cs.anim-ok .reveal.in .bs-bar:nth-child(4) .bs-bar-fill {
-  transition-delay: 270ms;
-}
+/* results bars: heights + count-up are now scrubbed to scroll by ResultsBars.tsx
+   (inline height MotionValue); only the peak glow stays CSS-driven, blooming once
+   the chart reveals. The reduced-motion / no-JS fallback (full-height bars) is the
+   default `.bs-bar-fill { height: var(--fill) }` above + the @media block below. */
 .lah-cs.anim-ok .reveal.in .bs-bar.peak .bs-bar-fill {
   animation: bsBarPeak 1.5s var(--ease-out) 1.2s;
 }
@@ -1784,6 +1788,151 @@
   }
 }
 
+/* =============================================================================
+   Scroll-scrubbed word reveals (ScrollRevealWords.tsx) — headline word-wipe
+   (.bs-head) + pull-quote karaoke fill (.bs-pull blockquote). Each word is an
+   inline-block span; motion drives per-word opacity/transform (wipe) or color
+   (fill). The em accent/italic comes from the existing `.bs-head em` /
+   `.bs-pull blockquote em` rules (fill words also get an inline color override).
+   ========================================================================== */
+.lah-cs .srw-word {
+  display: inline-block;
+  white-space: pre;
+  will-change: opacity, transform, color;
+}
+
+/* =============================================================================
+   Scroll parallax (view() timeline; a clean no-op where unsupported). Applied
+   only to elements without an existing entrance transform so the reveal layer is
+   untouched: the nameplate recedes as the masthead scrolls away (its entrance is
+   clip-path + opacity, never transform). The interface screenshots now have their
+   own scroll-driven zoom (ZoomParallax.tsx), so they're no longer drifted here.
+   ========================================================================== */
+@supports (animation-timeline: view()) {
+  .lah-cs.anim-ok .bs-name {
+    animation: bsNameRecede linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+    will-change: transform;
+  }
+  @keyframes bsNameRecede {
+    to {
+      transform: translateY(-22px) scale(0.965);
+    }
+  }
+}
+
+/* =============================================================================
+   Sticky scroll-spy rail (SectionRail.tsx) — fixed vertical index that fades in
+   past the masthead and tracks the section in view. Desktop only; the numbers
+   stay visible and the label expands on hover / active. Outside `.anim-ok` so it
+   works regardless of the reveal gate (it's navigation, not decoration).
+   ========================================================================== */
+.lah-cs .bs-rail {
+  position: fixed;
+  left: clamp(14px, 2.2vw, 32px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 45;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-out);
+}
+.lah-cs .bs-rail.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+@media (max-width: 1100px) {
+  .lah-cs .bs-rail {
+    display: none;
+  }
+}
+.lah-cs .bs-rail-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lah-cs .bs-rail-list::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--line-2);
+}
+.lah-cs .bs-rail-item a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 0;
+  text-decoration: none;
+  color: var(--fg-dim);
+  font-family: var(--cs-mono);
+  transition: color 0.22s var(--ease-out);
+}
+.lah-cs .bs-rail-tick {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  transition: background-color 0.22s var(--ease-out), border-color 0.22s var(--ease-out),
+    transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
+}
+.lah-cs .bs-rail-n {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--fg-dim);
+  opacity: 0.7;
+  transition: color 0.22s var(--ease-out), opacity 0.22s var(--ease-out);
+}
+.lah-cs .bs-rail-l {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: max-width 0.32s var(--ease-out), opacity 0.32s var(--ease-out),
+    transform 0.32s var(--ease-out);
+}
+.lah-cs .bs-rail-item a:hover {
+  color: var(--fg);
+}
+.lah-cs .bs-rail-item a:hover .bs-rail-tick {
+  border-color: var(--fg-mute);
+}
+.lah-cs .bs-rail-item a:hover .bs-rail-l,
+.lah-cs .bs-rail-item.on .bs-rail-l {
+  max-width: 170px;
+  opacity: 1;
+  transform: none;
+}
+.lah-cs .bs-rail-item.on a {
+  color: var(--fg);
+}
+.lah-cs .bs-rail-item.on .bs-rail-n {
+  color: var(--accent);
+  opacity: 1;
+}
+.lah-cs .bs-rail-item.on .bs-rail-tick {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.25);
+  box-shadow: 0 0 12px -1px var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lah-cs.anim-ok .reveal,
   .lah-cs.anim-ok .reveal-stagger > *,
@@ -1814,5 +1963,18 @@
   .lah-cs.anim-ok .bs-ledger th::before {
     transform: scaleY(1) !important;
     transition: none !important;
+  }
+  /* scroll-spy rail stays usable but instant; scrubbed words sit at final state */
+  .lah-cs .bs-rail,
+  .lah-cs .bs-rail-item a,
+  .lah-cs .bs-rail-tick,
+  .lah-cs .bs-rail-n,
+  .lah-cs .bs-rail-l {
+    transition: none !important;
+  }
+  .lah-cs .srw-word {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
   }
 }
