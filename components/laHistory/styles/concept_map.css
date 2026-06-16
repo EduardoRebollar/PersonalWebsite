@@ -36,8 +36,8 @@
   box-shadow: 0 0 0 1px rgba(184, 115, 26, 0.22),
               0 8px 24px rgba(184, 115, 26, 0.08),
               0 32px 96px rgba(10, 8, 6, 0.60);
-  width: min(96vw, 1420px);
-  height: min(90vh, 800px);
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;

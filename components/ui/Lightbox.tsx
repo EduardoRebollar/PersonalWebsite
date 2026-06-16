@@ -24,11 +24,18 @@ export function Lightbox({
   image,
   onClose,
   aspect = '3 / 4',
+  unoptimized = false,
 }: {
   image: MediaImage | null;
   onClose: () => void;
   /** CSS aspect-ratio for the image frame. Journey/About photos are 3:4. */
   aspect?: string;
+  /**
+   * Serve the original source file at full resolution instead of a next/image
+   * resized derivative. Use for already-compressed assets (e.g. the LA History
+   * screenshots) where the viewer expects the true full-res capture.
+   */
+  unoptimized?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
   // Once the image loads we know its true aspect ratio, so the frame can size
@@ -129,6 +136,7 @@ export function Lightbox({
                 alt={image.alt}
                 fill
                 quality={95}
+                unoptimized={unoptimized}
                 sizes="(max-width: 768px) 90vw, 60vw"
                 onLoad={(e) => {
                   const el = e.currentTarget;

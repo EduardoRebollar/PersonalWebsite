@@ -10,6 +10,8 @@ import {
 } from 'react';
 import { motion, useScroll, useTransform, type MotionValue } from 'motion/react';
 import { prefersReducedMotion } from '@/lib/motion';
+import { Lightbox } from '@/components/ui/Lightbox';
+import type { MediaImage } from '@/types/content';
 
 // useLayoutEffect warns on the server; fall back to useEffect there (mirrors
 // ScrollRevealWords / ScrollExpandCover).
@@ -68,10 +70,12 @@ function ParallaxItem({
   image,
   index,
   progress,
+  onOpen,
 }: {
   image: ParallaxImage;
   index: number;
   progress: MotionValue<number>;
+  onOpen: (image: MediaImage) => void;
 }) {
   const peak = SCALES[index % SCALES.length]!;
   const frame = FRAMES[index % FRAMES.length]!;
@@ -85,16 +89,28 @@ function ParallaxItem({
   };
   return (
     <motion.div className="bs-zoom-item" style={{ scale }}>
-      <div className="bs-zoom-frame" style={style}>
+      <button
+        type="button"
+        className="bs-zoom-frame"
+        style={style}
+        onClick={() => onOpen(image)}
+        aria-label={`Expand: ${image.alt}`}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
-      </div>
+      </button>
     </motion.div>
   );
 }
 
 /** Active branch — one scroll progress for the 300vh track, scrubbed onto each plate. */
-function AnimatedParallax({ images }: { images: ParallaxImage[] }) {
+function AnimatedParallax({
+  images,
+  onOpen,
+}: {
+  images: ParallaxImage[];
+  onOpen: (image: MediaImage) => void;
+}) {
   const container = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: container,
@@ -105,7 +121,13 @@ function AnimatedParallax({ images }: { images: ParallaxImage[] }) {
     <div ref={container as Ref<HTMLDivElement>} className="bs-zoom">
       <div className="bs-zoom-sticky">
         {images.map((image, i) => (
-          <ParallaxItem key={image.src} image={image} index={i} progress={scrollYProgress} />
+          <ParallaxItem
+            key={image.src}
+            image={image}
+            index={i}
+            progress={scrollYProgress}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </div>
@@ -113,13 +135,25 @@ function AnimatedParallax({ images }: { images: ParallaxImage[] }) {
 }
 
 /** Static, non-trapping fallback — SSR, no-JS, and reduced-motion all land here. */
-function StaticParallax({ images }: { images: ParallaxImage[] }) {
+function StaticParallax({
+  images,
+  onOpen,
+}: {
+  images: ParallaxImage[];
+  onOpen: (image: MediaImage) => void;
+}) {
   return (
     <div className="bs-zoom-static">
       {images.map((image) => (
         <figure key={image.src} className="bs-zoom-plate">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+          <button
+            type="button"
+            onClick={() => onOpen(image)}
+            aria-label={`Expand: ${image.alt}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+          </button>
         </figure>
       ))}
     </div>
@@ -139,11 +173,22 @@ function StaticParallax({ images }: { images: ParallaxImage[] }) {
  */
 export function ZoomParallax({ images }: { images: ParallaxImage[] }) {
   const [engaged, setEngaged] = useState(false);
+  // Click-to-expand: any plate (animated or static) opens the shared Lightbox,
+  // which shows the image enlarged with its alt text as the caption.
+  const [active, setActive] = useState<MediaImage | null>(null);
   useIsoLayoutEffect(() => {
     if (prefersReducedMotion()) return;
     setEngaged(true);
   }, []);
 
-  if (!engaged) return <StaticParallax images={images} />;
-  return <AnimatedParallax images={images} />;
+  return (
+    <>
+      {engaged ? (
+        <AnimatedParallax images={images} onOpen={setActive} />
+      ) : (
+        <StaticParallax images={images} onOpen={setActive} />
+      )}
+      <Lightbox image={active} onClose={() => setActive(null)} aspect="16 / 10" unoptimized />
+    </>
+  );
 }

@@ -49,15 +49,23 @@ export function ScrollExpandCover({
   // so reduced-motion / no-JS visitors never flash the interactive state — the
   // same gate CaseStudyShell uses for `.anim-ok`.
   const [interactive, setInteractive] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [mediaFullyExpanded, setMediaFullyExpanded] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+
   useIsoLayoutEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     setInteractive(true);
+    // On reload the browser restores the prior scroll position. If we're already
+    // deep in the article, skip the cover hijack entirely — otherwise `onScroll`
+    // yanks the reader back to the top and traps them until they replay the
+    // expand animation.
+    if (window.scrollY > 5) {
+      setScrollProgress(1);
+      setMediaFullyExpanded(true);
+    }
   }, []);
-
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [mediaFullyExpanded, setMediaFullyExpanded] = useState(false);
-  const [touchStartY, setTouchStartY] = useState(0);
   // Lazy-init from the current width — avoids a setState in the effect body.
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < 768,
@@ -109,7 +117,16 @@ export function ScrollExpandCover({
     const onTouchEnd = () => setTouchStartY(0);
 
     const onScroll = () => {
-      if (!mediaFullyExpanded) window.scrollTo(0, 0);
+      if (mediaFullyExpanded) return;
+      // The hijack pins the page at the top, so a non-trivial scrollY here means
+      // the browser restored a deep position after reload — release into the
+      // article instead of snapping back to the cover.
+      if (window.scrollY > 5) {
+        setScrollProgress(1);
+        setMediaFullyExpanded(true);
+        return;
+      }
+      window.scrollTo(0, 0);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {

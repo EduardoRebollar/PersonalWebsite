@@ -17,14 +17,14 @@ const M = C.meta;
 // Interface screenshots for the zoom-parallax montage (index 0 is the centered
 // hero plate). Captures live in public/la-history/screens/.
 const SCREENSHOTS: ParallaxImage[] = [
-  { src: '/la-history/screens/welcome.webp', alt: 'Onboarding tutorial modal introducing the LA History journey' },
-  { src: '/la-history/screens/map.webp', alt: 'Leaflet basemap with era markers and a location detail panel' },
-  { src: '/la-history/screens/quiz.webp', alt: 'Per-location quiz results modal that unlocks the concept map' },
-  { src: '/la-history/screens/concept-map.webp', alt: 'Concept map editor with the Socratic AI tutor chat panel' },
-  { src: '/la-history/screens/dashboard.webp', alt: 'Player dashboard with era progress and badge collection' },
-  { src: '/la-history/screens/breakdown.webp', alt: 'Location breakdown table and per-era concept maps' },
-  { src: '/la-history/screens/gallery.webp', alt: 'In-app photo viewer showing a location gallery image' },
-  { src: '/la-history/screens/build-map.webp', alt: 'Onboarding tutorial for building a concept map' },
+  { src: '/la-history/screens/welcome.webp', alt: 'Onboarding welcome modal over the Leaflet map of Los Angeles, introducing the 15-location journey across four eras' },
+  { src: '/la-history/screens/map.webp', alt: 'Era-filtered map markers with the Chavez Ravine detail panel — period photo, oral-history video, and narrative' },
+  { src: '/la-history/screens/quiz.webp', alt: 'Quiz results modal — 100% on Ballona Wetlands for +45 points, with the question recap and historical timeline' },
+  { src: '/la-history/screens/concept-map.webp', alt: 'Concept-map editor for the Modern era, with labeled cross-era links and the Socratic AI tutor chat alongside' },
+  { src: '/la-history/screens/dashboard.webp', alt: 'Player dashboard — explorer profile, per-era progress rings, and the earned-badge collection' },
+  { src: '/la-history/screens/breakdown.webp', alt: 'Location breakdown table across all 15 sites, with the four per-era concept-map summaries below' },
+  { src: '/la-history/screens/gallery.webp', alt: 'Full-screen photo viewer showing the Ballona Wetlands ecological reserve, with its descriptive caption' },
+  { src: '/la-history/screens/build-map.webp', alt: 'Concept-map tutorial — the "Build Your Concept Map" walkthrough with the AI tutor introducing itself' },
 ];
 
 export function LaHistoryCaseStudy() {
@@ -90,32 +90,33 @@ export function LaHistoryCaseStudy() {
             </nav>
           </Reveal>
 
-          {/* lede + role */}
-          <div className="col">
-            <Reveal className="bs-divider">
-              <span>The Report</span>
-            </Reveal>
-            <Reveal className="bs-cols">
-              <p className="raised">{C.whatItIs}</p>
-              <p>{C.bet}</p>
-            </Reveal>
-            <Reveal className="bs-role">
-              <div>
-                <span className="lbl">Team</span>
-                <p>{M.team.join(' · ')}</p>
-              </div>
-              <div>
-                <span className="lbl">My role</span>
-                <p>{M.myRole}</p>
-              </div>
-            </Reveal>
-          </div>
-
-          {/* the pedagogical bet */}
+          {/* The Bet — what it is, who built it, and the pedagogical wager */}
           <div className="wide" id="bet">
             <Reveal className="bs-divider">
-              <span>The Pedagogical Bet</span>
+              <span>The Bet</span>
             </Reveal>
+
+            <div className="col">
+              <Reveal>
+                <p className="bs-lede raised">{C.whatItIs}</p>
+              </Reveal>
+              <Reveal className="bs-role">
+                <div>
+                  <span className="lbl">Team</span>
+                  <p>{M.team.join(' · ')}</p>
+                </div>
+                <div>
+                  <span className="lbl">My role</span>
+                  <p>{M.myRole}</p>
+                </div>
+              </Reveal>
+            </div>
+
+            <Reveal className="bs-wager">
+              <span className="lbl">The wager</span>
+              <p>{C.bet}</p>
+            </Reveal>
+
             <ScrollWipeHeading text="Three theories, one loop" emphasis="one" />
             <Reveal className="bs-grid3" stagger>
               {C.theories.map((t, i) => (

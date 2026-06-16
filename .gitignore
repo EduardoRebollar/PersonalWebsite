@@ -50,3 +50,6 @@ yarn-error.log*
 
 # Bun
 bun.lockb.bak
+
+.vercel
+.env*
