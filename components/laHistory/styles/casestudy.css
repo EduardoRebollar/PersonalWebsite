@@ -33,9 +33,9 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* motion knobs (mirrors lah-motion.css) */
-  --m-dur: 0.85s;
+  --m-dur: 1.35s;
   --m-travel: 26px;
-  --m-step: 80ms;
+  --m-step: 110ms;
   --m-blur: 6px;
 
   --bs-rhythm: 1;
@@ -83,8 +83,15 @@
   height: 3px;
   z-index: 70;
   transform-origin: 0 50%;
-  background: linear-gradient(90deg, rgba(52, 211, 153, 0.55), #34d399);
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+  border-radius: 999px;
+  /* comet beam: bright at the leading edge (right), fading to transparent at the
+     trailing end — same treatment as the section rail's progress beam */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 0%, transparent) 0%,
+    var(--accent) 65%,
+    var(--accent) 100%
+  );
   pointer-events: none;
 }
 
@@ -159,20 +166,36 @@
   font-weight: 500;
 }
 .lah-cs .btn-primary:hover {
-  box-shadow: 0 0 26px -6px var(--accent);
-  transform: translateY(-1px);
+  box-shadow: 0 0 32px -4px var(--accent);
+  transform: translateY(-2px);
+}
+/* play glyph springs forward on hover */
+.lah-cs .btn-primary:hover svg {
+  transform: scale(1.18) translateX(1px);
 }
 .lah-cs .btn-ghost {
   border-color: var(--line-strong);
   color: var(--fg-mute);
+  /* ShinyButton's sweep ring reads --color-accent (site indigo); remap it to
+     the case-study green so the glint matches the page. */
+  --color-accent: var(--accent);
 }
 .lah-cs .btn-ghost:hover {
   color: var(--fg);
-  border-color: var(--fg-mute);
+  transform: translateY(-2px);
+}
+/* external-link arrow drifts up-and-out on hover */
+.lah-cs .btn-ghost:hover svg:last-child {
+  transform: translate(2px, -2px);
+}
+/* press feedback — settle back down */
+.lah-cs .btn:active {
+  transform: translateY(0);
 }
 .lah-cs .btn svg {
   width: 15px;
   height: 15px;
+  transition: transform 0.2s var(--ease);
 }
 
 /* figure with real photo + mono caption */
@@ -231,6 +254,8 @@
 /* nameplate */
 .lah-cs .bs-plate {
   text-align: center;
+  /* the masthead entrance breathes — wider gap between each line revealing */
+  --m-step: 250ms;
 }
 .lah-cs .bs-rule {
   height: 1px;
@@ -261,7 +286,7 @@
   line-height: 0.9;
   font-size: clamp(3.4rem, 11vw, 8rem);
   letter-spacing: -0.01em;
-  margin: clamp(14px, 2.4vw, 26px) 0;
+  margin: clamp(24px, 3.6vw, 44px) 0;
 }
 .lah-cs .bs-name em {
   font-style: italic;
@@ -273,8 +298,15 @@
   font-size: clamp(1.25rem, 2.4vw, 1.95rem);
   line-height: 1.35;
   color: var(--fg-mute);
-  max-width: 34ch;
-  margin: clamp(18px, 2.4vw, 28px) auto 0;
+  max-width: none;
+  white-space: nowrap;
+  margin: clamp(28px, 3.4vw, 46px) auto 0;
+}
+@media (max-width: 640px) {
+  .lah-cs .bs-standfirst {
+    white-space: normal;
+    max-width: 34ch;
+  }
 }
 .lah-cs .bs-byline {
   display: flex;
@@ -286,7 +318,7 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-dim);
-  margin: 18px 0;
+  margin: clamp(26px, 3vw, 40px) 0;
 }
 .lah-cs .bs-byline b {
   color: var(--fg);
@@ -294,18 +326,16 @@
 }
 .lah-cs .bs-plate .cs-links {
   justify-content: center;
-  margin-top: 22px;
+  margin-top: clamp(30px, 3.4vw, 46px);
 }
 
 /* contents / index strip under the nameplate */
 .lah-cs .bs-contents {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px 24px;
-  margin: clamp(22px, 2.6vw, 34px) auto 0;
-  padding: 14px 0;
+  margin: clamp(34px, 3.8vw, 54px) auto 0;
+  padding: clamp(16px, 1.8vw, 22px) 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   font-family: var(--cs-mono);
@@ -313,8 +343,31 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
+/* "In This Issue" heading — set apart from the entries below it */
 .lah-cs .bs-contents .lead-label {
-  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: clamp(12px, 1.4vw, 18px);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+}
+.lah-cs .bs-contents .lead-label::before,
+.lah-cs .bs-contents .lead-label::after {
+  content: "";
+  width: clamp(22px, 4vw, 48px);
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.7;
+}
+.lah-cs .bs-contents-entries {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 24px;
 }
 .lah-cs .bs-contents a {
   position: relative;
@@ -478,7 +531,12 @@
   font-size: clamp(3rem, 11vw, 8rem);
   letter-spacing: -0.01em;
   color: #fff;
-  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.6), 0 1px 4px rgba(0, 0, 0, 0.5);
+  /* drop-shadow (not text-shadow): the cut-reveal wraps each word in an
+     overflow-hidden mask, which clips a text-shadow into a visible rectangle
+     over bright photo areas. A filter applies after that clip, so the shadow
+     follows the glyph silhouette instead of boxing the word. */
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 2px 24px rgba(0, 0, 0, 0.6));
 }
 
 /* static (reduced-motion / no-JS) variant */
@@ -579,6 +637,12 @@
     columns: 1;
   }
 }
+/* single short lead: don't break into columns or justify (avoids gappy rivers) */
+.lah-cs .bs-cols.bs-cols--single {
+  columns: 1;
+  text-align: left;
+  hyphens: manual;
+}
 
 /* lede — single readable lead paragraph that opens The Bet (drop cap) */
 .lah-cs .bs-lede {
@@ -586,6 +650,10 @@
   font-size: 1.12rem;
   line-height: 1.78;
   color: #e9e9e9;
+  /* widen out of the 50rem .col so the intro settles onto five lines */
+  width: min(55rem, 94vw);
+  max-width: none;
+  margin-inline: calc((50rem - min(55rem, 94vw)) / 2);
 }
 .lah-cs .bs-lede.raised::first-letter {
   font-family: var(--cs-display);
@@ -598,9 +666,11 @@
 
 /* the wager — thesis deck that bridges the lede into the three theories */
 .lah-cs .bs-wager {
-  max-width: 52rem;
+  /* Share the .col (My Role) column exactly — same 50rem max-width, centered —
+     so both the deck's left and right edges line up with the My Role box. */
+  max-width: 50rem;
   margin: clamp(34px, 4vw, 56px) auto clamp(22px, 2.6vw, 36px);
-  padding: clamp(20px, 2.4vw, 30px) clamp(22px, 2.6vw, 34px);
+  padding: clamp(20px, 2.4vw, 30px) clamp(16px, 1.8vw, 24px);
   border-left: 2px solid var(--accent);
   background: linear-gradient(
     100deg,
@@ -621,25 +691,23 @@
   margin: 0;
   font-family: var(--cs-display);
   font-style: italic;
-  font-size: clamp(1.4rem, 3vw, 2.15rem);
-  line-height: 1.32;
+  /* Sized so the longest hard-broken line (the second sentence, see `bet` in
+     caseStudy.ts) reaches close to the deck's right edge — which is matched to
+     the My Role box — without wrapping; scales down on narrower viewports. */
+  font-size: clamp(1.3rem, 2.85vw, 1.85rem);
+  line-height: 1.42;
   color: var(--fg);
 }
 
 /* team / role callout */
 .lah-cs .bs-role {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: 1fr;
   gap: clamp(20px, 3vw, 44px);
   border: 1px solid var(--line);
   padding: clamp(20px, 2.4vw, 28px);
   margin: clamp(28px, 3.4vw, 44px) auto 0;
-}
-@media (max-width: 640px) {
-  .lah-cs .bs-role {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+  text-align: center;
 }
 .lah-cs .bs-role .lbl {
   font-family: var(--cs-mono);
@@ -772,11 +840,69 @@
   overflow: hidden;
   cursor: zoom-in;
   appearance: none;
+  transition: transform 0.3s var(--ease-out);
+}
+.lah-cs .bs-zoom-frame:hover,
+.lah-cs .bs-zoom-frame:focus-visible {
+  transform: scale(1.04);
 }
 .lah-cs .bs-zoom-frame img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* "click to enlarge" affordance overlaid on every plate (animated + static).
+   Hidden at rest, revealed on hover / keyboard focus: a faint corner scrim plus
+   a frosted magnifier+label chip at the bottom-right. */
+.lah-cs .bs-zoom-cue {
+  --cue-chip: rgb(12 16 22 / 0.72);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: clamp(8px, 1.1vw, 14px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s var(--ease-out);
+}
+.lah-cs .bs-zoom-cue > svg {
+  flex: none;
+  color: #f3efe4;
+  background: var(--cue-chip);
+  border: 1px solid var(--line-2);
+  border-right: 0;
+  border-radius: 999px 0 0 999px;
+  padding: 5px 4px 5px 9px;
+  box-sizing: content-box;
+}
+.lah-cs .bs-zoom-cue em {
+  display: inline-flex;
+  align-items: center;
+  font-style: normal;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: #f3efe4;
+  background: var(--cue-chip);
+  border: 1px solid var(--line-2);
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  padding: 7px 11px 7px 6px;
+}
+.lah-cs .bs-zoom-frame:hover .bs-zoom-cue,
+.lah-cs .bs-zoom-frame:focus-visible .bs-zoom-cue,
+.lah-cs .bs-zoom-plate button:hover .bs-zoom-cue,
+.lah-cs .bs-zoom-plate button:focus-visible .bs-zoom-cue {
+  opacity: 1;
+}
+@media (hover: none) {
+  /* touch devices can't hover — keep the cue faintly visible so it still reads */
+  .lah-cs .bs-zoom-cue {
+    opacity: 0.9;
+  }
 }
 
 /* static fallback — SSR / no-JS / reduced-motion (no 300vh scroll trap) */
@@ -800,6 +926,7 @@
   overflow: hidden;
 }
 .lah-cs .bs-zoom-plate button {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -826,12 +953,40 @@
   outline-offset: -2px;
 }
 
+/* persistent "click to enlarge" hint under the Interface heading */
+.lah-cs .bs-zoom-hint {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(10px, 1.4vw, 16px);
+}
+.lah-cs .bs-zoom-hint-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(12 16 22 / 0.4);
+}
+.lah-cs .bs-zoom-hint-chip svg {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+}
+
 /* boxed pull quote */
 .lah-cs .bs-pull {
   border-top: 3px double var(--line-2);
   border-bottom: 3px double var(--line-2);
   padding: clamp(24px, 3vw, 38px) clamp(16px, 3vw, 40px);
-  margin: clamp(36px, 4vw, 60px) auto;
+  /* break out of the 50rem .col so the quote lands on two lines, not three */
+  width: min(60rem, 92vw);
+  max-width: none;
+  margin: clamp(36px, 4vw, 60px) calc((50rem - min(60rem, 92vw)) / 2);
   text-align: center;
 }
 .lah-cs .bs-pull blockquote {
@@ -840,6 +995,14 @@
   font-size: clamp(1.6rem, 3.4vw, 2.6rem);
   line-height: 1.25;
   color: var(--fg);
+}
+/* the longer Reflections quote needs more room to land on four lines */
+.lah-cs #reflections .bs-pull {
+  width: min(68rem, 93vw);
+  margin-inline: calc((50rem - min(68rem, 93vw)) / 2);
+}
+.lah-cs #reflections .bs-pull blockquote {
+  font-size: clamp(1.3rem, 2.6vw, 2rem);
 }
 .lah-cs .bs-pull blockquote em {
   font-style: italic;
@@ -902,6 +1065,7 @@
   padding: clamp(18px, 2.4vw, 28px) clamp(16px, 2.4vw, 28px);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 18px;
   min-height: 300px;
 }
@@ -1169,6 +1333,10 @@
     color-mix(in oklab, var(--accent) 8%, transparent)
   );
   border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  /* Steady winner glow — an accent halo around the leading bar. */
+  box-shadow:
+    0 0 28px -2px color-mix(in oklab, var(--accent) 45%, transparent),
+    0 0 10px -1px color-mix(in oklab, var(--accent) 60%, transparent);
 }
 .lah-cs .bs-bar-fill .val {
   position: absolute;
@@ -1615,7 +1783,9 @@
 /* colophon end */
 .lah-cs .bs-colophon {
   text-align: center;
-  margin-top: clamp(40px, 5vw, 72px);
+  margin-top: clamp(24px, 3vw, 36px);
+  /* match the mark→buttons gap below the buttons too */
+  margin-bottom: clamp(24px, 3vw, 36px);
 }
 .lah-cs .bs-colophon .mark {
   font-family: var(--cs-display);
@@ -1632,6 +1802,7 @@
 }
 .lah-cs .bs-colophon .cs-links {
   justify-content: center;
+  margin-top: clamp(24px, 3vw, 36px);
 }
 
 /* =========================================================================
@@ -1818,22 +1989,12 @@
   transform: scale(1.05);
 }
 
-/* results bars: heights + count-up are now scrubbed to scroll by ResultsBars.tsx
-   (inline height MotionValue); only the peak glow stays CSS-driven, blooming once
-   the chart reveals. The reduced-motion / no-JS fallback (full-height bars) is the
-   default `.bs-bar-fill { height: var(--fill) }` above + the @media block below. */
-.lah-cs.anim-ok .reveal.in .bs-bar.peak .bs-bar-fill {
-  animation: bsBarPeak 1.5s var(--ease-out) 1.2s;
-}
-@keyframes bsBarPeak {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-  40% {
-    box-shadow: 0 0 26px -2px color-mix(in oklab, var(--accent) 50%, transparent);
-  }
-}
+/* results bars: heights + count-up animate in on view via ResultsBars.tsx
+   (inline height MotionValue). The peak bar carries a steady accent glow (see
+   `.bs-bar.peak .bs-bar-fill` above) — no separate pulse, which used to blink
+   the halo out of sync after the bars finished rising. The reduced-motion /
+   no-JS fallback (full-height bars) is the default
+   `.bs-bar-fill { height: var(--fill) }` above + the @media block below. */
 
 /* pull-quote: a soft accent halo blooms in with the quote */
 .lah-cs.anim-ok .reveal.bs-pull {
@@ -1923,12 +2084,14 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.5s var(--ease-out);
+  /* delay the visibility flip until the opacity has faded, so hiding animates */
+  transition: opacity 0.5s var(--ease-out), visibility 0s linear 0.5s;
 }
 .lah-cs .bs-rail.is-visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.5s var(--ease-out), visibility 0s linear 0s;
 }
 @media (max-width: 1100px) {
   .lah-cs .bs-rail {
@@ -1944,17 +2107,51 @@
   flex-direction: column;
   gap: 2px;
 }
-.lah-cs .bs-rail-list::before {
+.lah-cs .bs-rail-list::before,
+.lah-cs .bs-rail-list::after {
   content: "";
   position: absolute;
-  left: 3px;
-  top: 8px;
-  bottom: 8px;
-  width: 1px;
-  background: var(--line-2);
+  left: 2.5px;
+  /* start/end at the first and last dot centres (≈ row-height / 2) so the spine
+     and beam don't poke out as stray green bits above 01 / below 06 — the dots'
+     masking rings then tuck the line ends out of sight. */
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 999px;
+}
+/* full track (unfilled, dim) — faded at both ends like the Journey spine */
+.lah-cs .bs-rail-list::before {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--line-2) 12%,
+    var(--line-2) 88%,
+    transparent 100%
+  );
+}
+/* reading-progress beam: a teal gradient that's bright at its leading edge and
+   fades out at the trailing end (Journey's comet beam), scaled from the top down
+   to the active dot. */
+.lah-cs .bs-rail-list::after {
+  background: linear-gradient(
+    to top,
+    var(--accent) 0%,
+    var(--accent) 35%,
+    color-mix(in srgb, var(--accent) 0%, transparent) 100%
+  );
+  transform-origin: top;
+  transform: scaleY(var(--rail-fill, 0));
+  /* scroll-linked (set per-frame from JS) — no transition, so the beam tracks
+     the scroll position exactly like the Journey timeline beam */
+  will-change: transform;
 }
 .lah-cs .bs-rail-item a {
   position: relative;
+  /* lift above the spine + beam (ol::before/::after) so the dot's page-colour
+     ring masks BOTH the track and the fill beam — otherwise ::after, painting
+     last, draws the beam over the nodes. */
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -1969,8 +2166,14 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: transparent;
+  /* page-colour fill (not transparent) so the spine is masked INSIDE the dot
+     too — an outset box-shadow only paints outside the box, so a transparent
+     centre would let the line show through. */
+  background: var(--bg);
   border: 1px solid var(--line-strong);
+  /* …and the ring punches the gap OUTSIDE the dot, so the line never connects
+     to it — the same masking the Journey nodes use (bg-base). */
+  box-shadow: 0 0 0 4px var(--bg);
   transition: background-color 0.22s var(--ease-out), border-color 0.22s var(--ease-out),
     transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
 }
@@ -1986,12 +2189,14 @@
   overflow: hidden;
   white-space: nowrap;
   opacity: 0;
-  transform: translateX(-4px);
+  /* sits offset to the left while hidden, so it slides in from the left on
+     reveal and back out to the left on hide (symmetric) */
+  transform: translateX(-16px);
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: max-width 0.32s var(--ease-out), opacity 0.32s var(--ease-out),
-    transform 0.32s var(--ease-out);
+    transform 0.32s var(--ease-out), color 0.22s var(--ease-out);
 }
 .lah-cs .bs-rail-item a:hover {
   color: var(--fg);
@@ -1999,11 +2204,18 @@
 .lah-cs .bs-rail-item a:hover .bs-rail-tick {
   border-color: var(--fg-mute);
 }
+/* the label flashes in when a section is entered (`.flash`, cleared after 1s in
+   SectionRail) and on hover — then fades back out via the .bs-rail-l transition,
+   so it never lingers long enough to overlap the full-bleed content. */
 .lah-cs .bs-rail-item a:hover .bs-rail-l,
-.lah-cs .bs-rail-item.on .bs-rail-l {
+.lah-cs .bs-rail-item.flash .bs-rail-l {
   max-width: 170px;
   opacity: 1;
   transform: none;
+}
+.lah-cs .bs-rail-item.on .bs-rail-l,
+.lah-cs .bs-rail-item.flash .bs-rail-l {
+  color: var(--fg);
 }
 .lah-cs .bs-rail-item.on a {
   color: var(--fg);
@@ -2016,7 +2228,17 @@
   background: var(--accent);
   border-color: var(--accent);
   transform: scale(1.25);
-  box-shadow: 0 0 12px -1px var(--accent);
+  /* keep the page-colour gap ring, then the accent glow on top */
+  box-shadow: 0 0 0 4px var(--bg), 0 0 12px -1px var(--accent);
+}
+/* sections already read: dim accent dot, no glow. Blend with the page colour
+   (not transparent) so the filled beam behind the dot doesn't show through. */
+.lah-cs .bs-rail-item.passed .bs-rail-tick {
+  background: color-mix(in srgb, var(--accent) 55%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--bg));
+}
+.lah-cs .bs-rail-item.passed .bs-rail-n {
+  color: color-mix(in srgb, var(--accent) 70%, var(--fg-dim));
 }
 
 @media (prefers-reduced-motion: reduce) {

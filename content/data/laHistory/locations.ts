@@ -91,7 +91,7 @@ export const locations = [
     "isStarter": true,
     "unlockThreshold": 0,
     "imageUrl": "/la-history/img/san-gabriel-foothills.jpg",
-    "imageCaption": "A snow-capped panorama of the San Gabriel Mountains, which formed the northern horizon of Tongva territory for thousands of years.",
+    "imageCaption": "A panoramic view of the San Gabriel Mountains, which formed the northern horizon of Tongva territory for thousands of years.",
     "shortDescription": "Tongva villages lined the streams flowing from the San Gabriel Mountains, where oak groves and trade routes shaped daily life.",
     "fullDescription": "North of the Los Angeles Basin, the San Gabriel Mountains rise sharply above the city. Their foothills once supported many Tongva villages, each located near streams flowing down from the mountains. These communities relied on the land's rich resources and deep knowledge of seasonal cycles. Oak trees were especially important. Their acorns were collected, ground into flour with stone mortars, and turned into porridge or bread. Many of these grinding stones remain in the foothills today, marking places where families worked and gathered over generations. The foothills were also part of broad trade networks. Obsidian came from desert regions, shell beads arrived from the coast, and dried fish and plant medicines moved between communities. Leaders helped maintain relationships between villages and neighboring peoples, allowing trade and cooperation to continue. In 1769, the Portolá Expedition passed through the valley and noted the thriving settlements and fertile land. Within two years, Mission San Gabriel was founded nearby, beginning major changes to the Tongva world that had been shaped carefully over thousands of years.",
     "events": [
@@ -129,7 +129,7 @@ export const locations = [
     "isStarter": false,
     "unlockThreshold": 0,
     "imageUrl": "/la-history/img/el-pueblo.jpg",
-    "imageCaption": "Our Lady Queen of Angels Church (La Placita) near the original Los Angeles Plaza, at the heart of the historic El Pueblo district.",
+    "imageCaption": "Olvera Street, the historic brick-paved marketplace at the heart of El Pueblo de Los Ángeles, near the city's original 1781 plaza.",
     "shortDescription": "Founded September 4, 1781 by 44 settlers of Indigenous, African, and Spanish ancestry, El Pueblo became the seed of modern Los Angeles.",
     "fullDescription": "On September 4, 1781, forty-four settlers established a new civilian town in Alta California. They came from Sonora and Sinaloa and represented many backgrounds, including Indigenous, African, and Spanish ancestry. These settlers became the first residents of what would grow into Los Angeles. The pueblo was built around a central plaza, with adobe homes, farms, and irrigation channels. Like many Spanish colonial settlements, the plaza served as the center of community life, government, and trade. It was a statement of order and control placed onto the landscape. By 1800, the pueblo had grown steadily. Agriculture shaped daily life, and labor from nearby Indigenous communities supported much of the work. Mission San Gabriel strongly influenced the economy, directing resources and labor across the region. When Mexico gained independence from Spain in 1821, the pueblo officially became part of Mexico. Though governments changed, the plaza remained the center of the settlement. Today, the historic district near Olvera Street preserves part of that early city.",
     "events": [
@@ -395,7 +395,7 @@ export const locations = [
     "isStarter": false,
     "unlockThreshold": 0,
     "imageUrl": "/la-history/img/watts-towers.jpg",
-    "imageCaption": "Simon Rodia's Watts Towers — 17 interlocking steel-and-mosaic structures rising up to 99 feet — seen from the surrounding fence in the Watts neighborhood.",
+    "imageCaption": "Simon Rodia's Watts Towers — 17 interlocking steel-and-mosaic structures rising up to 99 feet — in the Watts neighborhood of Los Angeles.",
     "videoUrl": "https://www.youtube.com/watch?v=9L3hlXe3-Uc",
     "videoCaption": "Watts Towers Documentary",
     "shortDescription": "Italian immigrant Simon Rodia spent 33 years alone building 17 interlocking towers in Watts — one of America's greatest works of folk art.",

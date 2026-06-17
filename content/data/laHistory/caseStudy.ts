@@ -74,8 +74,10 @@ export const caseStudy: CaseStudyContent = {
 
   whatItIs:
     'LA History is an educational web game that walks a player through fifteen historical locations across Los Angeles — from Tongva and Kuruvungna villages, through Spanish missions and the Rancho period, to modern landmarks like the Watts Towers and the Bradbury Building. You move across an interactive Leaflet map, read a location’s history, take a short quiz, build a concept map of relationships between places, and — when you’re stuck — talk to a Socratic AI tutor that asks rather than answers.',
+  // Hard line breaks (\n) set the three display lines in the wager deck
+  // (WhisperText honors them); this is the only consumer of `bet`.
   bet:
-    'We took the position that making connections is what produces lasting understanding — not reading facts once and moving on. The whole app is shaped around three theories of how learning works.',
+    'We took the position that making connections is what produces\nlasting understanding — not reading facts once and moving on.\nThe whole app is shaped around three theories of how learning works.',
 
   theories: [
     {

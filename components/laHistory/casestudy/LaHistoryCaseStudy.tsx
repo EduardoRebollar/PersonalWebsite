@@ -3,13 +3,15 @@ import '@/components/laHistory/styles/casestudy.css';
 import { CaseStudyShell } from './CaseStudyShell';
 import { ScrollExpandCover } from './ScrollExpandCover';
 import { Reveal } from './Reveal';
-import { ScrollWipeHeading, ScrollFillQuote } from './ScrollRevealWords';
+import { ScrollWipeHeading } from './ScrollRevealWords';
+import { WhisperText } from './WhisperText';
 import { SectionRail } from './SectionRail';
 import { LinkCluster } from './LinkCluster';
 import { TutorTranscript } from './TutorTranscript';
 import { Gazetteer } from './Gazetteer';
 import { ResultsBars } from './ResultsBars';
 import { ZoomParallax, type ParallaxImage } from './ZoomParallax';
+import { ZoomIcon } from './icons';
 
 const C = caseStudy;
 const M = C.meta;
@@ -68,25 +70,27 @@ export function LaHistoryCaseStudy() {
             </div>
             <LinkCluster accentLabel="Play the demo" />
             <nav className="bs-contents" aria-label="Contents">
-              <span className="lead-label">Inside</span>
-              <a href="#bet">
-                <span className="num">01</span>The Bet
-              </a>
-              <a href="#interface">
-                <span className="num">02</span>Interface
-              </a>
-              <a href="#tutor">
-                <span className="num">03</span>The Tutor
-              </a>
-              <a href="#results">
-                <span className="num">04</span>Results
-              </a>
-              <a href="#gazetteer">
-                <span className="num">05</span>The Map
-              </a>
-              <a href="#production">
-                <span className="num">06</span>To Production
-              </a>
+              <span className="lead-label">In This Issue</span>
+              <div className="bs-contents-entries">
+                <a href="#bet">
+                  <span className="num">01</span>The Bet
+                </a>
+                <a href="#interface">
+                  <span className="num">02</span>Interface
+                </a>
+                <a href="#tutor">
+                  <span className="num">03</span>The Tutor
+                </a>
+                <a href="#results">
+                  <span className="num">04</span>Results
+                </a>
+                <a href="#gazetteer">
+                  <span className="num">05</span>The Map
+                </a>
+                <a href="#production">
+                  <span className="num">06</span>To Production
+                </a>
+              </div>
             </nav>
           </Reveal>
 
@@ -102,20 +106,16 @@ export function LaHistoryCaseStudy() {
               </Reveal>
               <Reveal className="bs-role">
                 <div>
-                  <span className="lbl">Team</span>
-                  <p>{M.team.join(' · ')}</p>
-                </div>
-                <div>
                   <span className="lbl">My role</span>
                   <p>{M.myRole}</p>
                 </div>
               </Reveal>
             </div>
 
-            <Reveal className="bs-wager">
+            <div className="bs-wager">
               <span className="lbl">The wager</span>
-              <p>{C.bet}</p>
-            </Reveal>
+              <WhisperText as="p" text={C.bet} delay={70} y={16} />
+            </div>
 
             <ScrollWipeHeading text="Three theories, one loop" emphasis="one" />
             <Reveal className="bs-grid3" stagger>
@@ -139,19 +139,26 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>The Interface</span>
             </Reveal>
-            <ScrollWipeHeading text="Map → quiz → concept map → tutor" emphasis="tutor" />
+            <ScrollWipeHeading text="Explore, test, connect, reflect" emphasis="connect" />
+            <Reveal className="bs-zoom-hint">
+              <span className="bs-zoom-hint-chip">
+                <ZoomIcon s={15} />
+                Click any screen to enlarge
+              </span>
+            </Reveal>
             <ZoomParallax images={SCREENSHOTS} />
           </div>
 
           {/* pull-quote */}
           <div className="col">
-            <Reveal className="bs-pull">
-              <ScrollFillQuote
+            <div className="bs-pull">
+              <WhisperText
+                as="blockquote"
                 text="“Making connections is what produces lasting understanding” — not reading facts once and moving on."
                 emphasis="not reading facts once and moving on."
               />
               <cite>The premise</cite>
-            </Reveal>
+            </div>
           </div>
 
           {/* the tutor — live transcript */}
@@ -161,7 +168,7 @@ export function LaHistoryCaseStudy() {
             </Reveal>
             <ScrollWipeHeading text="A Socratic AI that asks, never tells" emphasis="asks" />
             <div className="col" style={{ marginBottom: 'clamp(20px,2.4vw,30px)' }}>
-              <Reveal className="bs-cols">
+              <Reveal className="bs-cols bs-cols--single">
                 <p>
                   The tutor&rsquo;s system prompt is a contract, not a Q&amp;A. It reads the
                   player&rsquo;s current concept map and asks the one bridging question that pulls
@@ -199,7 +206,7 @@ export function LaHistoryCaseStudy() {
             </Reveal>
             <ScrollWipeHeading text="Four versions, scored" emphasis="scored" />
             <div className="col">
-              <Reveal className="bs-cols">
+              <Reveal className="bs-cols bs-cols--single">
                 <p>{C.results.intro}</p>
               </Reveal>
             </div>
@@ -228,7 +235,7 @@ export function LaHistoryCaseStudy() {
               <span>User Testing</span>
             </Reveal>
             <div className="col">
-              <Reveal className="bs-cols">
+              <Reveal className="bs-cols bs-cols--single">
                 <p>{C.userTesting.intro}</p>
               </Reveal>
             </div>
@@ -275,7 +282,7 @@ export function LaHistoryCaseStudy() {
             </Reveal>
             <ScrollWipeHeading text="A deliberately boring stack" emphasis="boring" />
             <div className="col">
-              <Reveal className="bs-cols">
+              <Reveal className="bs-cols bs-cols--single">
                 <p className="raised">{C.stackProse}</p>
               </Reveal>
             </div>
@@ -294,13 +301,14 @@ export function LaHistoryCaseStudy() {
 
           {/* pull-quote */}
           <div className="col">
-            <Reveal className="bs-pull">
-              <ScrollFillQuote
+            <div className="bs-pull">
+              <WhisperText
+                as="blockquote"
                 text="The tutor’s job isn’t to answer. It’s to ask the one question that bridges what you have to what you don’t."
                 emphasis="one question"
               />
               <cite>On the Socratic prompt</cite>
-            </Reveal>
+            </div>
           </div>
 
           {/* to production */}
@@ -326,10 +334,10 @@ export function LaHistoryCaseStudy() {
             <Reveal className="bs-divider">
               <span>Reflections</span>
             </Reveal>
-            <Reveal className="bs-pull">
-              <ScrollFillQuote text={C.reflections.quote} />
+            <div className="bs-pull">
+              <WhisperText as="blockquote" text={C.reflections.quote} delay={75} />
               <cite>What we learned</cite>
-            </Reveal>
+            </div>
             <Reveal className="bs-reflect" stagger>
               {C.reflections.points.map((p) => (
                 <div className="bs-reflect-item" key={p.t}>
@@ -343,7 +351,6 @@ export function LaHistoryCaseStudy() {
           {/* colophon */}
           <Reveal className="bs-colophon">
             <div className="mark">✶</div>
-            <p>End of report · {M.links.paper.split('/').pop()}</p>
             <LinkCluster accentLabel="Play the demo" />
           </Reveal>
         </div>

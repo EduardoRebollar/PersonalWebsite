@@ -218,16 +218,31 @@ export function Nav() {
   // on the controls. pushState/replaceState don't fire hashchange, so the nav
   // click handler above isn't double-triggered. The rAF lets the browser's
   // native jump and layout settle before we measure.
+  //
+  // Also collapses a duplicated/malformed hash (e.g. "#work#work") back to a
+  // single segment: a cross-route Link back to "/#work" while the current URL
+  // already carries a hash can leave the fragment doubled. We keep the last
+  // segment (the intended target) and rewrite the URL cleanly.
   useEffect(() => {
     if (isDemoRoute) return;
     const handleHashWork = () => {
+      const raw = window.location.hash;
+      // A second "#" after index 0 means the fragment is duplicated/malformed.
+      if (raw.indexOf('#', 1) !== -1) {
+        const segs = raw.slice(1).split('#').filter(Boolean);
+        const last = segs[segs.length - 1];
+        history.replaceState(null, '', last ? `#${last}` : window.location.pathname);
+      }
       if (window.location.hash !== '#work') return;
       requestAnimationFrame(() => scrollWorkControlsIntoView());
     };
     handleHashWork();
     window.addEventListener('hashchange', handleHashWork);
     return () => window.removeEventListener('hashchange', handleHashWork);
-  }, [isDemoRoute, scrollWorkControlsIntoView]);
+    // `pathname` so this re-runs on client navigation (pushState doesn't fire
+    // hashchange, and Nav is persistent in the layout) — that's when the doubled
+    // "/#work#work" arrives and needs collapsing.
+  }, [isDemoRoute, scrollWorkControlsIntoView, pathname]);
 
   if (isDemoRoute) return null;
 

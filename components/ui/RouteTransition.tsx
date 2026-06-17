@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSceneStore } from '@/stores/useSceneStore';
+import { routeState } from '@/lib/routeState';
 
 /**
  * Cross-page fade transition.
@@ -75,6 +76,10 @@ export function RouteTransition() {
       if (url.pathname === window.location.pathname) return;
 
       e.preventDefault();
+      // Mark that this document has performed an in-app navigation, so the
+      // destination's mount-time logic (e.g. ScrollExpandCover) can tell a
+      // fresh client arrival apart from a genuine reload/restore.
+      routeState.spaNavigated = true;
       pendingRef.current = { pathname: url.pathname, toTop: !url.hash };
       setCovering(true);
       window.setTimeout(() => {

@@ -45,6 +45,25 @@ export function PlayIcon({ s = 15 }: { s?: number }) {
   );
 }
 
+export function ZoomIcon({ s = 15 }: { s?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={s}
+      height={s}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+    </svg>
+  );
+}
+
 export function PaperIcon({ s = 15 }: { s?: number }) {
   return (
     <svg

@@ -3,6 +3,12 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { extractYouTubeId } from '@/lib/laHistory/youtube';
+import { routeState } from '@/lib/routeState';
+import { VerticalCutReveal } from '@/components/ui/vertical-cut-reveal';
+
+// Shared spring for the cover's word reveal; per-element `delay` cascades them
+// (title first word → rest → kicker → hint) as the page fades up.
+const REVEAL_SPRING = { type: 'spring', stiffness: 190, damping: 22 } as const;
 
 // useLayoutEffect warns on the server; fall back to useEffect there.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -57,10 +63,22 @@ export function ScrollExpandCover({
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     setInteractive(true);
-    // On reload the browser restores the prior scroll position. If we're already
-    // deep in the article, skip the cover hijack entirely — otherwise `onScroll`
-    // yanks the reader back to the top and traps them until they replay the
-    // expand animation.
+
+    // Arrived via an in-app navigation (e.g. from the homepage's Work section,
+    // which is scrolled far down). RouteTransition scrolls the new page to the
+    // top, but in a `useEffect` that runs *after* this layout effect — so the
+    // stale scroll position is still in place right now. Reset to the top and
+    // start the cover collapsed; trusting the leftover `scrollY` here would snap
+    // it straight to fully-expanded and fade out the still.
+    if (routeState.spaNavigated) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      return;
+    }
+
+    // Fresh document load. A non-zero scroll position means a genuine reload /
+    // restore deep in the article — the reader was already past the cover, so
+    // skip the hijack (otherwise `onScroll` yanks them back to the top and traps
+    // them until they replay the expand animation).
     if (window.scrollY > 5) {
       setScrollProgress(1);
       setMediaFullyExpanded(true);
@@ -250,7 +268,13 @@ export function ScrollExpandCover({
                 className="bs-cover-kicker"
                 style={{ transform: `translateX(-${textTranslateX}vw)` }}
               >
-                {kicker}
+                <VerticalCutReveal
+                  splitBy="words"
+                  containerClassName="inline-flex justify-center"
+                  transition={{ ...REVEAL_SPRING, delay: 0.4 }}
+                >
+                  {kicker}
+                </VerticalCutReveal>
               </p>
             )}
             {scrollToExpand && (
@@ -258,16 +282,40 @@ export function ScrollExpandCover({
                 className="bs-cover-hint"
                 style={{ transform: `translateX(${textTranslateX}vw)` }}
               >
-                {scrollToExpand}
+                <VerticalCutReveal
+                  splitBy="words"
+                  containerClassName="inline-flex justify-center"
+                  transition={{ ...REVEAL_SPRING, delay: 0.55 }}
+                >
+                  {scrollToExpand}
+                </VerticalCutReveal>
               </p>
             )}
           </div>
         </div>
 
         <div className="bs-cover-titles">
-          <h2 style={{ transform: `translateX(-${textTranslateX}vw)` }}>{firstWord}</h2>
+          <h2 style={{ transform: `translateX(-${textTranslateX}vw)` }}>
+            <VerticalCutReveal
+              splitBy="words"
+              containerClassName="inline-flex justify-center"
+              wordLevelClassName="pb-[0.14em] -mb-[0.14em]"
+              transition={{ ...REVEAL_SPRING, delay: 0 }}
+            >
+              {firstWord}
+            </VerticalCutReveal>
+          </h2>
           {restOfTitle && (
-            <h2 style={{ transform: `translateX(${textTranslateX}vw)` }}>{restOfTitle}</h2>
+            <h2 style={{ transform: `translateX(${textTranslateX}vw)` }}>
+              <VerticalCutReveal
+                splitBy="words"
+                containerClassName="inline-flex justify-center"
+                wordLevelClassName="pb-[0.14em] -mb-[0.14em]"
+                transition={{ ...REVEAL_SPRING, delay: 0.2 }}
+              >
+                {restOfTitle}
+              </VerticalCutReveal>
+            </h2>
           )}
         </div>
       </div>

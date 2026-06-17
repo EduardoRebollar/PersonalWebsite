@@ -8,6 +8,7 @@ import {
   type Ref,
   type ReactNode,
 } from 'react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
 
 type RevealProps = {
@@ -40,10 +41,19 @@ export function Reveal({
   children,
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
+  // Re-run on navigation: returning to the case study via client-side routing
+  // can reuse the cached subtree with `.in` still applied from the prior visit,
+  // so the entrance would never replay. Keying the effect to the pathname (and
+  // resetting `.in` below) makes the reveal fire again on every arrival.
+  const pathname = usePathname();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Reset any prior reveal, then commit the hidden pre-state (forced reflow)
+    // so re-adding `.in` actually transitions instead of being a no-op.
+    el.classList.remove('in');
+    void el.offsetWidth;
     let done = false;
     const reveal = () => {
       if (done) return;
@@ -57,16 +67,19 @@ export function Reveal({
           io.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+      // Bottom margin pulled in so the element must scroll well into the viewport
+      // (its top past ~62% of the height) before it reveals — fires deeper in.
+      { threshold: 0.12, rootMargin: '0px 0px -60% 0px' },
     );
     io.observe(el);
     // Never leave content hidden if the observer can't fire (print, odd layouts).
-    const timer = window.setTimeout(reveal, 1600);
+    // Generous so it doesn't pre-empt a slow scroll down to the element.
+    const timer = window.setTimeout(reveal, 6000);
     return () => {
       io.disconnect();
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [pathname]);
 
   const Tag = (as ?? 'div') as ElementType;
   return (

@@ -11,6 +11,7 @@ import {
 import { motion, useScroll, useTransform, type MotionValue } from 'motion/react';
 import { prefersReducedMotion } from '@/lib/motion';
 import { Lightbox } from '@/components/ui/Lightbox';
+import { ZoomIcon } from './icons';
 import type { MediaImage } from '@/types/content';
 
 // useLayoutEffect warns on the server; fall back to useEffect there (mirrors
@@ -98,6 +99,10 @@ function ParallaxItem({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        <span className="bs-zoom-cue" aria-hidden="true">
+          <ZoomIcon s={16} />
+          <em>Enlarge</em>
+        </span>
       </button>
     </motion.div>
   );
@@ -153,6 +158,10 @@ function StaticParallax({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+            <span className="bs-zoom-cue" aria-hidden="true">
+              <ZoomIcon s={16} />
+              <em>Enlarge</em>
+            </span>
           </button>
         </figure>
       ))}
