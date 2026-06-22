@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useReducedMotion } from 'motion/react';
 
 /**
- * Six article sections, mirroring the masthead's `.bs-contents` index in
+ * Five article sections, mirroring the masthead's `.bs-contents` index in
  * LaHistoryCaseStudy.tsx (id → number + short label).
  */
 const SECTIONS = [
@@ -13,7 +13,6 @@ const SECTIONS = [
   { id: 'tutor', n: '03', label: 'The Tutor' },
   { id: 'results', n: '04', label: 'Results' },
   { id: 'gazetteer', n: '05', label: 'The Map' },
-  { id: 'production', n: '06', label: 'To Production' },
 ] as const;
 
 /**

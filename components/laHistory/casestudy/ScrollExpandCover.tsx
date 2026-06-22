@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { extractYouTubeId } from '@/lib/laHistory/youtube';
 import { routeState } from '@/lib/routeState';
 import { VerticalCutReveal } from '@/components/ui/vertical-cut-reveal';
+import { ShimmerText } from './ShimmerText';
 
 // Shared spring for the cover's word reveal; per-element `delay` cascades them
 // (title first word → rest → kicker → hint) as the page fades up.
@@ -282,14 +283,28 @@ export function ScrollExpandCover({
                 className="bs-cover-hint"
                 style={{ transform: `translateX(${textTranslateX}vw)` }}
               >
-                <VerticalCutReveal
-                  splitBy="words"
-                  containerClassName="inline-flex justify-center"
-                  transition={{ ...REVEAL_SPRING, delay: 0.55 }}
-                >
-                  {scrollToExpand}
-                </VerticalCutReveal>
+                <ShimmerText duration={2.6}>{scrollToExpand}</ShimmerText>
               </p>
+            )}
+            {scrollToExpand && (
+              <span
+                className="bs-cover-arrow"
+                aria-hidden="true"
+                style={{ opacity: 1 - scrollProgress }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
             )}
           </div>
         </div>

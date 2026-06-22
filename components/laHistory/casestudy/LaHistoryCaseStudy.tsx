@@ -5,13 +5,35 @@ import { ScrollExpandCover } from './ScrollExpandCover';
 import { Reveal } from './Reveal';
 import { ScrollWipeHeading } from './ScrollRevealWords';
 import { WhisperText } from './WhisperText';
+import { SplitText } from './SplitText';
 import { SectionRail } from './SectionRail';
+import { ShimmerText } from './ShimmerText';
 import { LinkCluster } from './LinkCluster';
 import { TutorTranscript } from './TutorTranscript';
 import { Gazetteer } from './Gazetteer';
 import { ResultsBars } from './ResultsBars';
 import { ZoomParallax, type ParallaxImage } from './ZoomParallax';
-import { ZoomIcon } from './icons';
+import {
+  Arrow,
+  ZoomIcon,
+  LayersIcon,
+  DialogueIcon,
+  NetworkIcon,
+  WithholdIcon,
+  QuestionIcon,
+  AnalysisIcon,
+  ClarityIcon,
+  InsightIcon,
+  LoopIcon,
+} from './icons';
+
+const THEORY_ICONS = [LayersIcon, DialogueIcon, NetworkIcon] as const;
+const CRITERION_ICONS = [WithholdIcon, QuestionIcon, AnalysisIcon, ClarityIcon] as const;
+const REFLECT_ICONS = [AnalysisIcon, InsightIcon, Arrow, LoopIcon] as const;
+const REFLECT_GROUPS = [
+  { key: 'learned', label: 'What we learned' },
+  { key: 'ahead', label: 'What’s next' },
+] as const;
 
 const C = caseStudy;
 const M = C.meta;
@@ -87,9 +109,6 @@ export function LaHistoryCaseStudy() {
                 <a href="#gazetteer">
                   <span className="num">05</span>The Map
                 </a>
-                <a href="#production">
-                  <span className="num">06</span>To Production
-                </a>
               </div>
             </nav>
           </Reveal>
@@ -97,47 +116,56 @@ export function LaHistoryCaseStudy() {
           {/* The Bet — what it is, who built it, and the pedagogical wager */}
           <div className="wide" id="bet">
             <Reveal className="bs-divider">
-              <span>The Bet</span>
+              <ShimmerText>The Bet</ShimmerText>
             </Reveal>
 
             <div className="col">
-              <Reveal>
-                <p className="bs-lede raised">{C.whatItIs}</p>
-              </Reveal>
-              <Reveal className="bs-role">
+              <SplitText as="p" className="bs-lede raised" dropCap text={C.whatItIs} />
+              <div className="bs-role">
                 <div>
-                  <span className="lbl">My role</span>
-                  <p>{M.myRole}</p>
+                  <ShimmerText className="lbl">My role</ShimmerText>
+                  <SplitText as="p" text={M.myRole} />
                 </div>
-              </Reveal>
+              </div>
             </div>
 
             <div className="bs-wager">
-              <span className="lbl">The wager</span>
+              <ShimmerText className="lbl">The wager</ShimmerText>
               <WhisperText as="p" text={C.bet} delay={70} y={16} />
             </div>
 
             <ScrollWipeHeading text="Three theories, one loop" emphasis="one" />
-            <Reveal className="bs-grid3" stagger>
-              {C.theories.map((t, i) => (
-                <div className="bs-cell" key={t.name}>
-                  <span className="cn">Theory 0{i + 1}</span>
-                  <h4>{t.name}</h4>
-                  <p className="gl">{t.gloss}</p>
-                  <p>{t.body}</p>
-                </div>
-              ))}
+            <Reveal className="bs-bento" stagger>
+              {C.theories.map((t, i) => {
+                const Icon = THEORY_ICONS[i];
+                return (
+                  <div className="bs-bento-item" key={t.name}>
+                    <div className="bs-bento-header">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={t.image.src} alt={t.image.alt} loading="lazy" decoding="async" />
+                    </div>
+                    <div className="bs-bento-body">
+                      <div className="bs-bento-title">
+                        <h4>{t.name}</h4>
+                        <span className="bs-bento-icon">{Icon ? <Icon /> : null}</span>
+                      </div>
+                      <p className="gl">{t.gloss}</p>
+                      <p>{t.body}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </Reveal>
-            <Reveal className="bs-note">
-              <span className="lbl">Design note · why a local LLM</span>
-              <p>{C.whyLocal}</p>
-            </Reveal>
+            <div className="bs-note">
+              <ShimmerText className="lbl">Design note · why a local LLM?</ShimmerText>
+              <SplitText as="p" text={C.whyLocal} />
+            </div>
           </div>
 
           {/* the interface — screenshot placeholders (real captures to follow) */}
           <div className="wide" id="interface">
             <Reveal className="bs-divider">
-              <span>The Interface</span>
+              <ShimmerText>The Interface</ShimmerText>
             </Reveal>
             <ScrollWipeHeading text="Explore, test, connect, reflect" emphasis="connect" />
             <Reveal className="bs-zoom-hint">
@@ -164,18 +192,21 @@ export function LaHistoryCaseStudy() {
           {/* the tutor — live transcript */}
           <div className="wide" id="tutor">
             <Reveal className="bs-divider">
-              <span>The Tutor That Won&rsquo;t Answer</span>
+              <ShimmerText>The Tutor That Won&rsquo;t Answer</ShimmerText>
             </Reveal>
             <ScrollWipeHeading text="A Socratic AI that asks, never tells" emphasis="asks" />
             <div className="col" style={{ marginBottom: 'clamp(20px,2.4vw,30px)' }}>
-              <Reveal className="bs-cols bs-cols--single">
-                <p>
-                  The tutor&rsquo;s system prompt is a contract, not a Q&amp;A. It reads the
-                  player&rsquo;s current concept map and asks the one bridging question that pulls
-                  them toward what they almost know — then prompts them to record the connection.
-                  Step through a real exchange below.
-                </p>
-              </Reveal>
+              <div className="bs-cols bs-cols--single bs-cols--center">
+                <SplitText
+                  as="p"
+                  text={
+                    'The tutor’s system prompt is a contract, not a Q&A. It reads the ' +
+                    'player’s current concept map and asks the one bridging question that pulls ' +
+                    'them toward what they almost know — then prompts them to record the ' +
+                    'connection. Step through a real exchange below.'
+                  }
+                />
+              </div>
             </div>
             <Reveal>
               <TutorTranscript />
@@ -202,22 +233,30 @@ export function LaHistoryCaseStudy() {
           {/* results — prompt optimization + user testing */}
           <div className="wide" id="results">
             <Reveal className="bs-divider">
-              <span>Results · Prompt Optimization</span>
+              <ShimmerText>Results · Prompt Optimization</ShimmerText>
             </Reveal>
             <ScrollWipeHeading text="Four versions, scored" emphasis="scored" />
             <div className="col">
-              <Reveal className="bs-cols bs-cols--single">
-                <p>{C.results.intro}</p>
-              </Reveal>
+              <div className="bs-cols bs-cols--single bs-cols--center">
+                <SplitText as="p" text={C.results.intro} />
+              </div>
             </div>
-            <Reveal className="bs-grid4" stagger>
-              {C.results.criteria.map((c) => (
-                <div key={c.n}>
-                  <span className="cn">Criterion {c.n}</span>
-                  <h4>{c.name}</h4>
-                  <p>{c.desc}</p>
-                </div>
-              ))}
+            <Reveal className="bs-bento bs-bento--criteria" stagger>
+              {C.results.criteria.map((c, i) => {
+                const Icon = CRITERION_ICONS[i];
+                return (
+                  <div className="bs-bento-item" key={c.n}>
+                    <div className="bs-bento-body">
+                      <span className="cn">Criterion {c.n}</span>
+                      <div className="bs-bento-title">
+                        <h4>{c.name}</h4>
+                        <span className="bs-bento-icon">{Icon ? <Icon /> : null}</span>
+                      </div>
+                      <p>{c.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </Reveal>
             <Reveal>
               <ResultsBars
@@ -226,51 +265,16 @@ export function LaHistoryCaseStudy() {
                 peakScore={peakScore}
               />
             </Reveal>
-            <Reveal className="bs-note">
-              <span className="lbl">Key finding</span>
-              <p>{C.results.finding}</p>
-            </Reveal>
-
-            <Reveal className="bs-divider">
-              <span>User Testing</span>
-            </Reveal>
-            <div className="col">
-              <Reveal className="bs-cols bs-cols--single">
-                <p>{C.userTesting.intro}</p>
-              </Reveal>
+            <div className="bs-note">
+              <ShimmerText className="lbl">Key finding</ShimmerText>
+              <SplitText as="p" text={C.results.finding} />
             </div>
-            <Reveal className="bs-testing">
-              <div className="bs-tlist">
-                <div className="sub">What broke</div>
-                {C.userTesting.findings.map((f) => (
-                  <div className="row" key={f.k}>
-                    <span className="n">{f.k}</span>
-                    <div>
-                      <h4>{f.t}</h4>
-                      <p>{f.d}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="bs-tlist">
-                <div className="sub">What we changed</div>
-                {C.userTesting.changes.map((c) => (
-                  <div className="row chg" key={c.t}>
-                    <span className="n">→</span>
-                    <div>
-                      <h4>{c.t}</h4>
-                      <p>{c.d}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
           </div>
 
           {/* gazetteer — illustrated atlas, filterable by era */}
           <div className="wide" id="gazetteer">
             <Reveal className="bs-divider">
-              <span>The Gazetteer · 15 Locations</span>
+              <ShimmerText>The Gazetteer · 15 Locations</ShimmerText>
             </Reveal>
             <Gazetteer />
           </div>
@@ -278,13 +282,13 @@ export function LaHistoryCaseStudy() {
           {/* how it's built */}
           <div className="wide" id="built">
             <Reveal className="bs-divider">
-              <span>How It&rsquo;s Built</span>
+              <ShimmerText>How It&rsquo;s Built</ShimmerText>
             </Reveal>
             <ScrollWipeHeading text="A deliberately boring stack" emphasis="boring" />
             <div className="col">
-              <Reveal className="bs-cols bs-cols--single">
-                <p className="raised">{C.stackProse}</p>
-              </Reveal>
+              <div className="bs-cols bs-cols--single">
+                <SplitText as="p" className="raised" dropCap text={C.stackProse} />
+              </div>
             </div>
             <Reveal className="bs-hard" stagger>
               {C.hardParts.map((h) => (
@@ -299,50 +303,44 @@ export function LaHistoryCaseStudy() {
             </Reveal>
           </div>
 
-          {/* pull-quote */}
-          <div className="col">
+          {/* reflections — the "debrief dossier" */}
+          <div className="wide" id="reflections">
+            <Reveal className="bs-divider">
+              <ShimmerText>Reflections</ShimmerText>
+            </Reveal>
             <div className="bs-pull">
               <WhisperText
                 as="blockquote"
-                text="The tutor’s job isn’t to answer. It’s to ask the one question that bridges what you have to what you don’t."
-                emphasis="one question"
+                text={C.reflections.quote}
+                emphasis="when to be unhelpful, when to stay silent,"
+                delay={75}
               />
-              <cite>On the Socratic prompt</cite>
+              <span className="bs-qrule" aria-hidden="true" />
             </div>
-          </div>
-
-          {/* to production */}
-          <div className="col" id="production">
-            <Reveal className="bs-divider">
-              <span>To Production</span>
-            </Reveal>
-            <ScrollWipeHeading text="From a laptop to a district" emphasis="district" />
-            <Reveal as="table" className="bs-ledger" stagger>
-              <tbody>
-                {C.production.map((p) => (
-                  <tr key={p.k}>
-                    <th>{p.k}</th>
-                    <td>{p.v}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Reveal>
-          </div>
-
-          {/* reflections */}
-          <div className="col" id="reflections">
-            <Reveal className="bs-divider">
-              <span>Reflections</span>
-            </Reveal>
-            <div className="bs-pull">
-              <WhisperText as="blockquote" text={C.reflections.quote} delay={75} />
-              <cite>What we learned</cite>
-            </div>
-            <Reveal className="bs-reflect" stagger>
-              {C.reflections.points.map((p) => (
-                <div className="bs-reflect-item" key={p.t}>
-                  <h4>{p.t}</h4>
-                  <p>{p.d}</p>
+            {/* one observer drives a two-beat reveal: the "What we learned" half
+                fades in, then "What's next" follows once it has finished (see the
+                `.bs-dossier > *:nth-child(2)` delay override in casestudy.css). */}
+            <Reveal className="bs-dossier" stagger>
+              {REFLECT_GROUPS.map((g) => (
+                <div className={`bs-dossier-half bs-dossier-half--${g.key}`} key={g.key}>
+                  <span className="bs-reflect-group-label">{g.label}</span>
+                  <div className="bs-dossier-grid">
+                    {C.reflections.points
+                      .map((p, i) => ({ p, i }))
+                      .filter(({ p }) => p.group === g.key)
+                      .map(({ p, i }) => {
+                        const Icon = REFLECT_ICONS[i];
+                        return (
+                          <article className={`bs-dcard bs-dcard--${g.key}`} key={p.t}>
+                            <div className="bs-dcard-title">
+                              <h4>{p.t}</h4>
+                              <span className="bs-dcard-glyph">{Icon ? <Icon s={18} /> : null}</span>
+                            </div>
+                            <p>{p.d}</p>
+                          </article>
+                        );
+                      })}
+                  </div>
                 </div>
               ))}
             </Reveal>

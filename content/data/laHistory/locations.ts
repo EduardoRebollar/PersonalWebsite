@@ -130,7 +130,7 @@ export const locations = [
     "unlockThreshold": 0,
     "imageUrl": "/la-history/img/el-pueblo.jpg",
     "imageCaption": "Olvera Street, the historic brick-paved marketplace at the heart of El Pueblo de Los Ángeles, near the city's original 1781 plaza.",
-    "shortDescription": "Founded September 4, 1781 by 44 settlers of Indigenous, African, and Spanish ancestry, El Pueblo became the seed of modern Los Angeles.",
+    "shortDescription": "Founded September 4, 1781 by 44 settlers of\nIndigenous, African, and Spanish ancestry,\nEl Pueblo became the seed of modern Los Angeles.",
     "fullDescription": "On September 4, 1781, forty-four settlers established a new civilian town in Alta California. They came from Sonora and Sinaloa and represented many backgrounds, including Indigenous, African, and Spanish ancestry. These settlers became the first residents of what would grow into Los Angeles. The pueblo was built around a central plaza, with adobe homes, farms, and irrigation channels. Like many Spanish colonial settlements, the plaza served as the center of community life, government, and trade. It was a statement of order and control placed onto the landscape. By 1800, the pueblo had grown steadily. Agriculture shaped daily life, and labor from nearby Indigenous communities supported much of the work. Mission San Gabriel strongly influenced the economy, directing resources and labor across the region. When Mexico gained independence from Spain in 1821, the pueblo officially became part of Mexico. Though governments changed, the plaza remained the center of the settlement. Today, the historic district near Olvera Street preserves part of that early city.",
     "events": [
       {
@@ -436,7 +436,7 @@ export const locations = [
     "unlockThreshold": 0,
     "imageUrl": "/la-history/img/griffith-observatory.jpg",
     "imageCaption": "The Griffith Observatory's three copper domes and white Art Deco facade overlooking the sprawling Los Angeles Basin from Griffith Park.",
-    "shortDescription": "Opened in 1935 on land donated by Griffith J. Griffith, the observatory offers free telescopes, science exhibits, and sweeping views of Los Angeles.",
+    "shortDescription": "Opened in 1935 on land donated by Griffith J. Griffith, it offers free telescopes, exhibits, and sweeping views of the city.",
     "fullDescription": "Griffith Observatory opened in 1935 on land donated to the city by Griffith J. Griffith. His gift created Griffith Park, intended as a place for all residents to enjoy. The observatory gave Angelenos free access to telescopes, science exhibits, and sweeping views of the city. Visitors could see both the stars above and the expanding city below. The land had passed through many eras before becoming a public park, including Indigenous stewardship, Mexican rancho ownership, and private speculation. The observatory later became famous through films such as Rebel Without a Cause and remains one of Los Angeles's most visited landmarks.",
     "events": [
       {

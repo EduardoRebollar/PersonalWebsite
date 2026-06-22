@@ -128,6 +128,18 @@ export function TutorTranscript() {
             {note}
           </motion.span>
         </AnimatePresence>
+        <div
+          className="bs-tr-dots"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={demo.length}
+          aria-valuenow={n}
+          aria-label={`Turn ${n} of ${demo.length}`}
+        >
+          {demo.map((_, i) => (
+            <span key={i} className={`dot${i < n ? ' on' : ''}${i === n - 1 ? ' cur' : ''}`} />
+          ))}
+        </div>
         <button type="button" className="bs-step" onClick={advance} disabled={typing}>
           {buttonLabel}
           <Arrow s={13} />

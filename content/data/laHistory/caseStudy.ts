@@ -1,8 +1,7 @@
 // Editorial content for the LA History case-study "broadsheet" page
 // (/work/la-history). Location + era data is reused from ./locations and ./eras;
-// only the case-study prose, the four-version results, user-testing findings,
-// reflections, productionization ledger, the scripted tutor exchange, and the
-// gazetteer's curated display years / era labels live here.
+// only the case-study prose, the four-version results, reflections, the scripted
+// tutor exchange, and the gazetteer's curated display years / era labels live here.
 
 import type { EraKey } from '@/types/laHistory';
 
@@ -17,14 +16,16 @@ export type CaseStudyMeta = {
   links: { demo: string; paper: string; plan: string };
 };
 
-export type Theory = { name: string; gloss: string; body: string };
+export type Theory = {
+  name: string;
+  gloss: string;
+  body: string;
+  image: { src: string; alt: string };
+};
 export type HardPart = { n: string; title: string; body: string };
-export type LedgerRow = { k: string; v: string };
 export type Criterion = { n: string; name: string; desc: string };
 export type Version = { v: string; score: number; note: string };
-export type Finding = { k: string; t: string; d: string };
-export type Change = { t: string; d: string };
-export type ReflectionPoint = { t: string; d: string };
+export type ReflectionPoint = { t: string; d: string; group: 'learned' | 'ahead' };
 export type TutorTurn = { who: 'tutor' | 'student'; text: string };
 
 export type CaseStudyContent = {
@@ -35,18 +36,12 @@ export type CaseStudyContent = {
   whyLocal: string;
   stackProse: string;
   hardParts: readonly HardPart[];
-  production: readonly LedgerRow[];
   results: {
     intro: string;
     scoreMax: number;
     criteria: readonly Criterion[];
     versions: readonly Version[];
     finding: string;
-  };
-  userTesting: {
-    intro: string;
-    findings: readonly Finding[];
-    changes: readonly Change[];
   };
   reflections: {
     quote: string;
@@ -84,27 +79,39 @@ export const caseStudy: CaseStudyContent = {
       name: 'Constructivism',
       gloss: 'Players build knowledge, they don’t receive it.',
       body:
-        'Players don’t passively receive facts; they build knowledge by exploring, quizzing, and constructing concept maps. Every interaction has to produce a mental change in the player, or it isn’t earning its place.',
+        'Players don’t receive facts; they build knowledge by exploring, quizzing, and constructing concept maps. Every interaction must produce a change in the player, or it isn’t earning its place.',
+      image: {
+        src: '/la-history/constructivism-learning-theory-2.webp',
+        alt: 'Diagram of constructivism — the learner actively building knowledge structures rather than passively receiving facts',
+      },
     },
     {
       name: 'Zone of Proximal Development',
       gloss: 'Vygotsky — the tutor asks, never tells.',
       body:
         'The Socratic tutor responds to your current concept map and chat history with a guiding question, not an answer. It pulls you forward into the next thing you almost know.',
+      image: {
+        src: '/la-history/proximal.webp',
+        alt: 'Diagram of Vygotsky’s Zone of Proximal Development — the band between what a learner can do alone and what they can do with guidance',
+      },
     },
     {
       name: 'Schema theory',
       gloss: 'The concept map externalizes the schema.',
       body:
         'The concept map is where the player externalizes the schema they’re building — relationships between locations across eras (e.g. “Mission San Gabriel forcibly relocated Tongva from Kuruvungna”).',
+      image: {
+        src: '/la-history/schema.jpg',
+        alt: 'Diagram of schema theory — knowledge organized as an interconnected network of concepts and relationships',
+      },
     },
   ],
 
   whyLocal:
-    'We ran the tutor on a local Ollama instance with gemma:latest. That keeps the prompt and chat history off third-party servers — which matters for an educational tool used by minors — and makes the tutor’s response style controllable rather than a moving target. The trade-off is real latency (a 4 GB model on a laptop is slow); in production you’d swap for an API.',
+    'We ran the tutor on a local Ollama instance (gemma:latest), keeping the prompt and chat history off third-party servers — which matters for an educational tool used by minors — and the response style controllable rather than a moving target. The trade-off is latency (a 4 GB model on a laptop is slow); in production you’d swap for an API.',
 
   stackProse:
-    'The stack is deliberately boring: Flask 3 + SQLAlchemy 2 + SQLite for the backend, vanilla JavaScript and Leaflet for the frontend, Ollama on localhost:11434 for the LLM. No Node build, no bundler, no SPA framework — the whole app is a few hundred lines of templates and a handful of JS event handlers attached to map markers.',
+    'The stack is deliberately boring: Flask 3 + SQLAlchemy 2 + SQLite for the backend, vanilla JS and Leaflet for the frontend, Ollama on localhost:11434 for the LLM. No Node build, no bundler, no SPA framework — the whole app is a few hundred lines of templates and JS event handlers attached to map markers.',
 
   hardParts: [
     {
@@ -127,29 +134,6 @@ export const caseStudy: CaseStudyContent = {
     },
   ],
 
-  production: [
-    {
-      k: 'Hosting',
-      v: 'Containerized Flask on Fly.io — always-on, not serverless. The tutor streams tokens; cold starts are unacceptable when thirty students sign on at once.',
-    },
-    {
-      k: 'Database',
-      v: 'Managed Postgres (Fly or Supabase) replaces SQLite — SQLAlchemy makes the migration nearly free.',
-    },
-    {
-      k: 'LLM',
-      v: 'Claude Haiku 4.5 replaces local Ollama — sub-second first-token latency, holds the Socratic persona across long chats, ~$0.025 per session.',
-    },
-    {
-      k: 'Privacy',
-      v: 'Student chat is FERPA-relevant, so names never enter the API call — only conversation history. Encryption at rest, teacher-only review of flagged chats, semester-bound retention.',
-    },
-    {
-      k: 'Cost & guardrails',
-      v: '~$700 / month at 1,000 daily users. A ~15-message per-session cap controls cost variance — and keeps students on task instead of treating the tutor as a chatbot.',
-    },
-  ],
-
   results: {
     intro:
       'Before writing a single prompt we fixed four criteria and a 17-scenario test set, then scored four prompt versions — two independent local-model runs each, for 32 points per scenario.',
@@ -158,12 +142,12 @@ export const caseStudy: CaseStudyContent = {
       {
         n: '01',
         name: 'Does not supply answers',
-        desc: 'Withholds historical facts even when the student pushes, and guides them to build the knowledge instead. The core constructivist commitment.',
+        desc: 'Withholds facts even when pushed, guiding the student to build the knowledge instead. The core constructivist commitment.',
       },
       {
         n: '02',
         name: 'Asks clarifying questions',
-        desc: 'Checks what the student already knows — and reads their current map state — before redirecting. The Zone of Proximal Development in practice.',
+        desc: 'Reads what the student knows — and their current map state — before redirecting. The Zone of Proximal Development in practice.',
       },
       {
         n: '03',
@@ -183,52 +167,7 @@ export const caseStudy: CaseStudyContent = {
       { v: 'v4', score: 24.5, note: 'More rules, slight regression.' },
     ],
     finding:
-      'The most consistent lesson: negative constraints (“do not state facts”) are far easier to encode in language than generative ones (“let the student lead”) — and rule-stacking doesn’t compose. Each new version risked silently regressing a criterion an earlier one had stabilized.',
-  },
-
-  userTesting: {
-    intro:
-      'Four target-learner participants — high-school and college age, two from LA and two not, all recruited from outside the team — ran 20–25-minute think-aloud sessions on the map, the concept map, and the tutor.',
-    findings: [
-      {
-        k: '01',
-        t: 'Edge direction wasn’t self-explanatory',
-        d: 'Three of four assumed connections were bidirectional. The tutor graded historical accuracy but never addressed the structural confusion.',
-      },
-      {
-        k: '02',
-        t: 'Nobody used the tutor naturally',
-        d: 'Participants rarely started a conversation; when prompted they gave one-word replies or treated it like a search box. The Socratic design assumed engagement that didn’t happen on its own.',
-      },
-      {
-        k: '03',
-        t: 'Feedback quality was inconsistent',
-        d: 'On a “seashells” edge between San Gabriel Valley and Ballona Wetlands, the tutor drifted off-topic. Helpfulness rated about 3.5 / 5.',
-      },
-      {
-        k: '04',
-        t: 'Learners wanted different amounts of guidance',
-        d: 'Some preferred to work alone and ask on their own terms; others welcomed the steering. One setting didn’t fit everyone.',
-      },
-    ],
-    changes: [
-      {
-        t: 'Re-scoped the tutor to the concept map',
-        d: 'It now responds only to connections you’ve already built — no arbitrary Q&A — forcing every exchange to be task-relevant.',
-      },
-      {
-        t: 'Taught the prompt about edge direction',
-        d: 'The tutor now asks what a connection’s direction means before grading its history.',
-      },
-      {
-        t: 'Redesigned the tutorial',
-        d: 'A dim-and-highlight overlay on one screen instead of corner pop-ups, with a skip for returning users.',
-      },
-      {
-        t: 'Cut the tutorial copy',
-        d: 'Reduced to essential steps after “too many instructions” feedback.',
-      },
-    ],
+      'The clearest lesson: negative constraints (“do not state facts”) are far easier to encode than generative ones (“let the student lead”) — and rule-stacking doesn’t compose. Each new version risked silently regressing a criterion an earlier one had stabilized.',
   },
 
   reflections: {
@@ -238,18 +177,22 @@ export const caseStudy: CaseStudyContent = {
       {
         t: 'Theory is easier to specify than to enforce',
         d: 'Each learning theory mapped cleanly to a feature on paper; closing the gap to a prompt that actually behaved that way was harder than expected.',
+        group: 'learned',
       },
       {
         t: 'We overestimated the appetite for Socratic teaching',
         d: 'Several participants wanted direct answers and less friction — they came to learn LA history, not to be interrogated about their own thinking.',
+        group: 'learned',
       },
       {
         t: 'Next version: a Browse Mode',
         d: 'Readable location articles with no quizzes or unlock gates, plus an opt-in tutor — so students choose guidance rather than have it imposed.',
+        group: 'ahead',
       },
       {
-        t: 'What we’d do differently: test earlier',
-        d: 'The first session surfaced the tutorial, chat, and directionality problems we could have caught weeks sooner.',
+        t: 'Measure whether the connections stick',
+        d: 'Right now the game rewards drawing a link, not retaining it — a spaced-recall check a week later would show if the maps produce understanding that lasts.',
+        group: 'ahead',
       },
     ],
   },

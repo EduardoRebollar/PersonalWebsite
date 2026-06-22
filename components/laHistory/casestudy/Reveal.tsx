@@ -59,25 +59,52 @@ export function Reveal({
       if (done) return;
       done = true;
       el.classList.add('in');
+      io.disconnect();
+      window.clearInterval(failsafe);
+      window.removeEventListener('scroll', onScroll);
     };
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          reveal();
-          io.disconnect();
-        }
+        if (entries.some((e) => e.isIntersecting)) reveal();
       },
-      // Bottom margin pulled in so the element must scroll well into the viewport
-      // (its top past ~62% of the height) before it reveals — fires deeper in.
-      { threshold: 0.12, rootMargin: '0px 0px -60% 0px' },
+      // Bottom inset sets how deep a section must scroll before it reveals: the
+      // trigger band is the top 65% of the viewport, so sections fade in a little
+      // after they enter from the bottom.
+      { threshold: 0.12, rootMargin: '0px 0px -35% 0px' },
     );
     io.observe(el);
-    // Never leave content hidden if the observer can't fire (print, odd layouts).
-    // Generous so it doesn't pre-empt a slow scroll down to the element.
-    const timer = window.setTimeout(reveal, 6000);
+    // Elements anchored at the very bottom of the page (the colophon's link
+    // buttons, the final section) can never scroll their top above the observer's
+    // trigger band — there isn't enough content below them to push the top past
+    // the 65% line — so the observer would never fire for them. Reveal once the
+    // page has scrolled to the bottom and the element is actually on-screen.
+    // Guarded on "at page bottom" so the cover's scroll-hijack (held at the TOP)
+    // never trips it early.
+    const atPageBottom = () =>
+      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    const onScreen = () => {
+      const r = el.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0;
+    };
+    const onScroll = () => {
+      if (atPageBottom() && onScreen()) reveal();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Fallback for the rare environment where the observer never fires (odd
+    // layouts). It must NOT be a blind timer: the cover's scroll-hijack can hold
+    // the reader at the top for several seconds, and a blanket timeout would then
+    // flush every still-offscreen section in one go. So only reveal once the
+    // element has actually scrolled to roughly the depth the observer targets (or
+    // the page has bottomed out, for the unreachable bottom elements above).
+    // Print (no viewport to scroll) is handled in casestudy.css.
+    const failsafe = window.setInterval(() => {
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.65) reveal();
+      else if (atPageBottom() && onScreen()) reveal();
+    }, 1500);
     return () => {
       io.disconnect();
-      window.clearTimeout(timer);
+      window.clearInterval(failsafe);
+      window.removeEventListener('scroll', onScroll);
     };
   }, [pathname]);
 

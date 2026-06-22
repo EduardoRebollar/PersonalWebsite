@@ -77,7 +77,7 @@ export function buildLocationTutorPrompt(location: Location): string {
   return [
     LOCATION_TUTOR_PROMPT_BASE,
     '',
-    `LOCATION CONTEXT (do not recite verbatim): ${location.name} — ${location.shortDescription}`,
+    `LOCATION CONTEXT (do not recite verbatim): ${location.name} — ${location.shortDescription.replace(/\n/g, ' ')}`,
     '',
     `Background: ${location.fullDescription}`,
   ].join('\n');
@@ -230,7 +230,7 @@ function buildLocationsSummary(eraOrder: number): string {
   const locs = locationsForEra(eraOrder);
   if (locs.length === 0) return '(no era data available)';
   return locs
-    .map((l) => `• ${l.name}: ${l.shortDescription}`)
+    .map((l) => `• ${l.name}: ${l.shortDescription.replace(/\n/g, ' ')}`)
     .join('\n');
 }
 
