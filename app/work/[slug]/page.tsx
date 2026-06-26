@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/ui/primitives/Container';
 import { Pill } from '@/components/ui/primitives/Pill';
 import { LaHistoryCaseStudy } from '@/components/laHistory/casestudy/LaHistoryCaseStudy';
+import { EconWagesCaseStudy } from '@/components/econWages/casestudy/EconWagesCaseStudy';
 import { SparklesCore } from '@/components/ui/backgrounds/sparkles';
 import { StarfieldBackground } from '@/components/ui/backgrounds/StarfieldBackground';
 import { BackgroundBeams } from '@/components/ui/backgrounds/BackgroundBeams';
@@ -76,6 +77,19 @@ export default async function ProjectPage({
       <>
         {project && <JsonLd data={projectArticleSchema(project)} />}
         <LaHistoryCaseStudy />
+      </>
+    );
+  }
+
+  // AI & Developer Wages is a bespoke, full-bleed "broadsheet" case study (a
+  // front-page newspaper treatment of the regression) rather than the standard
+  // MDX article — render it directly, skipping the shared article chrome and the
+  // MDX bundle. (The MDX loader is still required above so the route resolves.)
+  if (slug === 'econometrics-final') {
+    return (
+      <>
+        {project && <JsonLd data={projectArticleSchema(project)} />}
+        <EconWagesCaseStudy />
       </>
     );
   }

@@ -97,10 +97,10 @@ export const projects: Project[] = [
   },
   {
     slug: 'econometrics-final',
-    title: "AI's Effect on Developer Wages",
+    title: 'AI & Developer Wages',
     short: 'AI & Developer Wages',
     tagline:
-      "AI's effect on developer work, measured against the 2025 Stack Overflow Developer Survey.",
+      'AI complements experience, not juniors: a wage regression on 17,498 developers from the 2025 Stack Overflow Survey.',
     year: 2026,
     tier: 'supporting',
     tech: ['Stata', 'CSV pipeline', 'Econ 272'],
@@ -108,9 +108,9 @@ export const projects: Project[] = [
     hue: 268,
     role: 'Econometrics',
     highlights: [
-      'Stata panel model',
-      '2025 SO Developer Survey',
-      'Wage-effect estimates',
+      'AI × experience interaction',
+      'OLS · log annual salary',
+      'Break-even at 11.4 years',
     ],
   },
   {
